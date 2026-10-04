@@ -31,3 +31,4 @@ it; the source code is authoritative.
 - `README.md` is the primary project overview.
 - `docs/` contains architecture, provider and workflow notes.
 - `Makefile` exposes local startup, migration, import and seed commands.
+- `.github/workflows/telegram-publisher.yml` schedules the one-shot Telegram publisher outside Vercel.

@@ -63,3 +63,12 @@ Operational notes:
 - With `TELEGRAM_PUBLISHER_ENABLED=true`, the API process starts the publisher after checking migration 000014. External Compose passes this setting to the backend; no separate worker container is required.
 - Local development keeps publishing disabled by default, even when the shared `.env` enables staging publishing. Set `TELEGRAM_LOCAL_PUBLISHER_ENABLED=true` only when intentionally testing live posts from the local Compose backend.
 - Publisher claims one vacancy at a time and spaces messages by at least 1.1 seconds. Telegram 429 responses stop the batch and honor `retry_after` when it exceeds the normal loop interval.
+
+Production scheduling on Vercel:
+
+- The Vercel API does not run a persistent publisher process. `.github/workflows/telegram-publisher.yml` runs the one-shot command every five minutes on GitHub Actions; GitHub schedules can be delayed or skipped, so this is not an exact delivery SLA.
+- Add repository secrets `TELEGRAM_PUBLISHER_DATABASE_URL` (the Supabase connection URL for the same database used by the deployed API) and `TELEGRAM_BOT_TOKEN`. Do not put these values in repository variables, workflow files, or `VITE_*` settings.
+- Add repository variables `TELEGRAM_PUBLIC_CHANNEL_ID` and `TELEGRAM_PUBLIC_CHANNEL_USERNAME` for the existing channel. Keep the same numeric channel ID to preserve the previous `telegram_publications` deduplication records.
+- Only after checking the secrets, channel, migration 000014, and prior publication records, set the repository variable `TELEGRAM_PUBLISHER_ENABLED=true`. Until then scheduled and manual runs are skipped. `workflow_dispatch` can be used for a controlled first run on `main`.
+- The workflow uses `https://jobhub-lovat.vercel.app` for vacancy links. Update both `FRONTEND_ORIGIN` and `JOBHUB_PUBLIC_BASE_URL` if the production domain changes.
+- The one-shot run sends up to ten eligible vacancies, so a backlog drains over multiple runs. Check the workflow logs and reconcile any `pending` rows before retrying uncertain sends.
