@@ -3,7 +3,7 @@
 Publisher отправляет подходящие публичные вакансии в один канал JobHub.
 Отдельная Go-команда находится в `backend/cmd/telegram-publisher` и может
 работать с Supabase Postgres без Docker. Действующая Production-схема с
-webhook описана в [отдельной инструкции](telegram-publisher-webhook.md).
+webhook описана в [отдельной инструкции](/docs/telegram-publisher-webhook).
 
 ## Правила отбора
 

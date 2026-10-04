@@ -3,7 +3,7 @@
 **Исследование 24–25 сентября 2026 года.** Исторический обзор и проект
 архитектуры: сам по себе он не добавлял адаптер, миграцию, запуск импорта,
 frontend или Production-разрешение. Позднее отдельный ограниченный
-[Greenhouse POC](greenhouse-poc.md) был реализован; его фактические границы
+[Greenhouse POC](/docs/greenhouse-poc) был реализован; его фактические границы
 описаны там.
 
 ## 1. Вывод и границы исследования
@@ -23,8 +23,8 @@ Teamtailor, Personio. Recruitee и Teamtailor требуют ключ работ
 требует разрешённого доступа и не доказывает полный публичный feed.
 Ни один источник не получил Production-разрешение только по этому обзору.
 
-Основной контекст: [стратегия](vacancy-supply-2026.md) и
-[архитектура импорта](vacancy-supply-architecture.md). Официальная
+Основной контекст: [стратегия](/docs/vacancy-supply-2026) и
+[архитектура импорта](/docs/vacancy-supply-architecture). Официальная
 документация разработчиков, поддержки и условий — главный источник.
 Страницы работодателей дают лишь свидетельство возможной географической
 релевантности: индекс поиска может сохранять закрытые вакансии. API
@@ -188,11 +188,11 @@ Teamtailor, Personio. Recruitee и Teamtailor требуют ключ работ
 ## 6. Минимальное расширение JobHub
 
 На дату обзора были проверены
-[`ingestion/service.go`](../backend/internal/ingestion/service.go),
-[`jobs/model.go`](../backend/internal/jobs/model.go),
-[`jobs/postgres_store.go`](../backend/internal/jobs/postgres_store.go),
-[`jobs.sql`](../backend/sql/queries/jobs.sql) и
-[`000002` миграция](../backend/migrations/000002_create_vacancy_supply.up.sql).
+[`ingestion/service.go`](https://github.com/juniorqazaq/JobHub/blob/main/backend/internal/ingestion/service.go),
+[`jobs/model.go`](https://github.com/juniorqazaq/JobHub/blob/main/backend/internal/jobs/model.go),
+[`jobs/postgres_store.go`](https://github.com/juniorqazaq/JobHub/blob/main/backend/internal/jobs/postgres_store.go),
+[`jobs.sql`](https://github.com/juniorqazaq/JobHub/blob/main/backend/sql/queries/jobs.sql) и
+[`000002` миграция](https://github.com/juniorqazaq/JobHub/blob/main/backend/migrations/000002_create_vacancy_supply.up.sql).
 Импорт был привязан к `RunJooble`/`jooble.Normalize`; advisory lock начинался
 после сбора; `UNIQUE(source, external_id)` и защита по времени наблюдения
 уже работали. Сохраните эти основы. Нейтральный `Collect` и обёртка

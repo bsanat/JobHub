@@ -18,9 +18,27 @@
         "tab": "Старт",
         "groups": [
           {
-            "group": "Обзор проекта",
+            "group": "Новая документация",
             "pages": [
               "index",
+              "docs/project-overview",
+              "docs/new-developer-guide",
+              "docs/system-architecture",
+              "docs/frontend-pages-reference",
+              "docs/user-flows",
+              "docs/backend-api-reference",
+              "docs/supabase-database",
+              "docs/roles-permissions",
+              "docs/telegram-publisher-reference",
+              "docs/testing-troubleshooting",
+              "docs/deployment-environment",
+              "docs/glossary",
+              "docs/change-history"
+            ]
+          },
+          {
+            "group": "Исходные материалы",
+            "pages": [
               "docs/documentation-index",
               "docs/agent-repo-map",
               "docs/contribution-workflow"
@@ -113,7 +131,8 @@
             "pages": [
               "docs/telegram-vacancy-publisher",
               "docs/telegram-publisher-webhook",
-              "docs/telegram-vacancy-collector"
+              "docs/telegram-vacancy-collector",
+              "docs/assets/screenshots"
             ]
           }
         ]

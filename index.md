@@ -3,7 +3,7 @@ title: "JobHub Docs"
 description: "Интерактивная документация JobHub для новых разработчиков."
 ---
 
-<img src="/frontend/public/brand/jobhub-logo.png" alt="Логотип JobHub" width="260" />
+<img src="/docs/assets/jobhub-logo.png" alt="Логотип JobHub" width="260" />
 
 # JobHub Docs
 
@@ -13,12 +13,16 @@ description: "Интерактивная документация JobHub для 
 
 ## С чего начать
 
-- [Индекс документации](/docs/documentation-index) — карта всех материалов.
-- [Карта репозитория](/docs/agent-repo-map) — где искать ключевые части кода.
-- [Локальное окружение](/docs/local-environment-checklist) — как подготовить
-  рабочую среду.
-- [Команды разработки](/docs/developer-command-reference) — ежедневные команды
-  для запуска и проверки проекта.
+- [О проекте](/docs/project-overview) — задача, роли, технологии и структура
+  репозитория.
+- [Инструкция для нового разработчика](/docs/new-developer-guide) — первый
+  запуск, переменные окружения и безопасная работа.
+- [Архитектура системы](/docs/system-architecture) — потоки
+  frontend → backend → PostgreSQL/Supabase и Telegram publisher.
+- [Frontend](/docs/frontend-pages-reference) — маршруты, страницы, кнопки,
+  действия и API-вызовы.
+- [Backend и API](/docs/backend-api-reference) — endpoints, auth, ошибки и
+  исходный код.
 
 ## Основные разделы
 
@@ -29,8 +33,14 @@ description: "Интерактивная документация JobHub для 
 - **Telegram** — как новая вакансия попадает в Telegram-канал без дублей.
 - **Проверки** — чек-листы ревью, тестирования, релиза и интеграций.
 
+## Что уже проверено по коду
+
+Документация опирается на `frontend/src/App.tsx`, `frontend/src/api`,
+`backend/internal/handlers`, `backend/migrations`, `backend/internal/telegrampublisher`,
+`vercel.json`, `Makefile` и `.github/workflows/telegram-publisher.yml`.
+Неподтверждённые детали помечены как «не подтверждено».
+
 ## Production
 
 - Сайт: [jobhub-lovat.vercel.app](https://jobhub-lovat.vercel.app/)
 - Репозиторий: [juniorqazaq/JobHub](https://github.com/juniorqazaq/JobHub)
-

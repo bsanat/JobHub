@@ -78,7 +78,7 @@ GitHub Actions workflow, а не регистрацией webhook. Маршру�
 ## 4. Как работает webhook
 
 В Production SQL Editor один раз был выполнен скрипт
-[`scripts/supabase-telegram-publisher.sql`](../scripts/supabase-telegram-publisher.sql).
+[`scripts/supabase-telegram-publisher.sql`](https://github.com/juniorqazaq/JobHub/blob/main/scripts/supabase-telegram-publisher.sql).
 Он включает `pg_net`, `pg_cron`, создаёт функции, триггер для `jobhub.jobs`
 и задачу `jobhub-telegram-publisher-retry`.
 
@@ -97,8 +97,8 @@ GitHub Actions workflow, а не регистрацией webhook. Маршру�
    функцию каждую минуту. Успешное выполнение SQL-задачи ещё не означает
    отправку в Telegram: проверяйте HTTP-ответ и запись публикации.
 
-Код: [`backend/cmd/api/telegram_webhook.go`](../backend/cmd/api/telegram_webhook.go)
-и [`backend/internal/handlers/telegram_publish.go`](../backend/internal/handlers/telegram_publish.go).
+Код: [`backend/cmd/api/telegram_webhook.go`](https://github.com/juniorqazaq/JobHub/blob/main/backend/cmd/api/telegram_webhook.go)
+и [`backend/internal/handlers/telegram_publish.go`](https://github.com/juniorqazaq/JobHub/blob/main/backend/internal/handlers/telegram_publish.go).
 
 ## 5. Формат сообщения и защита от повторов
 

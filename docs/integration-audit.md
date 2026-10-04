@@ -64,7 +64,7 @@
 Сохранить React/Vite, слой репозиториев, TanStack Query, Gin, pgx, sqlc и
 PostgreSQL/Supabase. Реализовать MVP 1 вертикальными сценариями против
 настоящего Go API до перехода к репутации компаний и удержанию пользователей.
-Предложение по контракту: [mvp1-api-contract.md](mvp1-api-contract.md).
+Предложение по контракту: [mvp1-api-contract.md](/docs/mvp1-api-contract).
 
 ## Что было проверено
 
