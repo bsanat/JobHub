@@ -10,9 +10,19 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"jobhub-ai/backend/internal/auth"
 	"jobhub-ai/backend/internal/candidates"
 )
+
+func TestUnavailableResumeStorageReturnsServiceUnavailable(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	writeCandidateError(ctx, slog.New(slog.NewTextHandler(io.Discard, nil)), candidates.ErrFileStorageUnavailable)
+	if recorder.Code != http.StatusServiceUnavailable || !strings.Contains(recorder.Body.String(), "RESUME_STORAGE_UNAVAILABLE") {
+		t.Fatalf("unexpected response: %d %s", recorder.Code, recorder.Body.String())
+	}
+}
 
 func TestCandidateRoutesEnforceRoles(t *testing.T) {
 	for _, tc := range []struct {

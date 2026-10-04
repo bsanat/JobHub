@@ -28,6 +28,10 @@ func startTelegramPublisher(ctx context.Context, pool *pgxpool.Pool, logger *slo
 	if !enabled {
 		return nil
 	}
+	if os.Getenv("VERCEL") == "1" {
+		logger.Warn("Telegram publisher disabled in Vercel API; use a scheduled worker")
+		return nil
+	}
 	cfg, err := config.LoadTelegramPublisher()
 	if err != nil {
 		return err

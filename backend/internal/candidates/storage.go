@@ -2,6 +2,7 @@ package candidates
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,22 @@ import (
 )
 
 var storageKeyPattern = regexp.MustCompile(`^[a-f0-9]{64}\.pdf$`)
+
+var ErrFileStorageUnavailable = errors.New("persistent resume file storage is unavailable")
+
+type UnavailableFileStore struct{}
+
+func (UnavailableFileStore) Put(context.Context, string, io.Reader) error {
+	return ErrFileStorageUnavailable
+}
+
+func (UnavailableFileStore) Open(context.Context, string) (io.ReadCloser, error) {
+	return nil, ErrFileStorageUnavailable
+}
+
+func (UnavailableFileStore) Delete(context.Context, string) error {
+	return ErrFileStorageUnavailable
+}
 
 type LocalFileStore struct{ root string }
 

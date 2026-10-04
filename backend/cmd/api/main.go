@@ -50,9 +50,14 @@ func run(logger *slog.Logger) error {
 	}
 	jobStore := jobs.NewPostgresStore(pool, cfg.Environment == "production")
 	authService := auth.NewService(pool)
-	resumeFiles, err := candidates.NewLocalFileStore(cfg.ResumeStorageDir)
-	if err != nil {
-		return err
+	var resumeFiles candidates.FileStore
+	if os.Getenv("VERCEL") == "1" {
+		resumeFiles = candidates.UnavailableFileStore{}
+	} else {
+		resumeFiles, err = candidates.NewLocalFileStore(cfg.ResumeStorageDir)
+		if err != nil {
+			return err
+		}
 	}
 	candidateService := candidates.NewService(candidates.NewPostgresStore(pool), resumeFiles)
 	companyStore := companies.NewPostgresStore(pool, cfg.Environment == "production")

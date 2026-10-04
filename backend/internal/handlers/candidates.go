@@ -451,6 +451,8 @@ func writeCandidateError(c *gin.Context, logger *slog.Logger, err error) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"code": "EXTERNAL_JOB", "message": "External jobs use the provider application flow"}})
 	case errors.Is(err, candidates.ErrResumeUnavailable):
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"code": "RESUME_UNAVAILABLE", "message": "Selected resume is not available"}})
+	case errors.Is(err, candidates.ErrFileStorageUnavailable):
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"code": "RESUME_STORAGE_UNAVAILABLE", "message": "Resume file storage is temporarily unavailable"}})
 	case errors.Is(err, candidates.ErrInvalidState):
 		c.JSON(http.StatusConflict, gin.H{"error": gin.H{"code": "INVALID_APPLICATION_TRANSITION", "message": "Application status transition is not allowed"}})
 	default:
