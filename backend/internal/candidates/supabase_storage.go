@@ -56,6 +56,7 @@ func (s *SupabaseFileStore) request(ctx context.Context, method, target string, 
 		return nil, err
 	}
 	req.Header.Set("apikey", s.key)
+	req.Header.Set("Authorization", "Bearer "+s.key)
 	return req, nil
 }
 

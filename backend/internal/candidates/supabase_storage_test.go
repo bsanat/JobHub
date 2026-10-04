@@ -15,7 +15,7 @@ func TestSupabaseFileStoreLifecycle(t *testing.T) {
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
-		if r.Header.Get("Authorization") != "" || r.Header.Get("apikey") != "secret" {
+		if r.Header.Get("Authorization") != "Bearer secret" || r.Header.Get("apikey") != "secret" {
 			t.Errorf("missing server-side authorization")
 		}
 		switch r.Method {
