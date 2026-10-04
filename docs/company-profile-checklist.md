@@ -1,22 +1,19 @@
-# Company profile checklist
+# Проверка профиля компании
 
-Use this checklist when changing public company catalog or employer company
-profile behavior.
+Используйте при изменении каталога компаний или профиля компании работодателя.
 
-## Public catalog
+## Публичный каталог
 
-- Only companies with public, visible vacancies should appear as active hiring
-  companies.
-- Company logos should use tracked assets and documented sources.
-- Empty vacancy states should be explicit and localized.
-- Follow/unfollow state should be candidate-specific.
+- Компания считается нанимающей только при наличии видимых публичных вакансий.
+- Используйте отслеживаемые логотипы с задокументированными источниками.
+- Пустой список вакансий отображается явно и с переводом.
+- Подписка на компанию относится к конкретному соискателю.
 
-## Employer profile editing
+## Редактирование работодателем
 
-- Company profile mutations require employer ownership checks in the backend.
-- Public fields should not expose private account data.
-- Verified status should be controlled by trusted backend data, not arbitrary
-  frontend state.
+- Изменения профиля требуют проверки владельца компании в backend.
+- Публичные поля не раскрывают личные данные аккаунта.
+- Статус проверки определяется доверенными данными backend, а не состоянием UI.
 
-Check the public company page, companies list and employer company editor when a
-change touches shared company presentation.
+Если изменение затрагивает отображение компании, проверьте её публичную
+страницу, каталог и редактор работодателя.

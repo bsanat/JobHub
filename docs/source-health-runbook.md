@@ -1,21 +1,21 @@
-# Source health runbook
+# Проверка состояния источника вакансий
 
-Use source health checks to understand imported vacancy freshness without
-changing public visibility by hand.
+Проверяйте актуальность импортированных вакансий по состоянию источника,
+не меняя публичную видимость вручную.
 
-## Signals to inspect
+## Что проверять
 
-- latest successful run per source;
-- failed run count and sanitized error codes;
-- fetched, normalized, inserted, updated and skipped counts;
-- stale or hidden imported job counts;
-- request budget used by the provider adapter.
+- последний успешный запуск каждого источника;
+- число ошибок и безопасные коды ошибок;
+- сколько записей получено, нормализовано, добавлено, обновлено и пропущено;
+- число устаревших или скрытых вакансий;
+- использованный бюджет запросов провайдера.
 
-## Safe response
+## Безопасная реакция
 
-- Failed runs should not refresh job `last_seen_at` or `fresh_until` values.
-- Partial ranked searches should not be treated as complete snapshots.
-- Missing jobs should be reconciled only when a provider supplies a complete,
-  successful snapshot and the source policy allows it.
+- Неуспешный запуск не обновляет `last_seen_at` и `fresh_until` вакансий.
+- Частичную ранжированную выдачу нельзя считать полным снимком.
+- Отсутствующие вакансии сверяются только при полном успешном снимке
+  провайдера, если политика источника это позволяет.
 
-Keep public display decisions in shared backend predicates, not manual SQL edits.
+Публичную видимость определяют общие серверные условия, а не ручные SQL-правки.

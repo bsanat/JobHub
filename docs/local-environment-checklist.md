@@ -1,29 +1,28 @@
-# Local environment checklist
+# Проверка локального окружения
 
-Use this checklist before running JobHub locally for the first time on a machine.
+Проверьте окружение перед первым локальным запуском JobHub.
 
-## Required tools
+## Необходимые инструменты
 
-- Docker with Docker Compose v2.
-- Go 1.25 or newer.
-- Node.js 22.12 or newer with npm.
-- A local `.env` created from `.env.example`.
+- Docker с Docker Compose v2 для существующих локальных Make-команд.
+- Go 1.25 или новее.
+- Node.js 22.12 или новее с npm.
+- Локальный `.env` на основе `.env.example`.
 
-## Safe defaults
+## Безопасные значения
 
-- Local Docker PostgreSQL uses `sslmode=disable`.
-- Supabase and other remote PostgreSQL connections use `sslmode=require`.
-- Provider keys stay in `.env` and must not be copied into documentation,
-  screenshots or committed files.
-- `VITE_API_URL` should point at the local backend for ordinary development.
+- Локальный PostgreSQL использует `sslmode=disable`.
+- Supabase и другие удалённые подключения используют `sslmode=require`.
+- Ключи провайдеров остаются в `.env`; не переносите их в документацию,
+  снимки экрана и коммиты.
+- Для обычной разработки `VITE_API_URL` указывает на локальный backend.
 
-## Quick smoke check
+## Быстрая проверка
 
-1. Run `make local-up`.
-2. Start the frontend with `npm run dev` from `frontend/`.
-3. Open `http://localhost:5173`.
-4. Check `http://localhost:8080/api/v1/health`.
-5. Stop local services with `make local-down` when finished.
+1. Запустите `make local-up`.
+2. В `frontend/` выполните `npm run dev`.
+3. Откройте `http://localhost:5173`.
+4. Проверьте `http://localhost:8080/api/v1/health`.
+5. По завершении остановите сервисы через `make local-down`.
 
-Use `make dev` only when the local POC database described in `README.md` is
-available.
+Команда `make dev` использует локальную POC-базу, описанную в `README.md`.

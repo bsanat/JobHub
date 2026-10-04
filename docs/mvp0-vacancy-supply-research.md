@@ -1,249 +1,130 @@
-# MVP 0: official vacancy supply research
+# MVP 0: исследование официальных источников вакансий
 
-Status: proposal only; checked 2026-09-23. No integration, migrations, provider
-accounts, credentials, scraping, or product features were implemented.
-[MVP 1](mvp1-api-contract.md) remains unchanged and deferred.
+**Историческое предложение, проверено 23 сентября 2026 года.** Тогда не
+создавались интеграции, миграции, аккаунты провайдеров, ключи, scraping
+или функции продукта. [Контракт MVP 1](mvp1-api-contract.md) оставался
+отдельным планом, а [схема источников](mvp0-source-schema.md) — проектом.
+Повторяющиеся разделы исходной заметки сведены здесь в один текст.
 
-The repository currently has only the infrastructure schema migration, not
-implemented jobs/company tables. The companion [schema proposal](mvp0-source-schema.md)
-extends the planned domain model, not a deployed database.
+## Рекомендация на тот момент
 
-## Recommendation
+Рассмотреть **Jooble Kazakhstan** для одного ограниченного POC после
+получения регионального ключа и письменного уточнения прав хранения,
+коммерческого показа, атрибуции, срока хранения и удаления. Официальный
+API рассчитан на интеграцию вакансий в другую платформу и имеет
+казахстанскую регистрацию, но это не доказывает право на неограниченное
+публичное переиздание или устойчивый Production-доступ.
 
-Choose **Jooble Kazakhstan for one bounded proof of concept**, conditional on
-obtaining its regional key and confirming API-specific storage, commercial
-display, attribution, retention and removal permissions. Its official API is
-intended for integrating vacancies into another platform, and it has a Kazakhstan
-registration portal. This is a candidate selection, not a statement that public
-republication rights or sustainable production access have been secured.
+Предлагался лимит, например 50 запросов и несколько согласованных поисков.
+Нужно измерить релевантность, повторы, отсутствующие поля и актуальность;
+не выдавать выборку за весь рынок Казахстана. В ходе исследования ключ не
+регистрировался и провайдеру не писали. HeadHunter давал более богатые
+данные, но стандартные условия мешали созданию публичной постоянной базы.
+Для Adzuna не подтвердился рынок Казахстана; ссылки на feed Enbek не работали.
 
-Start with an explicitly limited request budget, for example 50 requests, and a
-few agreed searches. Measure relevance, duplicates, missing fields and freshness.
-Do not describe this sample as the complete Kazakhstan market. No key registration
-or provider contact has been performed in this research.
-# MVP 0: official vacancy supply research
+## HeadHunter / hh.kz
 
-Status: proposal only; checked 2026-09-23. No integration, migrations, provider
-accounts, credentials, scraping, or product features were implemented.
-[MVP 1](mvp1-api-contract.md) remains unchanged and deferred.
+Официальный REST API использует общий хост `api.hh.ru`. Для Казахстана
+указан `area=40` (проверить актуальный справочник) и `host=hh.kz`; один
+только host не является географическим фильтром. Есть поиск и детали
+вакансий/работодателей. Для Production нужно зарегистрировать приложение,
+учесть OAuth и идентификационные заголовки, не полагаться на анонимный доступ.
 
-The repository currently has only the infrastructure schema migration, not
-implemented jobs/company tables. The companion [schema proposal](mvp0-source-schema.md)
-extends the planned domain model, not a deployed database.
+Пагинация: `page` с нуля, `per_page <= 100`, глубина поиска до 2000.
+Доступны ID, название, сниппет/описание, регион, занятость, формат,
+работодатель, URL, время публикации/создания, зарплата и признак архива.
+Устаревшие поля следует обрабатывать отдельно. Отсутствие в публичном
+поиске не означает удаление; приватный архив работодателя не служит
+общим feed удаления. [Официальный OpenAPI](https://api.hh.ru/openapi/en/redoc).
 
-## Recommendation
+Гарантированный бесплатный лимит извлечения не был подтверждён. Даже если
+[объявление провайдера](https://hh.ru/article/22812) говорит о бесплатном
+просмотре, это не право на безлимитное копирование.
 
-Choose **Jooble Kazakhstan for one bounded proof of concept**, conditional on
-obtaining its regional key and confirming API-specific storage, commercial
-display, attribution, retention and removal permissions. Its official API is
-intended for integrating vacancies into another platform, and it has a Kazakhstan
-registration portal. This is a candidate selection, not a statement that public
-republication rights or sustainable production access have been secured.
+[Условия API](https://hh.ru/article/15116) требуют регистрации и
+актуальности материалов, ограничивают передачу данных третьим лицам и
+создание базы для их доступа, требуют быстро удалять архивированные
+вакансии и ограничивают изменение материалов/товарных знаков. Значок
+источника не заменяет разрешение. **Вывод:** для постоянной публичной базы
+JobHub необходимо отдельное письменное соглашение.
 
-Start with an explicitly limited request budget, for example 50 requests, and a
-few agreed searches. Measure relevance, duplicates, missing fields and freshness.
-Do not describe this sample as the complete Kazakhstan market. No key registration
-or provider contact has been performed in this research.
+## Jooble Kazakhstan
 
-Why not the alternatives: HeadHunter has richer structured data but its baseline
-terms create a substantial obstacle to the proposed persistent public database;
-Adzuna Kazakhstan support could not be verified; Enbek's published feed links did
-not return usable feeds during this check.
+Официальный REST-поиск требует регионального ключа через
+[портал Казахстана](https://kz.jooble.org/api/about). Ключ находится в пути
+URL запроса: запрос остаётся на сервере, URL с ключом нельзя логировать.
+[Инструкция подключения](https://help.jooble.org/en/support/solutions/articles/60000922689-how-to-connect-to-the-jooble-rest-api)
+описывает интеграцию в другую платформу.
 
-## Provider verification
+Бесплатная квота — **500 запросов за всё время существования ключа**, не
+в месяц. JSON POST принимает keywords/location, страницу (по умолчанию 1)
+и `ResultOnPage`; ответ содержит `totalCount`. Документированного detail
+или feed удаления не найдено. В рассмотренном ответе нет даты публикации,
+истечения, архива и стабильного ID работодателя.
+[Спецификация REST от 16 августа 2026](https://help.jooble.org/en/support/solutions/articles/60001448238).
 
-### HeadHunter / hh.kz
+Публичные материалы не разъяснили точные API-условия кэширования,
+коммерческого показа, повторного распространения, атрибуции и удаления.
+[Общие условия Казахстана](https://kz.jooble.org/info/terms) ограничивают
+переиздание без письменного разрешения. Получение ключа не означает
+неограниченной лицензии; нужны подтверждения также на контент исходных
+работодателей. Поиск даёт выборку, не полный рынок. При отсутствии сигналов
+закрытия нужна согласованная осторожная политика свежести. Авторизованный
+ответ Казахстана во время этого исследования не проверялся.
 
-**Availability and Kazakhstan:** official REST API, shared base `api.hh.ru`.
-Use Kazakhstan `area=40` (recheck the region directory) and `host=hh.kz`;
-host selection alone is not a geographic filter. Search and vacancy/employer
-detail endpoints exist. Current documentation describes OAuth and application
-identification headers. Register the application; do not depend on anonymous
-access for production.
+## Adzuna
 
-**Pagination/data:** zero-based `page`, `per_page <= 100`, maximum search depth
-2,000. Fields include vacancy ID, title, snippets/detail description, region,
-employment/work format, employer ID/name/logos, landing URL, published/created
-timestamps, structured salary and archive state. Use current salary/work-format
-fields and handle deprecated legacy fields explicitly. Public expiry/deletion
-coverage is not guaranteed; private employer archive endpoints are not a global
-removal feed. [Official OpenAPI](https://api.hh.ru/openapi/en/redoc).
+Официальный REST API использует `app_id`, `app_key` и путь
+`/v1/api/jobs/{country}/search/{page}`.
+[Обзор API](https://developer.adzuna.com/overview).
+Официальные материалы не подтвердили рынок `kz`: нельзя выдумывать
+`/jobs/kz` или считать вакансии о Казахстане из другого рынка отдельным
+казахстанским feed.
 
-**Quota:** no current guaranteed free daily request allowance was verified.
-A [provider announcement](https://hh.ru/article/22812) describes vacancy viewing
-as free, but does not establish a present unlimited extraction entitlement.
+Поиск даёт ID/название, сниппет, дату создания, redirect URL, название
+компании, иерархию места/координаты, категорию, контракт и диапазон
+зарплаты с флагом прогнозного значения. Не установлены стабильный ID
+компании, полный текст, публичный feed архива/удаления. Валюту, период
+и gross/net нельзя угадывать.
+[Описание поиска](https://developer.adzuna.com/docs/search).
 
-**Commercial/display/attribution:** standard terms require application registration
-and allow charges for some services. Clauses 4.3 and 4.6 restrict building another
-database for third-party access and transferring received data. Clause 3.11
-requires prompt removal of archived jobs and restricts altering materials.
-Trademark use is restricted; a generic attribution badge is not a substitute
-for permission. No blanket approved logo/backlink formula was verified.
+Стандартные лимиты: 25/мин, 250/день, 1000/неделю и 2500/месяц —
+действуют одновременно. [Условия API](https://developer.adzuna.com/docs/terms_of_service)
+явно разрешают публикацию объявлений при соблюдении требований. Для иных
+постоянных коммерческих/исследовательских сценариев может потребоваться
+лицензия после периода проверки. Каждое объявление должно показывать
+связанное «Jobs by Adzuna» с логотипом не меньше 116 x 23 px; у Jobsworth
+отдельная атрибуция. При прекращении договора данные удаляются со страниц.
+Без подтверждённого рынка KZ источник сейчас не подходит.
 
-**Assessment (inference):** JobHub's public imported database appears to conflict
-with these baseline restrictions. A written agreement covering this use would
-be needed before selecting it for public supply.
-[Official API terms](https://hh.ru/article/15116).
+## Дополнительный источник: Enbek
 
-### Jooble Kazakhstan
+[Официальная страница web services](https://www.enbek.kz/ru/web-services)
+ссылалась на XML в форматах
+[Jooble](https://www.enbek.kz/ru/xml/jooble) и
+[Yandex](https://www.enbek.kz/ru/xml/yandex), но оба URL тогда возвращали
+404. Это не доказывает, что feed закрыт навсегда.
 
-**Availability/auth:** official REST search; obtain a Kazakhstan-specific key
-through the [Kazakhstan API portal](https://kz.jooble.org/api/about). Keys are
-regional; keep the key-bearing request URL server-side and redact it in logs.
-The [connection guide](https://help.jooble.org/en/support/solutions/articles/60000922689-how-to-connect-to-the-jooble-rest-api)
-explicitly describes integration into another platform.
+Казахстанская релевантность ясна, но текущий endpoint, авторизация,
+квота, поля, пагинация, права на показ и атрибуция не были подтверждены.
+[Инструкция работодателя](https://www.enbek.kz/kk/advice/4169) описывает
+публикацию на 30 дней и архив, но не семантику удаления из XML.
+Бесплатный просмотр портала не равен лицензии на импорт. Нужно запросить
+официальный способ экспорта или партнёрства.
 
-**Free quota/pagination:** 500 requests per key **over its lifetime**, not monthly.
-JSON POST search; required keywords/location; page defaults to 1; `ResultOnPage`
-controls size (documented maximum not found). Response provides `totalCount`.
-No documented job-detail or deletion feed was found. Published/expiry/archive
-metadata and structured employer identifiers are absent from the reviewed
-response specification. See the companion mapping for available fields.
-[REST documentation, updated August 16, 2026](https://help.jooble.org/en/support/solutions/articles/60001448238).
+## Условия следующего этапа
 
-**Commercial/display/attribution:** the connection guide references API terms but
-the reviewed public material did not establish exact API-specific caching,
-commercial redistribution, retention or branding rules. The general Kazakhstan
-terms restrict republication without express written permission (§4(i)).
-Do not infer an unrestricted licence from receiving a key. Confirm API terms
-override or expressly permit this use, including upstream content rights.
-[Kazakhstan terms](https://kz.jooble.org/info/terms).
+Перед POC согласовать выбор провайдера и модель данных. Затем проверить:
 
-**Limitations:** search coverage is a sample; continuous refresh needs a separate
-quota arrangement. Missing expiry signals require a conservative local freshness
-policy approved against provider terms. No authenticated Kazakhstan response was
-tested because no key was requested or supplied.
+1. Письменные права на хранение, публичный/коммерческий показ, преобразование,
+   атрибуцию, сроки и удаление, включая ограничения исходного издателя.
+2. Региональный ключ и рабочий endpoint, ключ только на сервере.
+3. Квоту, возможное платное расширение, размер страницы и rate limit.
+4. Качество данных Казахстана, стабильность ID/URL, временные зоны, обновления,
+   архив и допустимый срок актуальности.
+5. Идемпотентный повторный импорт и честный внешний отклик без заявления,
+   будто заявка отправлена через JobHub.
 
-### Adzuna
-
-**Availability/auth:** official REST API; `app_id` and `app_key` query parameters;
-Why not the alternatives: HeadHunter has richer structured data but its baseline
-terms create a substantial obstacle to the proposed persistent public database;
-Adzuna Kazakhstan support could not be verified; Enbek's published feed links did
-not return usable feeds during this check.
-
-## Provider verification
-
-### HeadHunter / hh.kz
-
-**Availability and Kazakhstan:** official REST API, shared base `api.hh.ru`.
-Use Kazakhstan `area=40` (recheck the region directory) and `host=hh.kz`;
-host selection alone is not a geographic filter. Search and vacancy/employer
-detail endpoints exist. Current documentation describes OAuth and application
-identification headers. Register the application; do not depend on anonymous
-access for production.
-
-**Pagination/data:** zero-based `page`, `per_page <= 100`, maximum search depth
-2,000. Fields include vacancy ID, title, snippets/detail description, region,
-employment/work format, employer ID/name/logos, landing URL, published/created
-timestamps, structured salary and archive state. Use current salary/work-format
-fields and handle deprecated legacy fields explicitly. Public expiry/deletion
-coverage is not guaranteed; private employer archive endpoints are not a global
-removal feed. [Official OpenAPI](https://api.hh.ru/openapi/en/redoc).
-
-**Quota:** no current guaranteed free daily request allowance was verified.
-A [provider announcement](https://hh.ru/article/22812) describes vacancy viewing
-as free, but does not establish a present unlimited extraction entitlement.
-
-**Commercial/display/attribution:** standard terms require application registration
-and allow charges for some services. Clauses 4.3 and 4.6 restrict building another
-database for third-party access and transferring received data. Clause 3.11
-requires prompt removal of archived jobs and restricts altering materials.
-Trademark use is restricted; a generic attribution badge is not a substitute
-for permission. No blanket approved logo/backlink formula was verified.
-
-**Assessment (inference):** JobHub's public imported database appears to conflict
-with these baseline restrictions. A written agreement covering this use would
-be needed before selecting it for public supply.
-[Official API terms](https://hh.ru/article/15116).
-
-### Jooble Kazakhstan
-
-**Availability/auth:** official REST search; obtain a Kazakhstan-specific key
-through the [Kazakhstan API portal](https://kz.jooble.org/api/about). Keys are
-regional; keep the key-bearing request URL server-side and redact it in logs.
-The [connection guide](https://help.jooble.org/en/support/solutions/articles/60000922689-how-to-connect-to-the-jooble-rest-api)
-explicitly describes integration into another platform.
-
-**Free quota/pagination:** 500 requests per key **over its lifetime**, not monthly.
-JSON POST search; required keywords/location; page defaults to 1; `ResultOnPage`
-controls size (documented maximum not found). Response provides `totalCount`.
-No documented job-detail or deletion feed was found. Published/expiry/archive
-metadata and structured employer identifiers are absent from the reviewed
-response specification. See the companion mapping for available fields.
-[REST documentation, updated August 16, 2026](https://help.jooble.org/en/support/solutions/articles/60001448238).
-
-**Commercial/display/attribution:** the connection guide references API terms but
-the reviewed public material did not establish exact API-specific caching,
-commercial redistribution, retention or branding rules. The general Kazakhstan
-terms restrict republication without express written permission (§4(i)).
-Do not infer an unrestricted licence from receiving a key. Confirm API terms
-override or expressly permit this use, including upstream content rights.
-[Kazakhstan terms](https://kz.jooble.org/info/terms).
-
-**Limitations:** search coverage is a sample; continuous refresh needs a separate
-quota arrangement. Missing expiry signals require a conservative local freshness
-policy approved against provider terms. No authenticated Kazakhstan response was
-tested because no key was requested or supplied.
-
-### Adzuna
-
-**Availability/auth:** official REST API; `app_id` and `app_key` query parameters;
-country-specific `/v1/api/jobs/{country}/search/{page}`.
-[Official overview](https://developer.adzuna.com/overview).
-
-**Kazakhstan:** not verified. The public reference did not establish a supported
-`kz` dataset; the interactive documentation exposed no usable country list in
-this check. A [2022 market expansion announcement](https://www.adzuna.com/blog/adzuna-is-live-across-20-countries-globally/)
-is not evidence of present Kazakhstan API coverage. Do not invent `/jobs/kz` or
-equate jobs mentioning Kazakhstan in another market with a Kazakhstan feed.
-
-**Pagination/data:** page in URL, starting at 1; `results_per_page`; maximum not
-verified. Search exposes ID/title, description snippet, created timestamp,
-redirect URL, company display name, location hierarchy/coordinates, category,
-contract type/time and salary bounds with a predicted-salary flag. Stable company
-ID, full description, public expiry/archive/deletion feed are not established by
-the reviewed search response. Currency/period/gross must not be guessed.
-[Search reference](https://developer.adzuna.com/docs/search).
-
-**Quota/terms/attribution:** default limits are 25/minute, 250/day, 1,000/week and
-2,500/month; all apply. Publishing listings is an expressly permitted use.
-Other commercial, government or academic uses get a 14-day validation period;
-ongoing research/aggregation may require written consent/licensing. This is not
-a blanket 14-day restriction on permitted advert publishing. Each displayed ad
-requires the linked “Jobs by Adzuna” treatment, at least 116 × 23 px, using the
-Adzuna logo and relevant local domain. Jobsworth estimates have separate
-attribution. Termination requires removing acquired data from website pages.
-[API terms](https://developer.adzuna.com/docs/terms_of_service).
-
-### Additional Kazakhstan lead: Enbek
-
-The official [frames and feeds page](https://www.enbek.kz/ru/web-services) links
-vacancy XML in Jooble and Yandex formats. Both listed endpoints
-([Jooble format](https://www.enbek.kz/ru/xml/jooble),
-[Yandex format](https://www.enbek.kz/ru/xml/yandex)) returned 404 during this check.
-This does not establish that feeds are permanently discontinued.
-
-Kazakhstan relevance is clear; operational availability, authentication, free
-quota, pagination, exported fields/salary/company data, redistribution and
-attribution permissions remain unverified. Official
-[employer guidance](https://www.enbek.kz/kk/advice/4169) describes a 30-day vacancy
-listing period and archival, but this does not establish XML removal semantics.
-Do not infer an open-data licence from free public portal access. Ask Enbek for
-the current official export/partnership route before considering it as supply.
-
-## Approval boundary and next-phase questions
-
-Approve provider choice and schema direction first. A later POC should establish:
-
-1. Written permission for the exact display/storage model, attribution, permitted
-   transformations, retention and removal schedule; any upstream restrictions.
-2. A Kazakhstan key and verified regional endpoint, kept only on the server.
-3. Available quota, paid expansion, maximum page size and rate-limit behavior.
-4. Actual Kazakhstan quality, stable IDs and URLs, timestamp timezone, update
-   semantics, archive handling and acceptable freshness window.
-5. Idempotent repeat import and honest outbound-only display, without suggesting
-   an application was submitted through JobHub.
-
-This research used official documentation and officially linked feed endpoints.
-It did not collect website listings or exercise authenticated provider APIs.
+Исследование использовало официальную документацию и официально
+указанные ссылки на feed. Списки вакансий сайтов не собирались,
+авторизованные API провайдеров не вызывались.

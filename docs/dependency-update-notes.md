@@ -1,22 +1,23 @@
-# Dependency update notes
+# Обновление зависимостей
 
-Treat dependency updates as behavior changes unless they are clearly isolated.
+Считайте обновление зависимостей изменением поведения, если изоляция не доказана.
 
-## Frontend
+## Фронтенд
 
-- Keep `package.json` and `package-lock.json` together.
-- Run lint, typecheck and build after updating frontend packages.
-- Check routes that use upgraded UI, router, form or query libraries.
-- Avoid combining package updates with unrelated feature work.
+- Обновляйте `package.json` и `package-lock.json` вместе.
+- После обновления запускайте lint, typecheck и build.
+- Проверяйте маршруты, использующие обновлённые библиотеки UI, маршрутизации,
+  форм или запросов.
+- Не смешивайте обновление пакетов с посторонними функциями.
 
-## Backend
+## Бэкенд
 
-- Keep `go.mod` and `go.sum` together.
-- Run package tests plus `go test -race ./...`, `go vet ./...` and
+- Обновляйте `go.mod` и `go.sum` вместе.
+- Запускайте тесты пакета, `go test -race ./...`, `go vet ./...` и
   `go build ./...`.
-- Check provider clients after HTTP, JSON or test-library changes.
+- После изменений HTTP, JSON или тестовых библиотек проверяйте клиентов провайдеров.
 
-## Review notes
+## Что указать при проверке
 
-Document why the dependency changed, whether it is security-driven and which
-runtime behavior was checked.
+Укажите причину обновления, связано ли оно с безопасностью и какое поведение
+проверено во время работы.

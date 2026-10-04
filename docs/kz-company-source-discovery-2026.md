@@ -1,65 +1,87 @@
-# Kazakhstan company vacancy source discovery — batch 1
+# Исследование источников вакансий компаний Казахстана — первая партия
 
-Date: 2026-09-25  
-Scope: the 20 URLs explicitly authorized for batch 1. This was a read-only, dry-run discovery. No database, ingestion, staging, production, or source registry changes were made.
+Дата: 2026-09-25. Проверены 20 явно разрешённых URL в режиме только чтения.
+База, импорт, staging, Production и реестр источников не изменялись.
 
-## Method and limits
+## Метод и ограничения
 
-Each URL was passed to the existing safe Go website scanner with a per-site limit of 15 outbound HTTP requests, the existing SSRF/public-address validation, and the existing 3 MiB response limit. The sites were scanned sequentially. Total observed HTTP requests: **69 / 300 maximum**. No credentials, cookies, request bodies, or private data were collected.
+Каждый URL обрабатывался существующим безопасным Go-сканером: до 15 HTTP-запросов
+на сайт, проверка SSRF/публичного адреса, ответ до 3 МиБ. Сайты проверялись
+последовательно. Всего **69 запросов из максимальных 300**. Учётные данные,
+cookie, тела запросов и личные данные не собирались.
 
-The static pass ran first for all 20 sites. The browser fallback was **not run** in this discovery batch: the current renderer is an optional production scanner path with a 100-request internal budget, while this research request requires a separate 40-request/site cap. No code was changed solely to run an unbounded diagnostic. Sites with zero static results are therefore recorded as unresolved or blocked; this is not evidence that their public vacancies do not exist.
+Сначала все 20 сайтов прошли статическую проверку. Браузерный fallback в этой
+партии **не запускался**: у renderer внутренний бюджет 100 запросов, а
+исследование требовало отдельного ограничения 40 на сайт. Код ради
+неограниченной диагностики не менялся. Нулевой статический результат означает
+«не выяснено» или «заблокировано», а не отсутствие вакансий на сайте.
 
-## Results
+## Результаты
 
-| Company | URL | Primary classification | Static requests | Vacancy URLs | Normalized | Skipped | Status / reason |
+| Компания | URL | Классификация | Статических запросов | URL вакансий | Нормализовано | Пропущено | Состояние / причина |
 |---|---|---:|---:|---:|---:|---:|---|
-| Halyk Bank | https://halykbank.kz/about/career | STATIC_HTML | 4 | 2 | 2 | 0 | succeeded |
-| Tele2 | https://tele2.kz/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Technodom | https://hr.technodom.kz/ | STATIC_HTML | 15 | 39 | 12 | 27 | request budget exhausted |
-| Sulpak | https://job.sulpak.kz/WorkMap/WorkMap | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
+| Halyk Bank | https://halykbank.kz/about/career | STATIC_HTML | 4 | 2 | 2 | 0 | успешно |
+| Tele2 | https://tele2.kz/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Technodom | https://hr.technodom.kz/ | STATIC_HTML | 15 | 39 | 12 | 27 | исчерпан лимит запросов |
+| Sulpak | https://job.sulpak.kz/WorkMap/WorkMap | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
 | BI Group | https://bi.group/ru/career | BLOCKED | 1 | 0 | 0 | 0 | HTTP_FAILED |
-| Kolesa Group | https://kolesa.group/career/job | STATIC_HTML | 5 | 3 | 3 | 0 | succeeded |
-| ERG | https://erg.kz/ru/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Magnum | https://hr.magnum.kz/ | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Kazakhmys | https://www.kazakhmys.kz/ru/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
+| Kolesa Group | https://kolesa.group/career/job | STATIC_HTML | 5 | 3 | 3 | 0 | успешно |
+| ERG | https://erg.kz/ru/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Magnum | https://hr.magnum.kz/ | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Kazakhmys | https://www.kazakhmys.kz/ru/career | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
 | Qarmet | https://job.qarmet.kz/ | BLOCKED | 1 | 0 | 0 | 0 | TRANSPORT_FAILED |
-| QazaqGaz | https://www.qazaqgaz.kz/ru/karera | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Samruk-Energy | https://samruk-energy.kz/ru/company/vacancy | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Kazatomprom | https://hrekap.kazatomprom.kz/ | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| KazMunayGas | http://work.kmg.kz/ | JS_SPA_UNRESOLVED | 4 | 0 | 0 | 0 | redirected to HTTPS; no static vacancy links |
+| QazaqGaz | https://www.qazaqgaz.kz/ru/karera | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Samruk-Energy | https://samruk-energy.kz/ru/company/vacancy | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Kazatomprom | https://hrekap.kazatomprom.kz/ | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| KazMunayGas | http://work.kmg.kz/ | JS_SPA_UNRESOLVED | 4 | 0 | 0 | 0 | перенаправление на HTTPS; статических ссылок на вакансии нет |
 | Tengizchevroil | https://tcoext.azure.chevron.com/ru/career/vacancy | BLOCKED | 1 | 0 | 0 | 0 | TRANSPORT_FAILED |
 | SMALL | https://small.kz/ru/astana/job | BLOCKED | 1 | 0 | 0 | 0 | HTTP_FAILED |
-| KEGOC | https://www.kegoc.kz/ | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | career URL was not exposed in static HTML |
-| RG Brands | https://rgbrands.com/career | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | succeeded, no static vacancy links |
-| Beeline Kazakhstan | https://beeline.kz/ru | JS_SPA_UNRESOLVED | 13 | 0 | 0 | 0 | succeeded, no static vacancy links |
+| KEGOC | https://www.kegoc.kz/ | JS_SPA_UNRESOLVED | 2 | 0 | 0 | 0 | URL раздела карьеры не найден в статическом HTML |
+| RG Brands | https://rgbrands.com/career | JS_SPA_UNRESOLVED | 3 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
+| Beeline Kazakhstan | https://beeline.kz/ru | JS_SPA_UNRESOLVED | 13 | 0 | 0 | 0 | успешно; статических ссылок на вакансии нет |
 | Astana Motors Manufacturing Kazakhstan | https://www.astanamotors-manufacturing.kz/ | BLOCKED | 1 | 0 | 0 | 0 | HTTP_FAILED |
 
-Classification is intentionally conservative. `JS_SPA_UNRESOLVED` means the bounded static pass did not expose usable vacancy records; it does not claim that a browser/API endpoint exists. No approved source was detected as a known ATS during this pass.
+Классификация намеренно осторожная. `JS_SPA_UNRESOLVED` означает, что
+ограниченная статическая проверка не нашла пригодных записей; наличие
+браузерного/API endpoint не доказано. Известная ATS среди подтверждённых
+источников на этом этапе не обнаружена.
 
-## Normalized samples
+## Примеры нормализованных записей
 
-The three successful static sources produced these public vacancy URLs:
+Три успешных статических источника дали следующие публичные URL:
 
-- Halyk Bank: [vacancies/2](https://halykbank.kz/about/career/vacancies/2), [vacancies/1](https://halykbank.kz/about/career/vacancies/1). The returned page is a vacancy listing page; the scanner preserved the original URL and left employer, location, salary, and employment type unknown where the page did not provide a field in the normalized detail shape.
-- Technodom: [Оператор котельной](https://hr.technodom.kz/vacancies/operator-kotelnoj/), [Оператор ПРТ](https://hr.technodom.kz/vacancies/operator-prt/), [Энергетик](https://hr.technodom.kz/vacancies/energetik/), [Инженер-электрик](https://hr.technodom.kz/vacancies/inzhener-elektrik-2/), [Слесарь-сантехник](https://hr.technodom.kz/vacancies/slesar-santehnik/). Twelve records normalized; 27 candidate links were skipped as malformed or non-vacancy pages within the 15-request budget.
-- Kolesa Group: [Middle GO Backend-разработчик Core team](https://kolesa.group/career/job/middle-go-backend-razrabotcik-core-team-136951220), [Fullstack Web QA](https://kolesa.group/career/job/fullstack-web-qa-v-krishakz-136312001), [Разработчик бизнес процессов (Middle)](https://kolesa.group/career/job/razrabotcik-biznes-processov-middle-137563145). Three records normalized.
+- Halyk Bank: [vacancies/2](https://halykbank.kz/about/career/vacancies/2), [vacancies/1](https://halykbank.kz/about/career/vacancies/1). Страница представляет список вакансий. Сканер сохранил исходный URL и не выдумывал работодателя, место, зарплату и занятость там, где страница не давала этих полей.
+- Technodom: [Оператор котельной](https://hr.technodom.kz/vacancies/operator-kotelnoj/), [Оператор ПРТ](https://hr.technodom.kz/vacancies/operator-prt/), [Энергетик](https://hr.technodom.kz/vacancies/energetik/), [Инженер-электрик](https://hr.technodom.kz/vacancies/inzhener-elektrik-2/), [Слесарь-сантехник](https://hr.technodom.kz/vacancies/slesar-santehnik/). Нормализовано 12 записей; 27 ссылок пропущены как некорректные или не ведущие на вакансии в пределах бюджета 15 запросов.
+- Kolesa Group: [Middle GO Backend-разработчик Core team](https://kolesa.group/career/job/middle-go-backend-razrabotcik-core-team-136951220), [Fullstack Web QA](https://kolesa.group/career/job/fullstack-web-qa-v-krishakz-136312001), [Разработчик бизнес процессов (Middle)](https://kolesa.group/career/job/razrabotcik-biznes-processov-middle-137563145). Нормализованы три записи.
 
-No normalized rows were persisted. No browser-rendered sample was produced.
+Нормализованные записи не сохранялись. Браузерных примеров на этом этапе нет.
 
-## Follow-up boundary
+## Границы следующего этапа
 
-The unresolved set is suitable for a separately approved browser/API diagnostic, capped at five sites and 40 browser/resource requests per site. This document does not authorize that follow-up, an adapter, a source-registry entry, or production enablement. Existing proven Kaspi, Kcell, and Air Astana sources were not rescanned.
+Неопределённые сайты можно проверить отдельно разрешённой браузерной/API
+диагностикой: не более пяти сайтов и 40 запросов на каждый. Этот документ
+не разрешает такую проверку, создание адаптера, запись в реестр или
+включение в Production. Ранее проверенные Kaspi, Kcell и Air Astana
+повторно не сканировались.
 
-## Browser follow-up
+## Дополнительная браузерная проверка
 
-The renderer now accepts a caller-requested lower budget. Its effective budget is `min(requested, 100)`; zero or negative requests retain the existing 100-request default. The five selected sites were working, non-blocked, career-specific unresolved entries from the static pass. No API or ATS adapter was implemented.
+Renderer теперь принимает меньший бюджет от вызывающего кода: фактически
+`min(requested, 100)`; нулевое и отрицательное значения оставляют лимит 100.
+Выбраны пять доступных специализированных страниц карьеры с неопределённым
+результатом статической проверки. API/ATS-адаптеры не создавались.
 
-| Company | Browser | Effective budget | Requests used | Rendered vacancy URLs | API/ATS | Stable ID | Observed count | Classification | Recommended next action |
+| Компания | Браузер | Лимит | Запросов | URL вакансий | API/ATS | Стабильный ID | Найдено | Классификация | Следующий шаг |
 |---|---|---:|---:|---:|---|---|---:|---|---|
-| Tele2 | Chromium fallback | 40 | 0 | 0 | none observed | unknown | unknown | JS_SPA_UNRESOLVED | obtain a separately approved public API/network diagnostic |
-| Sulpak | Chromium fallback | 40 | 28 | 0 | none observed | unknown | 0 observable | JS_SPA_UNRESOLVED | inspect an approved public endpoint if one is documented |
-| ERG | Chromium fallback | 40 | 0 | 0 | none observed | unknown | unknown | JS_SPA_UNRESOLVED | obtain a separately approved public API/network diagnostic |
-| Magnum | Chromium fallback | 40 | 0 | 0 | none observed | unknown | unknown | JS_SPA_UNRESOLVED | obtain a separately approved public API/network diagnostic |
-| Kazakhmys | Chromium fallback | 40 | 40 | 0 | none observed | unknown | 0 observable | JS_SPA_UNRESOLVED | investigate only a documented public API or site-provided feed |
+| Tele2 | резервный Chromium | 40 | 0 | 0 | не обнаружен | неизвестен | неизвестно | JS_SPA_UNRESOLVED | отдельно согласовать диагностику публичного API/сетевых запросов |
+| Sulpak | резервный Chromium | 40 | 28 | 0 | не обнаружен | неизвестен | 0 наблюдаемых | JS_SPA_UNRESOLVED | проверить согласованный публичный endpoint, если он задокументирован |
+| ERG | резервный Chromium | 40 | 0 | 0 | не обнаружен | неизвестен | неизвестно | JS_SPA_UNRESOLVED | отдельно согласовать диагностику публичного API/сетевых запросов |
+| Magnum | резервный Chromium | 40 | 0 | 0 | не обнаружен | неизвестен | неизвестно | JS_SPA_UNRESOLVED | отдельно согласовать диагностику публичного API/сетевых запросов |
+| Kazakhmys | резервный Chromium | 40 | 40 | 0 | не обнаружен | неизвестен | 0 наблюдаемых | JS_SPA_UNRESOLVED | изучать только документированный публичный API или ленту сайта |
 
-Tele2, ERG, and Magnum did not trigger the existing browser fallback because the bounded static pass did not mark their pages as productive SPA candidates. Sulpak and Kazakhmys rendered within the 40-request cap but exposed no normalized vacancy records; Kazakhmys consumed the full cap. No public JSON vacancy payload, stable ID, pagination contract, or ATS endpoint was observed in this diagnostic. “0 observable” means zero records were exposed by the normal rendered DOM/structured-data path, not zero vacancies on the company site.
+Для Tele2, ERG и Magnum статическая проверка не определила подходящую SPA,
+поэтому fallback не сработал. Sulpak и Kazakhmys отобразились в пределах
+40 запросов, но не дали нормализованных вакансий; Kazakhmys исчерпал лимит.
+Публичных JSON-записей, стабильных ID, контракта пагинации и ATS endpoint
+не найдено. «0 наблюдаемых» означает отсутствие записей в обработанном
+DOM/structured-data, а не отсутствие вакансий у компании.

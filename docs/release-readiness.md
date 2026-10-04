@@ -1,23 +1,23 @@
-# Release readiness
+# Готовность к выпуску
 
-Use this lightweight checklist before tagging or deploying an MVP increment.
+Проверьте перед созданием тега или развёртыванием следующей версии MVP.
 
-## Code health
+## Состояние кода
 
-- Backend tests, vet, build and sqlc generation complete.
-- Frontend lint, typecheck and build complete.
-- `git diff --check` reports no whitespace issues.
-- Generated files are up to date when their sources changed.
+- Выполнены тесты backend, vet, build и при необходимости генерация sqlc.
+- Выполнены lint, typecheck и build frontend.
+- `git diff --check` не показывает проблем с пробелами.
+- Генерируемые файлы обновлены при изменении исходников.
 
-## Product checks
+## Проверка продукта
 
-- Candidate and employer happy paths still work locally.
-- Public job search and job detail pages handle native and imported vacancies.
-- Company catalog and company profile pages load with empty and populated data.
-- Kazakh and Russian locales both render the touched flows.
+- Основные сценарии соискателя и работодателя работают локально.
+- Поиск и страница вакансии обрабатывают собственные и импортированные записи.
+- Каталог и страница компании работают с пустыми и заполненными данными.
+- Изменённые сценарии отображаются на казахском и русском языках.
 
-## Operational checks
+## Эксплуатационные проверки
 
-- No secrets or real connection strings are in commits.
-- Remote migration version is checked before running staging migrations.
-- Provider quota is not consumed without explicit authorization.
+- В коммитах нет секретов и реальных строк подключения.
+- Перед миграцией staging проверена текущая версия.
+- Лимит провайдера не расходуется без явного разрешения.

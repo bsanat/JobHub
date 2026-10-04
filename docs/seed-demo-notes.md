@@ -1,20 +1,20 @@
-# Seed demo notes
+# Загрузка демонстрационных данных
 
-`make seed-demo` loads local demo data through the Go seed command.
+`make seed-demo` загружает локальные демоданные через Go-команду.
 
-## Intended use
+## Для чего использовать
 
-- Local product walkthroughs.
-- Browser QA for candidate and employer happy paths.
-- Empty-versus-populated UI comparisons.
-- Development environments where synthetic data is acceptable.
+- Локальная демонстрация продукта.
+- Проверка основных сценариев соискателя и работодателя в браузере.
+- Сравнение пустого и заполненного интерфейса.
+- Окружения разработки, допускающие синтетические данные.
 
-## Safety rules
+## Безопасность
 
-- Do not run seed commands against staging or production.
-- Do not mix demo data with private resumes or real account data.
-- Keep demo credentials and names synthetic.
-- Re-run local migrations first when schema changes affect seeded tables.
+- Не запускайте seed-команды на staging или Production.
+- Не смешивайте демоданные с реальными аккаунтами и резюме.
+- Используйте вымышленные имена и учётные данные.
+- После изменения схемы сначала выполните локальные миграции.
 
-When a feature depends on demo data, document the expected route and account role
-in the PR or handoff.
+Если функция зависит от демоданных, укажите ожидаемый маршрут и роль
+аккаунта в PR или передаче задачи.

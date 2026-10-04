@@ -1,21 +1,20 @@
-# Developer command reference
+# Справочник команд разработчика
 
-This reference collects the commands that are most useful during JobHub local
-development. It is intentionally short; keep detailed feature or provider notes
-in the domain-specific documents under `docs/`.
+Краткий список команд для локальной разработки JobHub. Подробности о функциях
+и провайдерах находятся в отдельных документах `docs/`.
 
-## Local startup
+## Локальный запуск
 
-| Task | Command | Notes |
+| Задача | Команда | Примечание |
 | --- | --- | --- |
-| Start the POC development stack | `make dev` | Uses the local POC database and does not modify staging Supabase data. |
-| Start Docker services with an empty local database | `make local-up` | Builds and starts PostgreSQL, migrations and backend containers. |
-| Stop Docker services | `make local-down` | Stops the local Compose profile. |
-| Apply local migrations only | `make migrate-local` | Uses the local Docker PostgreSQL service. |
-| Import Jooble POC vacancies | `make import-jooble` | Requires `JOOBLE_API_KEY` in `.env`; request count remains capped. |
-| Seed demo data | `make seed-demo` | Loads local demo data through the Go command. |
+| Запустить стек разработки | `make dev` | Локальная POC-база; данные staging Supabase не меняются. |
+| Запустить Docker-сервисы с пустой базой | `make local-up` | Собирает и запускает PostgreSQL, миграции и backend. |
+| Остановить Docker-сервисы | `make local-down` | Останавливает локальный профиль Compose. |
+| Применить локальные миграции | `make migrate-local` | Использует локальный PostgreSQL в Docker. |
+| Импортировать POC-вакансии Jooble | `make import-jooble` | Нужен `JOOBLE_API_KEY` в `.env`; число запросов ограничено. |
+| Загрузить демоданные | `make seed-demo` | Локальные данные через Go-команду. |
 
-## Frontend workflow
+## Работа с frontend
 
 ```sh
 cd frontend
@@ -23,10 +22,10 @@ npm ci
 npm run dev
 ```
 
-The default Vite URL is `http://localhost:5173`. Keep `VITE_API_URL` pointed at
-the local backend unless a task explicitly needs another environment.
+Адрес Vite по умолчанию — `http://localhost:5173`. Для обычной разработки
+`VITE_API_URL` должен указывать на локальный backend.
 
-## Backend workflow
+## Работа с backend
 
 ```sh
 docker compose --profile local up -d postgres
@@ -40,12 +39,11 @@ cd backend
 go run ./cmd/api
 ```
 
-Do not run the Docker backend and the manual Go backend on the same port at the
-same time.
+Не запускайте backend из Docker и Go-процесс вручную на одном порту одновременно.
 
-## Verification
+## Проверки
 
-Backend checks:
+Backend:
 
 ```sh
 cd backend
@@ -55,7 +53,7 @@ go build ./...
 go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 ```
 
-Frontend checks:
+Frontend:
 
 ```sh
 cd frontend
@@ -64,18 +62,17 @@ npm run typecheck
 npm run build
 ```
 
-Repository checks:
+Репозиторий:
 
 ```sh
 git diff --check
 git status
 ```
 
-## Safety notes
+## Правила безопасности
 
-- Keep `.env`, Supabase keys, provider API keys and real connection strings out
-  of git.
-- Use `sslmode=disable` only for local Docker PostgreSQL.
-- Use `sslmode=require` for Supabase direct or session connections.
-- Run remote migrations only with the guarded `make migrate-version` and
-  `make migrate-staging` flow described in `README.md`.
+- Не добавляйте в Git `.env`, ключи Supabase и провайдеров, реальные строки подключения.
+- Используйте `sslmode=disable` только для локального PostgreSQL.
+- Для прямых и сессионных подключений к Supabase нужен `sslmode=require`.
+- Удалённые миграции выполняйте только защищёнными командами
+  `make migrate-version` и `make migrate-staging` по инструкции в `README.md`.

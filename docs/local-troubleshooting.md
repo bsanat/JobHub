@@ -1,27 +1,26 @@
-# Local troubleshooting
+# Устранение локальных неполадок
 
-Use this page for common local development failures before reaching for broader
-debugging.
+Здесь собраны частые проблемы локальной разработки.
 
-## Backend port already in use
+## Порт backend занят
 
-Do not run the Docker backend and manual Go backend at the same time. Stop one
-process before starting the other.
+Не запускайте Docker backend и Go backend вручную одновременно. Остановите
+один процесс перед запуском другого.
 
-## Frontend cannot reach the API
+## Frontend не подключается к API
 
-- Check `VITE_API_URL`.
-- Check the backend health endpoint.
-- Check `FRONTEND_ORIGIN` in `.env`.
-- Restart Vite after changing environment variables.
+- Проверьте `VITE_API_URL`.
+- Проверьте endpoint состояния backend.
+- Проверьте `FRONTEND_ORIGIN` в `.env`.
+- После изменения переменных окружения перезапустите Vite.
 
-## Local database looks empty
+## Локальная база пуста
 
-- `make local-up` starts an empty local database.
-- `make dev` expects the local POC database described in `README.md`.
-- Jooble import requires `JOOBLE_API_KEY` and remains request-capped.
+- `make local-up` запускает пустую локальную базу.
+- `make dev` использует локальную POC-базу, описанную в `README.md`.
+- Импорт Jooble требует `JOOBLE_API_KEY`; число запросов ограничено.
 
-## Remote migration refused
+## Удалённая миграция отклонена
 
-Confirm `APP_ENV=staging`, `sslmode=require` and a direct or session connection
-on port `5432`.
+Проверьте `APP_ENV=staging`, `sslmode=require` и прямое либо сессионное
+подключение через порт `5432`.

@@ -1,54 +1,52 @@
-# MVP 0: native and external vacancy schema proposal
+# MVP 0: предложение по схеме собственных и внешних вакансий
 
-Status: design only, pending approval. No SQL migration or integration added.
-Read alongside [provider research](mvp0-vacancy-supply-research.md).
-The existing [MVP 1 contract](mvp1-api-contract.md) is unchanged and remains the
-next-phase native marketplace proposal.
+**Исторический проектный документ**, не инструкция по текущим миграциям.
+Читайте вместе с [исследованием провайдеров](mvp0-vacancy-supply-research.md)
+и [предложением контракта MVP 1](mvp1-api-contract.md).
 
-## Core model
+## Основная модель
 
-Use one future `jobhub.jobs` table with local UUIDs for stable JobHub URLs, and
-explicit source identity. Do not use external IDs as local primary keys. Native
-jobs retain their future company ownership/publication behavior. Imported jobs
-do not require invented employer users, memberships or applications.
+Одна таблица `jobhub.jobs` с локальным UUID для стабильных URL JobHub и
+явной идентичностью источника. Внешний ID не становится локальным первичным
+ключом. Собственные вакансии сохраняют связь с компанией и жизненный цикл;
+для импортированных не создаются вымышленные пользователи и отклики.
 
-| Field/concept | Proposed meaning |
+| Поле | Предлагаемый смысл |
 | --- | --- |
-| `id` | Local UUID, stable across source updates |
-| `source` | Non-null identity namespace: `jobhub`, `hh`, `jooble:kz`, `adzuna:gb` |
-| `external_id` | Text; null only for native jobs; preserve provider identifiers exactly |
-| `source_url` | Imported public landing/tracking URL; never a credential-bearing API URL |
-| `upstream_source_name` | Original publisher label from an aggregator, distinct from ingestion source |
-| `company_id` | Nullable FK to local companies for imports; native requirements stay in MVP 1 |
-| `company_source_id` | Optional FK to a known provider employer identity |
-| `company_name_raw` | Source-supplied company label even when no identity can be resolved |
-| `application_method` | `external` for imported MVP 0 jobs; native internal behavior deferred |
-| `apply_url` | Optional provider-authorized application URL; otherwise use source landing URL |
-| `description`, `description_kind` | Plain/sanitized text and `full` or `snippet`; never imply a snippet is full content |
-| `source_status` | External state: `unknown`, `active`, `archived`, `expired`, `removed` |
-| `publication_status` | Future native lifecycle, independent of external status |
-| `first_seen_at`, `last_seen_at` | Local first/latest observation in a successful provider response |
-| `last_synced_at` | Last successful validation and normalization into the database |
-| `fresh_until` | JobHub display freshness deadline, under provider-approved policy |
-| `external_created_at`, `external_published_at` | Provider creation/publication times, nullable |
-| `external_updated_at`, `external_expires_at`, `external_archived_at` | Provider events, nullable, never fabricated from local sync time |
-| `created_at`, `updated_at` | Local persistence timestamps; separate from upstream history |
+| `id` | Локальный UUID, неизменный при обновлениях источника |
+| `source` | Ненулевое пространство имён: `jobhub`, `hh`, `jooble:kz`, `adzuna:gb` |
+| `external_id` | Точный текстовый ID провайдера; `NULL` только у собственных вакансий |
+| `source_url` | Публичная исходная ссылка, без учётных данных API |
+| `upstream_source_name` | Имя исходного публикатора у агрегатора, не источник импорта |
+| `company_id` | Необязательная ссылка на локальную компанию при импорте |
+| `company_source_id` | Необязательная ссылка на идентификатор работодателя провайдера |
+| `company_name_raw` | Название, полученное от источника без обязательного сопоставления |
+| `application_method` | Для внешних вакансий `external` |
+| `apply_url` | Разрешённая провайдером ссылка для отклика; иначе исходная страница |
+| `description`, `description_kind` | Текст и признак `full`/`snippet`; сниппет не выдаётся за полное описание |
+| `source_status` | `unknown`, `active`, `archived`, `expired`, `removed` |
+| `publication_status` | Отдельный жизненный цикл собственной вакансии |
+| `first_seen_at`, `last_seen_at` | Первое и последнее успешное наблюдение |
+| `last_synced_at` | Последняя успешная нормализация в БД |
+| `fresh_until` | Срок актуальности показа по разрешённой политике |
+| `external_created_at`, `external_published_at` | Время провайдера, если известно |
+| `external_updated_at`, `external_expires_at`, `external_archived_at` | События провайдера; не заменяются временем локальной синхронизации |
+| `created_at`, `updated_at` | Локальное время сохранения |
 
-Provider family/market belong in a small `job_sources` registry, keyed by `source`.
-Regional namespaces avoid assuming IDs from country-specific APIs are globally
-unique. HH uses one namespace across its shared API. Never change namespace when
-rotating credentials or when an aggregator's original publisher label changes.
+Семейство провайдера и рынок относятся к реестру `job_sources` с ключом
+`source`. Региональные пространства имён не предполагают глобальную
+уникальность ID. HH использует одно пространство в общем API. При смене
+ключа или исходного издателя агрегатора пространство имён не меняется.
 
-The registry can describe enabled state, approved terms/version, attribution
-template, retention/freshness policy and allowed display fields. Credentials
-belong in server configuration or secret storage, never browser-visible rows.
-Raw JSON storage is optional and retention-limited, subject to explicit rights;
-do not create an unrestricted permanent mirror by default.
+Реестр может хранить состояние включения, версию разрешённых условий,
+атрибуцию, сроки хранения/актуальности и допустимые поля. Ключи остаются в
+серверных секретах. Сохранение исходного JSON необязательно и допустимо
+только с явно разрешённым сроком хранения: постоянное зеркало по умолчанию
+не создаётся.
 
-## Required identity constraints
+## Идентификаторы и ограничения
 
-Illustrative fragment for a future migration, not runnable DDL for the current
-infrastructure-only schema:
+Это иллюстрация будущей миграции, **не готовый DDL**:
 
 ```sql
 UNIQUE (source, external_id),
@@ -58,130 +56,116 @@ CHECK (
   (source <> 'jobhub'
     AND external_id IS NOT NULL AND length(btrim(external_id)) > 0
     AND source_url IS NOT NULL AND length(btrim(source_url)) > 0
-    AND application_method IS NOT NULL AND application_method = 'external')
+    AND application_method = 'external')
 )
 ```
 
-`source` is separately `NOT NULL` and a foreign key. PostgreSQL's ordinary UNIQUE
-permits multiple native rows with null external IDs, while rejecting duplicate
-imported `(source, external_id)` pairs. Do not use `NULLS NOT DISTINCT` here.
+`source` отдельно обязателен и ссылается на реестр. Обычный `UNIQUE`
+PostgreSQL допускает несколько `NULL` для собственных вакансий, но не
+повтор импортированной пары `(source, external_id)`. `NULLS NOT DISTINCT`
+здесь не нужен.
 
-Ingestion will use an atomic `INSERT ... ON CONFLICT (source, external_id)
-DO UPDATE`, retaining the local UUID and first-seen time. Concurrent runs must
-not allow older observations to overwrite newer state. Serialize per source or
-use an explicit observation/version guard. Missing optional fields in partial
-responses must not erase previously retrieved detail fields.
+Импорт использует атомарный `INSERT ... ON CONFLICT DO UPDATE`, сохраняя
+локальный UUID и время первого обнаружения. Параллельные запуски не должны
+перезаписывать новые сведения старым наблюдением: нужна сериализация по
+источнику или версия наблюдения. Пустые необязательные поля частичного
+ответа не стирают ранее полученные подробности.
 
-This prevents duplicates within a provider namespace. It intentionally does
-not merge the same real vacancy syndicated by multiple providers; future
-cross-source duplicate groups must preserve provenance, rights and independent
-removal behavior. Title/company string matching alone is not an identity rule.
+Это защищает от повторов **внутри** источника. Одна и та же вакансия у двух
+провайдеров остаётся разными записями с независимыми правами и удалением;
+совпадение названия и компании само по себе не доказывает тождество.
 
-## Companies
+## Компании
 
-Keep `companies` as local entities. Add `company_sources` with local `id`,
-`company_id`, `source`, `external_id`, source name/profile URL and sync timestamps;
-enforce `UNIQUE(source, external_id)`. This supplies the requested
-`external_company_id` concept without making one company's HH identity overwrite
-its identity at another provider.
+`companies` остаются локальными сущностями. Предлагаемая `company_sources`
+хранит локальные `id`, `company_id`, `source`, `external_id`, имя/URL профиля
+и времена синхронизации с `UNIQUE(source, external_id)`. Так ID компании у
+HH не перезаписывает её ID у другого провайдера.
 
-If a job carries `company_source_id`, enforce matching job source and local
-company identity through composite keys/FKs (or equivalent transactional
-validation). An import may have only `company_name_raw` and null company FKs.
-Do not invent company IDs or automatically merge identical names. An imported
-company is not automatically a verified JobHub employer. Future ownership
-claiming requires a separate verified workflow; provider verification and
-JobHub `is_verified` are distinct.
+Если указано `company_source_id`, источник и локальная компания должны
+совпадать; проверка возможна составным FK или транзакцией. Импорт может
+иметь только `company_name_raw` без FK. Нельзя выдумывать ID компаний или
+автоматически объединять одинаковые названия. Компания провайдера не
+становится проверенным работодателем JobHub. Подтверждение владения —
+отдельный процесс; верификация провайдера и `is_verified` JobHub различны.
 
-## Content and salary normalization
+## Текст, зарплата и даты
 
-Preserve raw location and provider area IDs; normalize country/city only when
-unambiguous. Preserve source language; interface i18n does not translate job
-content. Multi-valued work formats must not collapse silently into a misleading
-single value. Unknown experience does not mean junior; a years-of-experience
-range is not a reliable seniority label.
+Сохраняйте исходное место и ID региона провайдера; нормализуйте страну и
+город только однозначно. Язык вакансии не переводится локализацией UI.
+Множественные форматы работы нельзя без объяснения сводить к одному.
+Неизвестный опыт — не `junior`; диапазон лет не определяет грейд надёжно.
 
-Salary needs nullable decimal min/max, currency, period, gross/net (nullable
-boolean), `salary_raw`, and `salary_is_estimated`. Unknown salary is not zero.
-Do not infer monthly/KZT from the Kazakhstan search context. Parse free text
-only with explicit, tested rules; retain unknowns when ambiguous. Filters and
-sorting use comparable known currency/period values, matching the intent of the
-MVP 1 proposal. Estimated values remain visibly distinct.
+Для зарплаты нужны nullable decimal min/max, валюта, период, gross/net,
+`salary_raw`, `salary_is_estimated`. Отсутствие данных — не ноль. Не
+предполагайте месячный период или KZT из контекста поиска. Свободный текст
+разбирайте только проверенными явными правилами, иначе оставляйте значение
+неизвестным. Оценочные суммы показываются как оценочные.
 
-Normalize timestamps to UTC only with an offset or documented provider timezone.
-Retain an offsetless raw timestamp (if permitted) and leave its normalized value
-null until resolved. Do not substitute external update time for publication time.
-Use an explicitly labeled first-observed date when publication is unavailable;
-do not let periodic sync make an old vacancy appear newly published.
+Время переводится в UTC только при известном смещении или документированной
+зоне провайдера. Время без зоны сохраняется как исходное (если разрешено),
+нормализованное остаётся `NULL`. Время обновления не подменяет публикацию.
+Если дата публикации неизвестна, явно показывайте дату первого наблюдения;
+регулярная синхронизация не должна делать старую вакансию «новой».
 
-## Normalized Jooble POC mapping
+## Сопоставление Jooble POC
 
-This mapping follows the official [response specification](https://help.jooble.org/en/support/solutions/articles/60001448238).
-The left column contains provider fields; the right column is our proposed design.
+Основано на [официальной спецификации ответа](https://help.jooble.org/en/support/solutions/articles/60001448238).
 
-| Jooble field | JobHub destination |
+| Поле Jooble | Поле JobHub |
 | --- | --- |
-| Adapter configuration | `source = 'jooble:kz'`; local UUID generated once |
-| `id` | `external_id`, losslessly converted to text |
+| Конфигурация адаптера | `source='jooble:kz'`, локальный UUID |
+| `id` | `external_id`, без потери точности преобразованный в текст |
 | `title` | `title` |
-| `link` | `source_url`; outbound destination, preserved |
-| `source` | `upstream_source_name`, never ingestion `source` |
-| `company` | `company_name_raw`; company identity unresolved |
-| `location` | `location_raw`; normalize only if unambiguous |
-| `snippet` | `description`; `description_kind = 'snippet'` |
-| `type` | Raw employment label; dictionary mapping or unknown |
-| `salary` | `salary_raw`; structured amounts only when unambiguous |
-| `updated` | `external_updated_at`, subject to timezone validation |
-| No supplied equivalent | External publication/expiry/company ID stay null |
-| Successful local ingestion | Set observation/sync timestamps and policy freshness |
+| `link` | `source_url`, исходный адрес перехода |
+| `source` | `upstream_source_name`, не идентификатор импорта |
+| `company` | `company_name_raw`, идентичность компании ещё неизвестна |
+| `location` | `location_raw`, нормализация только при однозначности |
+| `snippet` | `description`, `description_kind='snippet'` |
+| `type` | Исходное название занятости, словарное сопоставление или неизвестно |
+| `salary` | `salary_raw`, структура — только при однозначности |
+| `updated` | `external_updated_at` после проверки временной зоны |
+| Поле отсутствует | Внешние публикация, истечение и ID компании остаются `NULL` |
+| Успешный импорт | Время наблюдения/синхронизации и срок актуальности |
 
-Treat a returned search listing as recently observed, not proof of an explicit
-provider `active` flag. Preserve `source_status = 'unknown'` where no status was
-supplied. Proposed CTA is “View on source”; its final wording/attribution must
-match the approved provider agreement. No internal application is created.
+Выдача поиска означает недавнее наблюдение, но не явный `active` провайдера.
+При отсутствии статуса сохраняется `source_status='unknown'`. Отклик ведёт
+на источник; окончательная подпись и атрибуция зависят от соглашения.
+Внутренний отклик не создаётся. Будущий HH-адаптер использует
+`company_sources`; Adzuna сохраняет флаг прогнозной зарплаты и redirect URL.
 
-For a future approved HH adapter, map its employer ID through `company_sources`;
-for Adzuna, retain its predicted-salary flag and outbound redirect URL. Neither
-adapter is part of this phase.
+## Актуальность, удаление и индексы
 
-## Freshness, removal and indexes
+Будущая `ingestion_runs` отдельно фиксирует источник, диапазон, время,
+успех, cursor/страницы, бюджет и безопасные коды ошибок. Неуспешный запуск
+не обновляет времена вакансий и не очищает базу.
 
-Track future `ingestion_runs` separately: source, requested scope, start/end,
-completion status, cursor/pages, request budget and sanitized errors. A failed
-run must not update job success timestamps or empty the database.
+Отсутствие в частичном, ранжированном или ограниченном поиске не доказывает
+истечение вакансии. Явный сигнал архивации/удаления скрывает сразу. Иначе
+применяйте согласованный срок локальной актуальности и обозначайте причину
+как устаревание, а не внешнее закрытие. После отзыва прав скрывайте и
+удаляйте содержимое по договору; сроки хранения касаются и tombstone.
 
-An item missing from a paginated, ranked, capped or filtered search is not proof
-it expired. Explicit archive/expiry/removal signals can suppress it immediately.
-Without those signals, use a provider-approved local freshness deadline to hide
-unrefreshed listings; label the reason stale, not externally expired. The chosen
-deadline is a JobHub policy, not an undocumented vendor guarantee. On permission
-revocation, disable display and purge content according to the agreement;
-even retained tombstones must follow allowed retention.
+Рекомендуемые индексы: уникальная пара источника и внешнего ID, источник с
+`last_seen_at`, FK компании, дата списка с UUID. Поисковые индексы добавляют
+после измерения запросов. Не включайте изменяющееся `now()` в условие
+частичного индекса — проверяйте актуальность при чтении.
 
-Suggested indexes: the required source/external-ID unique index; source plus
-last-seen for reconciliation; company FKs for joins; eligible listing date plus
-UUID for stable ordering. Add search indexes only against measured queries.
-Do not put volatile `now()` freshness expressions in partial-index predicates;
-evaluate freshness in reads and use static-state predicates where appropriate.
+## Связь с MVP 1
 
-## Relationship to MVP 1
+Собственная публичная вакансия требует активного работодателя и компании.
+Импортированной нужна отдельная ветка видимости: разрешённый источник и
+поля, внешний URL, свежесть, отсутствие известных сигналов закрытия.
+Нельзя создавать фиктивных работодателей ради условий собственной вакансии.
+Статус `unknown` допустим только в пределах согласованной свежести без
+гарантии действующего отклика у источника.
 
-The preserved MVP 1 contract requires an active employer account/company for
-native public vacancies. Imported jobs need a separately approved visibility
-branch: authorized/enabled source, permitted fields, valid outbound URL, fresh
-observation, and no known archive/removal/expiry. Do not fake employer accounts
-to satisfy the native predicate. Unknown provider state can be displayed only
-within the agreed freshness policy, with no guarantee that the source still
-accepts applications.
+Перед реализацией требуется контракт публичного ответа с метаданными
+источника, nullable полями, различием сниппета и внешним CTA. Поля источника
+управляются сервером и недоступны работодателю. Список, детали и счётчики
+применяют соответствующие общие правила видимости.
 
-Before implementation, formalize the imported public response variant: source
-metadata, nullable company/salary fields, snippet distinction and external CTA.
-The existing native write contract remains the next phase; this proposal does
-not silently change it. Source fields will be server-managed and unavailable
-to native employer edits. Public reads, details and counts must share their
-respective visibility rules.
-
-All future tables stay in `jobhub`, with RLS and deliberate server-role grants;
-no direct browser/Supabase Data API access. Keep React/Vite → Go → PostgreSQL.
-Auth, resumes, applications, employer ownership and admin moderation remain
-deferred; no such systems are introduced by this design.
+Будущие таблицы размещаются в `jobhub` с RLS и явными правами серверной роли;
+браузер не обращается к Supabase Data API напрямую. Цепочка остаётся
+React/Vite -> Go -> PostgreSQL. Этот исторический проект схемы не вводил
+авторизацию, резюме, отклики и модерацию.

@@ -1,350 +1,234 @@
-# MVP 1: proposed marketplace contract
+# MVP 1: предлагаемый контракт каталога и аккаунтов
 
-Status: proposal for approval; none of these endpoints exists yet except health.
-This is a Go API extension, not a Supabase Auth or browser database integration.
+**Историческое предложение, а не снимок текущего API.** Первоначально
+почти все перечисленные маршруты только планировались; с тех пор часть
+реализована. Проверяйте действующие маршруты по коду и `README.md`.
+Архитектура: Go API, не Supabase Auth и не прямой доступ браузера к БД.
 
-## Common conventions
+## Общие соглашения
 
-- Base path `/api/v1`. UUID identifiers and UTC RFC 3339 timestamps.
-- JSON uses snake_case; explicit frontend mappers expose camelCase domain models.
-- Single-resource responses return the resource directly. Paginated responses:
-  `{ "items": [], "page": 1, "page_size": 20, "total": 0, "total_pages": 0 }`.
-- Page and page_size must be positive integers; page_size is capped at 100.
-- Keep the existing error envelope and extend it with optional field errors:
-  `{ "error": { "code": "VALIDATION_ERROR", "message": "Invalid request", "fields": { "title": "required" } } }`.
-  UI maps stable codes to translations; it does not display raw backend errors.
-- 400 malformed/invalid payload; 401 missing/expired session; 403 prohibited role;
-  404 absent or inaccessible private resource; 409 duplicate/conflicting state;
-  413 oversized upload; 415 unsupported file type; 429 rate limit.
-- Reject unknown mutation fields, especially role/owner/candidate/verification
-  and moderation fields on endpoints where clients cannot set them.
-- Mutations return the persisted resource, except idempotent delete/unsave/logout
-  operations (204). Creation returns 201 and a Location header.
-- Public reads may optionally use a session for saved state. Private routes always
-  enforce session role, account status, and ownership in Go and SQL predicates.
+- Базовый путь `/api/v1`, ID в формате UUID, время UTC RFC 3339.
+- JSON использует `snake_case`; frontend преобразует DTO в модели с `camelCase`.
+- Одиночный ресурс возвращается напрямую. Страница:
+  `{"items":[],"page":1,"page_size":20,"total":0,"total_pages":0}`.
+- `page` и `page_size` — положительные целые, максимум `page_size=100`.
+- Ошибки сохраняют оболочку `error` с постоянным `code`, текстом и
+  необязательным `fields`; UI переводит код, а не показывает сырое сообщение.
+- `400` — неверный запрос; `401` — нет сессии; `403` — роль; `404` — нет
+  ресурса или доступа; `409` — конфликт; `413` — размер; `415` — тип файла;
+  `429` — ограничение частоты.
+- Неизвестные поля изменяющих запросов отклоняются, особенно роли,
+  владелец, статус проверки и модерация.
+- Создание возвращает `201` и `Location`; изменяющий запрос — сохранённый
+  ресурс, идемпотентное удаление/выход — `204`.
+- Приватные маршруты проверяют роль, состояние аккаунта и владение в Go
+  и SQL. Публичное чтение может использовать сессию для признака сохранения.
 
-## Authentication and role policy
+## Сессии и роли
 
-Use Go-managed opaque sessions stored as token hashes in PostgreSQL. Send the
-session through an HttpOnly cookie, Secure in production, SameSite=Lax; do not
-persist bearer tokens in localStorage. Deploy browser and API on the same site,
-preferably with `/api` reverse-proxied. Direct cross-origin development uses an
-explicit allowed origin plus credentials, never wildcard CORS.
+Непрозрачные серверные сессии хранятся в PostgreSQL как хеши токенов.
+Cookie: HttpOnly, Secure в Production, SameSite=Lax. Не храните bearer token
+в localStorage. Сайт и API должны работать под одним доменом через `/api`;
+при разработке на разных origins разрешается ровно нужный адрес с credentials,
+не wildcard CORS.
 
-Require CSRF protection for state-changing requests: enforce trusted Origin and
-validate a session-bound token sent via `X-CSRF-Token`. Protect login/register
-against cross-site requests too. Logout revokes the database session; rotate
-sessions on login. Use an audited password hashing library and rate-limit auth.
-Suspended users cannot use existing sessions to perform account actions.
+Изменяющие запросы требуют проверки Origin и связанного с сессией
+`X-CSRF-Token`; вход и регистрация также защищены от межсайтовых запросов.
+Выход отзывает сессию в БД, вход обновляет сессию. Для паролей нужна
+проверенная библиотека хеширования, для auth — ограничение частоты.
+Заблокированные пользователи не могут продолжать действия через старую сессию.
 
-| Method / path | Request | Response / authorization |
+| Метод и маршрут | Запрос | Результат |
 | --- | --- | --- |
-| POST `/auth/register` | `full_name`, `email`, `password`, `role: job_seeker or employer`, `company_name` required for employer | 201 session response; employer company + owner membership created atomically |
-| POST `/auth/login` | `email`, `password` | 200 session response and cookie; generic invalid-credentials error |
-| GET `/auth/me` | None | 200 session response, or 401 |
-| POST `/auth/logout` | CSRF token | 204 and cookie expiration; revoke session |
+| POST `/auth/register` | `full_name`, `email`, `password`, роль `job_seeker`/`employer`; для работодателя `company_name` | `201`, сессия; компания и владелец создаются атомарно |
+| POST `/auth/login` | `email`, `password` | Сессия и cookie; общая ошибка для неверных данных |
+| GET `/auth/me` | Без тела | Данные сессии или `401` |
+| POST `/auth/logout` | CSRF-токен | Отзыв сессии, очистка cookie, `204` |
 
-Session response:
+Ответ сессии содержит `user` (`id`, `full_name`, `email`, `role`, `status`),
+`csrf_token` и `expires_at`. Публичный запрос не может создать администратора,
+присоединиться к произвольной компании или установить верификацию.
+Первого администратора создаёт уполномоченный оператор серверной командой,
+без стандартного пароля в репозитории. На этом этапе новый работодатель
+получает одну компанию с ролью owner; приглашения отложены.
 
-```json
-{
-  "user": {
-    "id": "<uuid>",
-    "full_name": "<name>",
-    "email": "<email>",
-    "role": "employer",
-    "status": "active"
-  },
-  "csrf_token": "<session-bound-token>",
-  "expires_at": "<timestamp>"
-}
-```
+Для гостевого действия сохраняется только разрешённый внутренний URL и
+намерение. После входа пользователь возвращается к той же вакансии и форме,
+но отклик не отправляется автоматически. Внешний redirect запрещён.
 
-No public request may create or promote an admin, join an arbitrary company,
-or set company verification. Provision the initial admin through a backend CLI
-run by an authorized operator, with no default password or checked-in seed.
-MVP company membership is one owner per newly registered employer; invitations
-and association with an existing company are deferred pending verification rules.
+## Компании
 
-For a guest account action, retain an allowlisted internal return URL and action
-intent. After auth, return to the same vacancy and application form; do not
-automatically submit an application or accept external redirect URLs.
-
-## Companies
-
-| Method / path | Request / query | Response / authorization |
-| --- | --- | --- |
-| GET `/companies` | `q`, `industry`, `location`, `size`, `sort=relevant or open_jobs`, pagination | Public company summaries; active companies only |
-| GET `/companies/:id` | None | Public Company; inactive/private company returns 404 |
-| GET `/companies/:id/jobs` | Common job filters | Public job page with the same visibility predicate as `/jobs` |
-| GET `/employer/company` | None | Company managed by current employer |
-| POST `/companies` | `name`, optional company content below | Employer without a company; creates owner membership; 409 if already associated |
-| PATCH `/companies/:id` | Allowed company content fields | Owner only; immutable owner/verification fields |
-
-Company fields: `id`, `name`, `slug`, `description`, `industry`, `headquarters`,
-`locations: string[]`, `company_type`, `size`, optional `founded_year`, `website`,
-`logo_url`, `benefits: string[]`, server-controlled `is_verified`, `open_job_count`,
-`created_at`, `updated_at`. Use validated HTTPS links; never fetch arbitrary
-user-supplied URLs on the server. Initial logo/photo management may use validated
-URLs; file-upload workflow here is limited to resumes for MVP 1.
-
-Public summaries omit private owner contacts. Verification is false by default.
-Open vacancy counts use the public visibility predicate. Ratings, review counts,
-recommendation percentages and rank-by-rating are absent until MVP 2 exists.
-
-## Vacancies and search
-
-| Method / path | Behavior / authorization |
+| Метод и маршрут | Правила |
 | --- | --- |
-| GET `/jobs` | Public search; no login required |
-| GET `/jobs/:id` | Public visible vacancy detail; hidden/nonpublic resource returns 404 |
-| GET `/employer/jobs` | Current employer's vacancies, including drafts and paused jobs |
-| GET `/employer/jobs/:id` | Owner-only detail for editing, including moderation status |
-| POST `/jobs` | Employer with membership in company_id; draft initially |
-| PATCH `/jobs/:id` | Owner-only allowed field updates, including publication lifecycle |
-| DELETE `/jobs/:id` | Owner-only soft delete; preserves application and audit records |
+| GET `/companies` | Публичный список активных компаний с `q`, отраслью, местом, размером, сортировкой и страницей |
+| GET `/companies/:id` | Публичный профиль; приватная/неактивная компания — `404` |
+| GET `/companies/:id/jobs` | Вакансии с тем же правилом видимости, что `/jobs` |
+| GET `/employer/company` | Компания текущего работодателя |
+| POST `/companies` | Только работодатель без компании; создаётся членство owner, иначе `409` |
+| PATCH `/companies/:id` | Только владелец, без изменения owner и verification |
 
-Search parameters (same names in shared browser URLs and HTTP requests): `q`,
-`location`, repeated `workMode`, repeated `employmentType`, repeated `experience`,
-`salaryMin`, `currency`, `postedWithin=1d|3d|7d|30d`, `sort=newest|salary_desc|recommended`,
-`page`, `pageSize`, optional `companyId`. Go maps pageSize to response page_size.
-Omit empty/default values. Validate all enums and numeric bounds in both layers.
+Поля: `id`, `name`, `slug`, `description`, `industry`, `headquarters`,
+`locations`, `company_type`, `size`, `founded_year`, `website`, `logo_url`,
+`benefits`, серверный `is_verified`, `open_job_count`, `created_at`,
+`updated_at`. Проверяйте HTTPS-ссылки; сервер не скачивает произвольные
+пользовательские URL. Публичный ответ не содержит контакты владельца.
+Верификация по умолчанию false; счётчик вакансий использует общий фильтр
+видимости. Рейтинги и сортировка по отзывам отложены до MVP 2.
 
-`salaryMin` requires an explicit currency; no comparisons across currencies.
-Salary sorting also specifies a currency and groups only comparable periods;
-initial search salary filters use monthly salaries. Hidden salaries do not match
-salary filters. Sort with deterministic ID tie-breaking. Recommended initially
-means text relevance when q is set, otherwise newest; no AI score or personalized
-claim. Index/search behavior must be checked against representative data.
+## Вакансии и поиск
 
-Create/update content shape:
-
-```json
-{
-  "company_id": "<authorized-company-uuid>",
-  "title": "Backend Engineer",
-  "category": "software_development",
-  "description": "<plain text>",
-  "responsibilities": ["<responsibility>"],
-  "requirements": ["<requirement>"],
-  "nice_to_have": [],
-  "skills": ["Go", "PostgreSQL"],
-  "location": "Almaty",
-  "work_mode": "hybrid",
-  "employment_type": "full_time",
-  "experience_level": "middle",
-  "salary": {"min": 600000, "max": 900000, "currency": "KZT", "period": "month"},
-  "salary_visible": true,
-  "benefits": [],
-  "application_method": "internal",
-  "expires_at": null
-}
-```
-
-Employer ownership comes from session + membership, never a supplied user ID.
-company_id is fixed after creation. Bounds: nonempty title up to 160 characters,
-nonempty description on publishing, bounded text/array lengths, salary min >= 0,
-max >= min, allowed currency/enum values, expiration in the future. Drafts allow
-incomplete descriptions; publishing requires all necessary fields. Treat content
-as plain text, not executable HTML. New jobs are not implicitly verified.
-
-Response adds `id`, `company` summary, `publication_status`, owner-visible
-`moderation_status`, `created_at`, `updated_at`, `published_at`, `is_saved`.
-List responses include summary metadata; detail includes full content above.
-Public responses omit hidden salary amounts and internal moderation details.
-
-Publication: `draft → published → paused/closed`; paused can be republished;
-closed is terminal in MVP 1. Soft-deleted jobs cannot be republished.
-Moderation is separate: `active`, `pending_review`, `hidden`, `rejected`, `removed`.
-New jobs start active moderation; an admin can put them under review or hide them.
-
-A public job must satisfy **all**: published, active moderation, not expired,
-not deleted, active company, active employer account. Apply this predicate to
-search, details, company vacancies, counts, saved-job availability and application
-submission. Save records may remain, but hidden content is returned only as an
-unavailable reference to its owner, not as public vacancy content. Employer edits
-cannot clear moderation restrictions or set verification.
-
-## Candidate profile and private resume
-
-| Method / path | Behavior / authorization |
+| Метод и маршрут | Правила |
 | --- | --- |
-| GET `/profile` | Current candidate's private profile |
-| PATCH `/profile` | Candidate edits own allowed fields |
-| POST `/profile/resume` | Candidate uploads/replaces active resume, multipart field `file` |
-| GET `/profile/resume` | Active resume metadata, or 404 |
-| GET `/profile/resume/content` | Authorized own-file download/preview |
-| DELETE `/profile/resume` | Removes active resume from profile; 204 |
+| GET `/jobs`, GET `/jobs/:id` | Публичный поиск и детали; скрытая запись — `404` |
+| GET `/employer/jobs`, GET `/employer/jobs/:id` | Собственные вакансии, включая черновики; детали доступны владельцу |
+| POST `/jobs` | Работодатель создаёт черновик в своей компании |
+| PATCH `/jobs/:id` | Разрешённые поля и жизненный цикл, только владелец |
+| DELETE `/jobs/:id` | Мягкое удаление с сохранением откликов и аудита |
 
-Profile: `user_id`, `full_name`, optional `photo_url`, `city`, optional
-`birth_year`, `phone`, `about`, `current_position`, `desired_position`,
-`years_experience`, `experience_level`, reusable `skills: [{id,name}]`,
-`certifications`, `languages: [{language_code,proficiency}]`, links
-`{github,linkedin,portfolio,website}`, `search_status` and preferences.
-Proficiency: `native`, `fluent`, `A1`, `A2`, `B1`, `B2`, `C1`, `C2`.
-Search status: `actively_looking`, `open_to_offers`, `not_looking`.
+Параметры поиска: `q`, `location`, повторяемые `workMode`, `employmentType`,
+`experience`, `salaryMin`, `currency`, `postedWithin=1d|3d|7d|30d`,
+`sort=newest|salary_desc|recommended`, `page`, `pageSize`, `companyId`.
+Имена в URL браузера и запросе должны совпадать. `pageSize` переводится в
+`page_size` ответа. Пустые значения не передаются; enum и границы чисел
+проверяются в обоих слоях.
 
-`work_experience` entries: `id`, `company`, `position`, `employment_type`,
-`start_date`, optional `end_date`, `is_current`, `description`, `achievements`,
-`skill_ids`. `education` entries: `id`, `institution`, `degree`, `field_of_study`,
-`start_year`, optional `graduation_year`, `description`.
+Для `salaryMin` обязательна валюта: нельзя сравнивать разные валюты.
+Первоначально поиск зарплаты — по месячным значениям, скрытая зарплата
+в фильтр не попадает. Сортировка стабильна благодаря ID при равенстве.
+`recommended` означает текстовую релевантность при `q`, иначе новизну,
+не персональный или AI-рейтинг.
 
-`preferences`: salary with currency/period, locations, employment types,
-work modes, industries, roles. `privacy`: allow_employer_contact,
-show_profile_to_employers, show_salary_expectations, notification_preferences.
-Default private; dates of birth and contact details are never in public responses.
-MVP 1 has no public candidate-directory endpoint. Privacy defaults do not grant
-employers access beyond explicit applications. Return a server-derived completion
-summary based on defined fields, with missing-field keys for translated prompts.
+При создании/изменении передаются: разрешённый `company_id`, `title`,
+`category`, `description`, списки `responsibilities`, `requirements`,
+`nice_to_have`, `skills`, `benefits`, `location`, `work_mode`,
+`employment_type`, `experience_level`, объект `salary` с min/max/currency/
+period, `salary_visible`, `application_method`, `expires_at`.
+Владение определяется сессией и членством, а не переданным user ID;
+`company_id` после создания не меняется.
 
-PATCH arrays replace their corresponding owned collections atomically; missing
-fields are unchanged. Server validates all entry IDs belong to the caller.
-Reject incoherent dates. Never accept `user_id` changes.
+Название непустое до 160 символов. Для публикации нужно описание и другие
+обязательные поля; черновик может быть неполным. Зарплата неотрицательна,
+max не меньше min, сроки — в будущем, текст — не исполняемый HTML.
+В ответе дополнительно есть ID, компания, статусы публикации/модерации,
+даты, `is_saved`; публичный ответ скрывает невидимую зарплату и внутреннюю
+модерацию.
 
-Proposed initial resume storage: private persistent volume attached only to the
-Go service, plus metadata in PostgreSQL behind a storage interface. This permits
-later object storage without changing UI contracts. Production requires a
-backed-up persistent volume; container-local ephemeral storage is unacceptable.
-Horizontal deployment requires shared/object storage before launch.
+Переходы: `draft -> published -> paused/closed`. После паузы можно
+опубликовать снова; `closed` терминален, удалённую вакансию вернуть нельзя.
+Модерация отдельно: `active`, `pending_review`, `hidden`, `rejected`,
+`removed`. В исходном предложении новая вакансия начинала с `active`;
+администратор мог отправить её на проверку или скрыть. Это историческая
+деталь — действующие статусы проверяйте по коду.
 
-MVP accepts PDF up to 10 MiB, checks content type/signature and filename safely,
-uses opaque storage keys, streams through authorized Go endpoints, and does not
-serve uploads as static public assets. Metadata: `id`, `filename`, `content_type`,
-`size_bytes`, `uploaded_at`, `status`. A file is usable only after successful
-validation/storage. Replacements do not orphan active metadata on failure.
+Публичная вакансия должна быть опубликована, пройти модерацию, не истечь и
+не быть удалённой; компания и работодатель активны. Одинаковое правило
+применяется к поиску, деталям, компаниям, счётчикам и отправке отклика.
+Запись о сохранении может остаться, но скрытый текст вакансии не раскрывается.
+Работодатель не снимает ограничение модерации редактированием.
 
-Applications retain an immutable submitted resume version. Replacing/deleting
-the profile resume does not silently change an already submitted application.
-The UI explains that distinction before submission/removal. Retention/deletion
-policy for those submitted copies must be documented before public launch.
+## Профиль соискателя и приватное резюме
 
-## Saved jobs and applications
-
-| Method / path | Request / response / authorization |
+| Метод и маршрут | Правила |
 | --- | --- |
-| GET `/saved-jobs` | Candidate's paginated saved jobs |
-| PUT `/jobs/:id/saved` | Candidate saves visible job, idempotent, 204 |
-| DELETE `/jobs/:id/saved` | Candidate removes own save, idempotent, 204 |
-| POST `/jobs/:id/applications` | `{resume_id, message?}`; candidate, 201 Application |
-| GET `/applications` | Current candidate's applications only |
-| PATCH `/applications/:id/withdraw` | Owning candidate; persisted withdrawal |
-| GET `/employer/jobs/:id/applications` | Authorized company employer only |
-| PATCH `/employer/applications/:id` | `{status}`; authorized vacancy employer only |
-| GET `/employer/applications/:id/resume` | Submitted resume for an authorized vacancy only |
+| GET/PATCH `/profile` | Чтение и изменение собственного профиля |
+| POST `/profile/resume` | Загрузка/замена активного PDF, multipart `file` |
+| GET `/profile/resume` | Метаданные или `404` |
+| GET `/profile/resume/content` | Защищённое скачивание/просмотр |
+| DELETE `/profile/resume` | Удаление активной версии из профиля, `204` |
 
-Application response: `id`, `job_id`, `company_id`, `candidate_id`, `status`,
-`message`, resume metadata reference, `created_at`, `updated_at`, and allowed
-summary data. Employer responses include the minimum candidate information
-needed for that application, not unrestricted profile access.
+Профиль включает личные сведения, должность, опыт, навыки, сертификаты,
+языки с уровнем (`native`, `fluent`, `A1`–`C2`), ссылки, статус поиска и
+предпочтения. Опыт работы: компания, должность, даты, текущая работа,
+описание, достижения и навыки. Образование: учреждение, степень, область,
+годы и описание. Предпочтения: зарплата, места, занятость, формат, отрасли,
+роли. Настройки приватности управляют контактами и уведомлениями.
 
-Statuses: `sent`, `viewed`, `in_review`, `contacted`, `interview`, `offer`,
-`rejected`, `withdrawn`. Candidate cannot assign employer stages. Employer can
-advance nonterminal applications or reject them; no silent backward movement.
-Withdrawn/rejected are terminal for MVP. Candidate can withdraw a nonterminal
-application. Record status changes with actor and timestamp. Contacted denotes
-an explicit employer action; do not imply a message-delivery feature exists.
+По умолчанию профиль закрыт; дата рождения и контакты не включаются в
+публичный ответ. Публичного каталога соискателей на этапе MVP 1 нет.
+Настройки приватности не дают работодателю доступ к профилю сверх отклика.
+Процент заполнения и ключи недостающих полей рассчитывает сервер.
 
-Enforce one application per candidate/job with a database constraint. Duplicate
-submission returns 409 with the existing application ID; double clicks cannot
-create duplicates. Resume must belong to the candidate and be ready. Job/company
-visibility and ownership checks occur transactionally with writes. Concurrent
-moderation/closure cannot allow an application to a job already unavailable at
-commit under the defined transaction ordering.
+В PATCH переданный массив целиком заменяет принадлежащую пользователю
+коллекцию, отсутствующее поле не меняется. Сервер проверяет принадлежность
+каждого ID, согласованность дат и запрещает изменение `user_id`.
 
-Update/invalidate relevant TanStack Query keys only after actual server success.
-Saving uses optimistic cache updates with rollback and accessible error toast.
-Candidate application lists show an unavailable-job label for moderated content;
-they retain the candidate's own application history without exposing hidden text.
+Первоначальное предложение хранило PDF на закрытом постоянном volume за
+интерфейсом Storage; **текущий Production использует закрытый Supabase
+Storage**, см. README. Требуются проверка типа и сигнатуры PDF, размера,
+имени, непрозрачные ключи хранения и выдача через авторизованный Go API.
+Метаданные: `id`, `filename`, `content_type`, `size_bytes`, `uploaded_at`,
+`status`. Ошибка замены не должна оставлять повреждённую активную запись.
+Отправленный отклик сохраняет неизменную версию резюме; последующая замена
+активного файла её не меняет. Срок хранения таких копий требует политики.
 
-## Admin moderation
+## Сохранённые вакансии и отклики
 
-| Method / path | Request / response / authorization |
+| Метод и маршрут | Правила |
 | --- | --- |
-| GET `/admin/jobs` | Paginated vacancies with lifecycle and moderation filters; admin only |
-| POST `/admin/jobs/:id/moderation` | `{action, reason, note?}`; admin, persisted job + audit event |
-| GET `/admin/jobs/:id/moderation` | Ordered history; admin only |
-| GET `/admin/companies` | Company status and verification; admin only |
-| GET `/admin/users` | Minimal permitted user/account metadata; admin only |
-| PATCH `/admin/users/:id/status` | `{status, reason, note?}`; suspend/restore employer only in MVP 1 |
+| GET `/saved-jobs` | Список соискателя с пагинацией |
+| PUT/DELETE `/jobs/:id/saved` | Идемпотентное сохранение/удаление, `204` |
+| POST `/jobs/:id/applications` | `{resume_id,message?}`, `201` |
+| GET `/applications` | Только собственные отклики |
+| PATCH `/applications/:id/withdraw` | Отзыв собственного отклика |
+| GET `/employer/jobs/:id/applications` | Только работодатель компании |
+| PATCH `/employer/applications/:id` | Разрешённый переход статуса |
+| GET `/employer/applications/:id/resume` | Только отправленная версия резюме для своей вакансии |
 
-Actions: `mark_pending`, `hide`, `reject`, `remove`, `restore`.
-Reasons: `fake_vacancy`, `scam`, `duplicate`, `misleading_information`,
-`already_closed`, `prohibited_content`, `other`; other requires a note.
-Restore requires an explanatory note and never republishes a paused/closed job.
-Store actor, target, old/new state, reason, note, timestamp in the same transaction.
-Suspension prevents writes and excludes employer vacancies from public results;
-restoration does not override individual job moderation states.
+Ответ содержит ID отклика, вакансии, компании, соискателя, статус,
+сообщение, ссылку на версию резюме и даты. Работодатель получает только
+необходимые для отклика данные, не весь приватный профиль.
 
-MVP 1 admins moderate existing vacancies directly. Reporting queues and review
-moderation arrive in later milestones; do not display fake reports. Admin role
-alone does not grant applicant/resume access; that requires a separately reviewed
-privacy policy and capability.
+Статусы: `sent`, `viewed`, `in_review`, `contacted`, `interview`, `offer`,
+`rejected`, `withdrawn`. Соискатель не устанавливает стадии работодателя.
+Работодатель продвигает незавершённый отклик или отклоняет его без скрытого
+движения назад; `withdrawn` и `rejected` терминальны. Изменения фиксируются
+с участником и временем. `contacted` — действие работодателя, не гарантия
+доставки сообщения.
 
-## Persistence model and migration plan
+На пару соискатель/вакансия действует ограничение уникальности. Повторная
+отправка даёт `409` с ID существующего отклика. Резюме должно принадлежать
+соискателю и быть готовым. Проверки доступности вакансии и прав выполняются
+транзакционно, включая гонку с модерацией или закрытием. Кэш TanStack Query
+обновляется только после успеха сервера; оптимистическое сохранение
+откатывается при ошибке. Для скрытой вакансии история отклика сохраняется,
+но её закрытый текст не выдаётся.
 
-Add new numbered migrations; do not rewrite the deployed baseline. Proposed
-tables in `jobhub`:
+## Модерация администратором
 
-- `users`, `sessions`: unique normalized email, password hash, role/status enums,
-  hashed session token, expiry, CSRF material and revocation.
-- `companies`, `company_memberships`: authorized ownership and public company data.
-- `jobs`, `job_skills`: company ownership, structured content, salary, publication,
-  moderation, expiration and soft deletion.
-- `candidate_profiles`, `work_experience`, `education`, `skills`,
-  `candidate_skills`, `candidate_languages`: private structured candidate data.
-- `resumes`: private versioned storage metadata and active reference.
-- `saved_jobs`: unique candidate/job pair.
-- `applications`, `application_status_events`: unique candidate/job pair,
-  immutable submitted resume reference, stage history.
-- `moderation_events`, `account_status_events`: immutable audit history.
+Предлагались `GET /admin/jobs`, `POST /admin/jobs/:id/moderation`,
+`GET /admin/jobs/:id/moderation`, `GET /admin/companies`, `GET /admin/users`
+и `PATCH /admin/users/:id/status`. Доступ только у администратора.
+Действия: `mark_pending`, `hide`, `reject`, `remove`, `restore`.
+Причины: `fake_vacancy`, `scam`, `duplicate`, `misleading_information`,
+`already_closed`, `prohibited_content`, `other`; для `other` нужна заметка.
 
-Use foreign keys, check constraints, membership and ownership indexes, public
-search indexes, and unique constraints for concurrency-sensitive invariants.
-Compute counts from persisted rows, never seeded metrics. Enable RLS for every
-new table. Keep `jobhub` outside the Supabase Data API; grant no anon/browser
-access. Define a server-only database role and SQL permissions deliberately so
-RLS does not accidentally deny all backend queries; end-user authorization
-remains enforced by Go and scoped SQL. Migration credentials stay server-side.
+Восстановление требует объяснения и не публикует приостановленную или
+закрытую вакансию. Участник, объект, старое/новое состояние, причина,
+заметка и время сохраняются в одной транзакции. Блокировка работодателя
+запрещает запись и скрывает его вакансии; восстановление аккаунта не снимает
+модерацию отдельных вакансий. Роль администратора сама по себе не даёт
+доступ к откликам или резюме.
 
-## Implementation order and completion gates
+## Модель хранения и порядок реализации
 
-1. Approve these proposed endpoints, auth/session policy and private resume storage.
-   Then formalize request/response schemas as a versioned OpenAPI contract.
-2. Implement auth, company ownership and migrations with negative authorization
-   tests before connecting role navigation and short register/login forms.
-3. Implement employer vacancy create/edit/publish plus public search/detail and
-   company read endpoints; connect forms, URL state, loading/error/empty UI.
-4. Implement candidate profile/resume, saves and application submission; connect
-   guest return-context flow, candidate applications and employer applicants.
-5. Implement admin moderation/history and suspension, and prove public visibility
-   is consistent across every query surface after moderation.
-6. Run complete browser → Go → PostgreSQL flows and capture persisted evidence.
-   Only then mark MVP 1 complete. Later milestones remain explicitly unavailable.
+Предлагались нумерованные миграции без изменения применённой основы:
+`users`, `sessions`, `companies`, `company_memberships`, `jobs`, `job_skills`,
+структурированные таблицы профиля, `resumes`, `saved_jobs`, `applications`,
+события статусов и модерации. Нужны FK, CHECK, индексы владения и поиска,
+уникальность для конкурентных операций и RLS на каждой таблице.
+Схема `jobhub` не открывается Supabase Data API или анонимной роли; доступ
+серверной роли задаётся явно, конечные права проверяет Go.
 
-Production builds must use HTTP repositories and exclude development mocks.
-Development may explicitly opt into mocks for missing features. Never switch to
-mock data after network/auth/server errors. Empty production databases show an
-honest empty state and employer creation path. Sample fixtures belong only in
-isolated tests or explicitly identified development environments.
+Порядок из исходного предложения: согласовать контракт и хранилище;
+реализовать авторизацию и владение; затем вакансии и публичный поиск,
+профиль и отклики, модерацию; в конце подтвердить полный путь
+браузер -> Go -> PostgreSQL. Production не должен незаметно переключаться
+на mock после сетевой или серверной ошибки. Пустая база показывает честное
+пустое состояние и путь создания вакансии.
 
-Acceptance tests use an isolated Docker database, not production Supabase:
-
-- Employer A registers, creates company and vacancy through UI, publishes; the
-  job survives API restart and appears in anonymous search and company vacancies.
-- Guest search URL reconstructs filters after reload and Back/Forward. Public
-  browsing needs no account. Pagination/filter results match persisted rows.
-- Candidate registers through Apply and returns to the same job; uploads resume,
-  submits, sees own application; employer A sees the submitted application/resume.
-- Employer B cannot edit A's company/job or access applicants/resumes, including
-  by manually crafted requests. Candidates cannot create jobs or become admins.
-- Private profiles, sessions and resumes are never exposed by public endpoints.
-- Duplicate applications, invalid salary/date/enum values, forbidden role changes,
-  oversized files, expired sessions and CSRF failures are rejected authoritatively.
-- Admin hides/removes the vacancy; fresh search, direct detail, company jobs and
-  counts exclude it; applications reject it; moderation survives restart. Owner
-  editing cannot clear the restriction. Restore honors publication/expiration.
-- Existing health/local migration flow still works; `go test`, `go vet`, frontend
-  lint/typecheck/build, integration tests and responsive keyboard/browser QA pass.
-
-Existing unit tests alone do not satisfy these acceptance checks. No real
-credential is needed in source code or in a browser environment variable.
+Приёмочные проверки выполнялись бы на изолированной локальной базе, не на
+Production Supabase: работодатель A создаёт вакансию и видит её после
+перезапуска; фильтры переживают reload/Back/Forward; соискатель отправляет
+отклик со своим резюме; работодатель B не видит чужие вакансии и резюме;
+дубликаты и неверные поля отклоняются; модерация скрывает запись во всех
+публичных выборках. Обычных unit-тестов для этих сценариев недостаточно.

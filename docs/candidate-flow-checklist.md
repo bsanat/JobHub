@@ -1,25 +1,23 @@
-# Candidate flow checklist
+# Проверка сценария соискателя
 
-Use this checklist when changing candidate profile, saved-job, resume or
-application behavior.
+Используйте при изменении профиля, сохранённых вакансий, резюме или откликов.
 
-## Profile and resume
+## Профиль и резюме
 
-- Candidate profile updates should preserve existing optional data unless the
-  user intentionally clears it.
-- PDF resumes remain private and are served through the backend.
-- Resume size limits and content-type validation should be enforced server-side.
+- Обновление профиля сохраняет необязательные данные, если пользователь не
+  удалил их намеренно.
+- PDF-резюме остаются приватными и отдаются через backend.
+- Размер и тип файла проверяются на сервере.
 
-## Saved jobs and applications
+## Сохранённые вакансии и отклики
 
-- Saved jobs are idempotent.
-- A candidate can submit only one application per vacancy.
-- Applications snapshot the active resume version at submission time.
-- Replacing the active resume must not change already submitted applications.
-- External vacancies keep their external CTA and do not create internal
-  applications.
+- Повторное сохранение вакансии не создаёт дубликат.
+- На одну вакансию соискатель отправляет не более одного отклика.
+- При отправке отклика сохраняется версия текущего резюме.
+- Замена резюме не изменяет отправленные отклики.
+- Внешние вакансии сохраняют внешнюю ссылку и не создают внутренний отклик.
 
-## UI verification
+## Проверка интерфейса
 
-- Check profile completeness, resume upload, saved jobs and applications pages.
-- Verify empty states in Kazakh and Russian.
+- Проверьте заполненность профиля, загрузку резюме, сохранённые вакансии и отклики.
+- Проверьте пустые состояния на казахском и русском языках.

@@ -1,23 +1,23 @@
-# Accessibility checklist
+# Проверка доступности
 
-Use this checklist for UI changes before handing off a JobHub feature.
+Используйте этот список перед передачей изменений интерфейса JobHub.
 
-## Interaction
+## Взаимодействие
 
-- Interactive elements are reachable by keyboard.
-- Focus order follows the visual flow.
-- Buttons use button elements and links use links.
-- Disabled states are visually and semantically clear.
+- Интерактивные элементы доступны с клавиатуры.
+- Порядок фокуса соответствует визуальному порядку.
+- Для действий используются кнопки, для переходов — ссылки.
+- Неактивное состояние понятно визуально и семантически.
 
-## Content
+## Содержимое
 
-- Form fields have labels or accessible names.
-- Error messages identify the field or action that failed.
-- Loading and empty states are announced through visible text.
-- Icon-only controls have accessible labels.
+- У полей формы есть подписи или доступные названия.
+- Сообщение об ошибке указывает поле или неудавшееся действие.
+- Состояния загрузки и отсутствия данных обозначены видимым текстом.
+- У элементов управления только с иконкой есть доступное название.
 
-## Layout
+## Компоновка
 
-- Text remains readable at narrow widths.
-- Long company names, job titles and skill labels wrap without overlapping.
-- Kazakh and Russian strings are checked in the same component state.
+- Текст читается на узких экранах.
+- Длинные названия компаний, вакансий и навыков переносятся без наложения.
+- Казахские и русские строки проверены в одинаковых состояниях компонента.

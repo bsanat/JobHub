@@ -1,32 +1,35 @@
-# Documentation index
+# Указатель документации
 
-This index groups the JobHub documentation by day-to-day use. It is a locator,
-not a replacement for the individual documents.
+Здесь документы JobHub сгруппированы по задачам. Это указатель, а не замена
+содержимого каждого документа.
 
-## Local development
+## Локальная разработка
 
-- `README.md` describes the project, current MVP scope, local startup and
-  verification commands.
-- `docs/developer-command-reference.md` provides the compact command reference
-  for routine development.
-- `backend/migrations/README.md` documents migration security rules.
+- `README.md` — обзор проекта, работающие функции, локальный запуск и проверки.
+- `docs/developer-command-reference.md` — краткий справочник команд.
+- `backend/migrations/README.md` — правила безопасности миграций.
 
-## Vacancy supply
+## Источники вакансий
 
-- `docs/vacancy-supply-architecture.md` captures the source-aware ingestion
-  architecture and future provider model.
-- `docs/vacancy-supply-2026.md` and
-  `docs/mvp0-vacancy-supply-research.md` preserve vacancy-source research.
-- `docs/ats-vacancy-sources.md`, `docs/greenhouse-poc.md` and
-  `docs/telegram-vacancy-collector.md` cover provider-specific discovery.
+- `docs/vacancy-supply-architecture.md` — архитектура импорта и модель провайдеров.
+- `docs/vacancy-supply-2026.md` и `docs/mvp0-vacancy-supply-research.md` —
+  исследование источников.
+- `docs/ats-vacancy-sources.md`, `docs/greenhouse-poc.md` и
+  `docs/telegram-vacancy-collector.md` — исследование конкретных провайдеров.
 
-## Integration and source evidence
+## Интеграции и подтверждение источников
 
-- `docs/integration-audit.md` records integration findings.
-- `docs/company-logo-sources.md` and
-  `docs/kz-company-source-discovery-2026.md` document company-source evidence.
-- `docs/mvp0-source-schema.md` and `docs/mvp1-api-contract.md` describe early
-  schema and API contracts.
+- `docs/integration-audit.md` — выводы проверки интеграций.
+- `docs/company-logo-sources.md` и
+  `docs/kz-company-source-discovery-2026.md` — источники данных компаний.
+- `docs/mvp0-source-schema.md` и `docs/mvp1-api-contract.md` — ранние
+  предложения по схеме и API.
 
-Keep this file short when new docs are added; link to the owning document
-instead of duplicating its content.
+## Эксплуатация
+
+- `docs/telegram-publisher-webhook.md` — полный путь публикации вакансии в
+  Telegram, хранение ключей и диагностика.
+- `docs/migration-runbook.md`, `docs/security-checklist.md` и
+  `docs/release-readiness.md` — миграции, безопасность и подготовка релиза.
+
+Сохраняйте указатель кратким: добавляйте ссылки, а не копируйте документы.

@@ -1,23 +1,21 @@
-# i18n guidelines
+# Правила локализации
 
-JobHub currently ships Kazakh and Russian UI locales for the active MVP.
-English is intentionally deferred.
+В текущем MVP интерфейс JobHub поддерживает казахский и русский языки.
+Английский намеренно отложен.
 
-## Current locale rule
+## Текущие языки
 
-- Add or update `kk` and `ru` keys for new user-facing UI.
-- Do not add English files, English selector entries or English browser QA for
-  the current MVP.
-- Keep key names extensible so English can be restored later without reshaping
-  the feature.
+- Для нового UI добавляйте или обновляйте ключи `kk` и `ru`.
+- Не добавляйте английские файлы, пункт переключателя или английскую проверку
+  браузера в текущем MVP.
+- Сохраняйте структуру ключей расширяемой для будущего возвращения английского.
 
-## Implementation notes
+## Реализация
 
-- Prefer feature-scoped keys over one-off text embedded in components.
-- Keep labels, helper text, empty states and validation messages together when
-  they belong to the same flow.
-- Check longer Russian strings and Kazakh strings in narrow layouts.
-- Do not reuse a key when two screens need different meaning or tone.
+- Используйте ключи функции вместо текста прямо в компонентах.
+- Подписи, подсказки, пустые состояния и ошибки одного сценария держите вместе.
+- Проверяйте длинные русские и казахские строки на узких экранах.
+- Не используйте один ключ для разных по смыслу или тону экранов.
 
-Backend error contracts should remain stable; frontend copy can translate the
-user-facing message separately.
+Контракты ошибок backend должны оставаться стабильными; текст для
+пользователя frontend переводит отдельно.

@@ -1,24 +1,24 @@
-# Contribution workflow
+# Порядок внесения изменений
 
-Use this workflow for small, reviewable JobHub changes.
+Порядок работы над небольшими изменениями JobHub, удобными для проверки.
 
-## Before changing files
+## Перед изменением файлов
 
-- Start from the affected feature or document.
-- Check the current branch and worktree status.
-- Preserve unrelated untracked or modified files.
-- Read the relevant code or document before editing it.
+- Начните с затронутой функции или документа.
+- Проверьте ветку и состояние рабочей директории.
+- Сохраните не относящиеся к задаче изменённые и неотслеживаемые файлы.
+- Перед правкой прочитайте соответствующий код или документ.
 
-## While changing files
+## Во время работы
 
-- Keep the scope narrow and coherent.
-- Prefer existing project patterns.
-- Update Kazakh and Russian UI copy together when the UI changes.
-- Keep secrets, private data and provider credentials out of commits.
+- Ограничивайте изменения темой задачи.
+- Следуйте существующим соглашениям проекта.
+- При изменении UI обновляйте казахский и русский тексты вместе.
+- Не включайте секреты, личные данные и ключи провайдеров в коммиты.
 
-## Before opening a PR
+## Перед открытием PR
 
-- Review the final diff.
-- Run proportional checks for the changed area.
-- Use a title that describes the user-visible or maintainer-visible change.
-- Note docs-only changes honestly when runtime checks are not needed.
+- Просмотрите итоговый diff.
+- Выполните проверки соразмерно изменению.
+- Назовите PR по наблюдаемому изменению.
+- Для правок только документации честно укажите, что runtime-проверки не нужны.

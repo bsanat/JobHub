@@ -1,18 +1,18 @@
-# Testing matrix
+# Матрица проверок
 
-Use this matrix to choose the smallest useful verification set for a JobHub
-change, then add broader checks when the blast radius grows.
+Выбирайте минимальные полезные проверки для изменения JobHub и расширяйте
+их при большем влиянии на систему.
 
-| Change type | Focused check | Broader check |
+| Тип изменения | Целевая проверка | Дополнительная проверка |
 | --- | --- | --- |
-| Route component or page copy | affected route in browser | frontend lint, typecheck and build |
-| API repository or DTO mapper | mapper/unit coverage where present | frontend typecheck and build |
-| Backend handler | handler package tests | backend race tests, vet and build |
-| Domain service logic | owning package tests | backend race tests |
-| SQL query | query-level tests when present | sqlc generation and backend tests |
-| Migration | local migration up path | schema-dependent package tests |
-| Provider adapter | provider package tests | ingestion/service tests |
-| Documentation only | markdown review and `git diff --check` | no runtime check needed |
+| Компонент маршрута или текст страницы | Проверка маршрута в браузере | lint, typecheck и build frontend |
+| Репозиторий API или DTO-маппер | Тесты преобразования | typecheck и build frontend |
+| Обработчик backend | Тесты пакета обработчика | race-тесты, vet и build backend |
+| Доменный сервис | Тесты своего пакета | race-тесты backend |
+| SQL-запрос | Тесты запроса при наличии | Генерация sqlc и тесты backend |
+| Миграция | Локальное применение up | Тесты зависящих от схемы пакетов |
+| Адаптер провайдера | Тесты пакета | Тесты импорта и сервиса |
+| Только документация | Проверка Markdown и `git diff --check` | Runtime-проверки не нужны |
 
-Always call out skipped checks in the PR body or handoff. Do not claim a test
-passed when it was not run.
+Всегда указывайте пропущенные проверки в PR или отчёте. Не называйте тест
+успешным, если он не запускался.

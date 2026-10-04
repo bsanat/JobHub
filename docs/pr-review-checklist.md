@@ -1,23 +1,23 @@
-# Pull request review checklist
+# Проверка pull request
 
-Use this checklist for small JobHub pull requests.
+Список для небольших pull request в JobHub.
 
-## Scope
+## Область изменений
 
-- The title describes the observable change.
-- The PR avoids unrelated formatting, dependency upgrades and refactors.
-- Documentation changes do not copy secrets, private data or stale reports.
-- Generated files are updated only when their sources changed.
+- Заголовок описывает наблюдаемое изменение.
+- Нет постороннего форматирования, обновлений зависимостей и рефакторинга.
+- Документация не содержит секретов, личных данных и устаревших отчётов.
+- Генерируемые файлы изменены только вместе с исходниками.
 
-## Correctness
+## Корректность
 
-- Frontend changes use the typed API/repository layer.
-- Backend authorization stays server-enforced.
-- Native and imported vacancy behavior remains separate.
-- New UI copy updates both Kazakh and Russian locale files.
+- Frontend использует типизированный слой API и репозиториев.
+- Права доступа проверяются сервером.
+- Собственные и импортированные вакансии ведут себя по-разному.
+- Новый текст UI обновлён в казахской и русской локализациях.
 
-## Verification
+## Проверки
 
-- Mention the focused checks that were run.
-- For docs-only changes, state that runtime checks were not needed.
-- Call out skipped checks honestly when tools or credentials are unavailable.
+- Перечислите выполненные целевые проверки.
+- Для правок только документации укажите, что runtime-проверки не требовались.
+- Честно отметьте пропущенные проверки из-за отсутствия инструментов или доступа.

@@ -1,9 +1,9 @@
-# Frontend verification
+# Проверка frontend
 
-Frontend changes should use the smallest check that proves the touched behavior,
-then the standard package checks before handoff.
+Сначала выполните минимальную проверку затронутого поведения, перед передачей
+изменения — стандартные проверки пакета.
 
-## Routine checks
+## Стандартные проверки
 
 ```sh
 cd frontend
@@ -12,19 +12,18 @@ npm run typecheck
 npm run build
 ```
 
-Run these after changes to React components, repositories, DTO mappers,
-i18n keys, route wiring, styles or build configuration.
+Выполняйте их после изменения компонентов React, репозиториев, DTO-мапперов,
+ключей i18n, маршрутов, стилей и конфигурации сборки.
 
-## Browser checks
+## Проверка в браузере
 
-For UI changes, verify the affected route in a browser at a desktop width and a
-narrow mobile width. Look for:
+Проверяйте изменённый маршрут на широком и узком экране. Обратите внимание на:
 
-- text wrapping inside buttons, form controls, filters and cards;
-- empty, loading and error states;
-- keyboard focus movement through interactive controls;
-- Kazakh and Russian strings fitting in the same layout;
-- external vacancies keeping external apply behavior.
+- перенос текста в кнопках, полях, фильтрах и карточках;
+- состояния без данных, загрузки и ошибки;
+- переход фокуса между элементами с клавиатуры;
+- размещение казахских и русских строк в одном макете;
+- сохранение внешнего отклика для импортированных вакансий.
 
-Do not use English browser QA for the current MVP unless English support is
-explicitly restored later.
+Не проводите английскую проверку интерфейса для текущего MVP, пока поддержка
+английского не возвращена явно.

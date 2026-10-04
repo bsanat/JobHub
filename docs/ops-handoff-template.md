@@ -1,32 +1,32 @@
-# Operations handoff template
+# Шаблон передачи изменений
 
-Use this template when handing over a local, staging or provider-related change.
+Используйте при передаче локального изменения, изменения staging или провайдера.
 
-## Change summary
+## Краткое описание
 
-- What changed:
-- Why it changed:
-- User-visible impact:
+- Что изменено:
+- Причина:
+- Что заметит пользователь:
 
-## Verification
+## Проверки
 
-- Backend checks:
-- Frontend checks:
-- Browser checks:
-- Docs-only or skipped checks:
+- Backend:
+- Frontend:
+- Браузер:
+- Правки только документации или пропущенные проверки:
 
-## Operational notes
+## Эксплуатация
 
-- Migration required:
-- Environment variables changed:
-- Provider quota used:
-- Rollback notes:
+- Нужна миграция:
+- Изменены переменные окружения:
+- Использован лимит провайдера:
+- План отката:
 
-## Risks
+## Риски
 
-- Security or ownership considerations:
-- Known limitations:
-- Follow-up work:
+- Безопасность и права доступа:
+- Известные ограничения:
+- Дальнейшие задачи:
 
-Keep handoffs factual and short. Link to detailed design or research documents
-instead of duplicating them here.
+Пишите кратко и по фактам. На подробные исследования и проекты давайте ссылки,
+не копируя их сюда.

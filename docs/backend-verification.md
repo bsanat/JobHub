@@ -1,9 +1,8 @@
-# Backend verification
+# Проверка backend
 
-Backend changes should be checked close to the touched package first, then with
-the broader Go commands when the change is ready.
+Сначала проверяйте изменённый пакет, затем запускайте общие команды Go.
 
-## Routine checks
+## Стандартные проверки
 
 ```sh
 cd backend
@@ -13,17 +12,16 @@ go build ./...
 go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 ```
 
-Run the sqlc command after changing SQL queries, sqlc configuration or database
-types used by generated code.
+Запускайте sqlc после изменения SQL-запросов, его конфигурации или типов БД,
+которые используются генерируемым кодом.
 
-## Focused checks
+## Целевые проверки
 
-- Handler changes should include handler tests for the affected route.
-- Service logic changes should include package tests for success and failure
-  paths.
-- Authorization changes should prove forbidden cross-user or cross-company
-  access is rejected server-side.
-- Provider changes should cover normalization, request-budget behavior and safe
-  error handling without logging secrets.
+- Для изменённого маршрута добавьте тесты обработчика.
+- Для сервисной логики проверьте успешный и ошибочный сценарии.
+- Изменения авторизации должны проверять отказ в доступе к чужому
+  пользователю или компании на сервере.
+- Для провайдера проверьте нормализацию, лимит запросов и обработку ошибок
+  без записи секретов в лог.
 
-Never point destructive or migration tests at staging or production databases.
+Никогда не направляйте разрушающие тесты и тестовые миграции на staging или Production.

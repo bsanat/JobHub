@@ -1,32 +1,32 @@
-# Migration runbook
+# Порядок выполнения миграций
 
-This runbook summarizes the safe path for local and remote migrations.
+Безопасный порядок локальных и удалённых миграций.
 
-## Local migrations
+## Локальные миграции
 
 ```sh
 make migrate-local
 ```
 
-Local migrations target the Docker PostgreSQL service and use
+Локальные миграции работают с PostgreSQL в Docker и используют
 `sslmode=disable`.
 
-## Remote migrations
+## Удалённые миграции
 
 ```sh
 make migrate-version
 make migrate-staging
 ```
 
-Remote migrations require `APP_ENV=staging` and `DATABASE_MIGRATION_URL` pointed
-at a direct or session connection on port `5432`.
+Для удалённых миграций нужны `APP_ENV=staging` и `DATABASE_MIGRATION_URL` с
+прямым или сессионным подключением через порт `5432`.
 
-## Rules
+## Правила
 
-- Never run remote migrations through a transaction pooler on port `6543`.
-- Never use `sslmode=disable` for Supabase.
-- Do not rewrite applied migrations.
-- Do not run down, reset or force operations against staging or production.
-- Keep migration and application connections separate when possible.
+- Не запускайте удалённые миграции через transaction pooler на порту `6543`.
+- Не используйте `sslmode=disable` для Supabase.
+- Не переписывайте применённые миграции.
+- Не выполняйте down, reset и force для staging или Production.
+- По возможности разделяйте подключения приложения и миграций.
 
-See `backend/migrations/README.md` for table-level RLS requirements.
+Требования к RLS для таблиц описаны в `backend/migrations/README.md`.

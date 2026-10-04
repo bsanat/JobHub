@@ -1,26 +1,24 @@
-# API route notes
+# Маршруты API
 
-JobHub keeps browser access behind the Go API. Use these notes when changing
-routes or frontend API calls.
+Браузер обращается к данным через Go API. Учитывайте эти правила при
+изменении маршрутов и запросов frontend.
 
-## Public routes
+## Публичные маршруты
 
-- Public job and company reads should share the same visibility rules as the
-  backend queries.
-- Imported jobs must expose external application behavior.
-- Native JobHub jobs can expose internal application behavior only when they are
-  public and published.
+- Публичные запросы вакансий и компаний используют те же правила видимости,
+  что и запросы backend.
+- Для импортированных вакансий отклик ведёт на внешний ресурс.
+- Внутренний отклик на вакансию JobHub доступен только для публичной
+  опубликованной вакансии.
 
-## Authenticated routes
+## Маршруты с авторизацией
 
-- Candidate profile, resume, saved-job and application routes require an
-  authenticated candidate session.
-- Employer routes require an authenticated employer session and company
-  ownership checks.
-- Admin provisioning stays outside public registration.
+- Профиль, резюме, сохранённые вакансии и отклики требуют сессии соискателя.
+- Маршруты работодателя требуют его сессии и проверки владения компанией.
+- Создание администратора не входит в публичную регистрацию.
 
-## Frontend boundary
+## Граница frontend
 
-React should call the existing typed repository layer rather than reaching
-around it. Keep DTO mapping close to `frontend/src/api/http/` so UI components
-receive stable frontend models.
+React должен использовать существующий типизированный слой репозиториев.
+Преобразование DTO размещайте рядом с `frontend/src/api/http/`, чтобы
+компоненты получали стабильные модели.

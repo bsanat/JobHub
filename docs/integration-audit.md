@@ -1,79 +1,77 @@
-# JobHub integration audit
+# Проверка интеграций JobHub
 
-Status: audited proposal, awaiting approval of the missing backend contracts.
-This document describes repository evidence, not a deployed marketplace.
+**Исторический снимок раннего состояния репозитория.** Документ описывает
+найденные тогда пробелы и не является отчётом о текущем Production. Многие
+перечисленные ниже возможности были реализованы позднее.
 
-## Existing implementation
+## Состояние на момент проверки
 
-| Area | Evidence | Implemented behavior |
+| Область | Подтверждение | Тогдашнее поведение |
 | --- | --- | --- |
-| Routing | `backend/internal/handlers/router.go` | Only `GET /api/v1/health`; unknown routes return JSON 404 |
-| Health | `backend/internal/handlers/health.go`, `services/health.go` | Anonymous readiness check, pgx Ping with a two-second deadline |
-| Database | `backend/internal/database/database.go` | PostgreSQL pool, configurable pgx execution mode, connection URL-driven TLS |
-| Schema | `backend/migrations/000001_initialize.up.sql` | Creates `jobhub` schema only; no domain tables |
-| SQL | `backend/sql/queries/health.sql` | Timestamp query only |
-| Domain models | `backend/internal/database/dbgen/models.go` | No generated domain structs |
-| Middleware | `backend/internal/middleware/http.go` | Logging, response headers, exact-origin CORS; allowed methods are GET and OPTIONS only |
-| Authorization | All backend source inspected | No authentication middleware, sessions, roles, ownership checks, or account suspension |
-| Tests | Backend test files | Config, pool config, health handler/service; no marketplace round trips |
-| Frontend | `frontend/src/App.tsx` | Root and unknown paths redirect to component showcase |
-| HTTP adapter | `frontend/src/api/http/HttpJobsRepository.ts` | Calls proposed `/jobs` and `/jobs/:id/saved` routes that do not exist in Go |
-| Mock adapter | `frontend/src/api/mock/MockJobsRepository.ts` | Static examples; saves are memory-only and reset on reload |
+| Маршруты | `backend/internal/handlers/router.go` | Только `GET /api/v1/health`; неизвестные маршруты — JSON 404 |
+| Состояние API | `backend/internal/handlers/health.go`, `services/health.go` | Анонимная проверка и pgx Ping с двухсекундным сроком |
+| База | `backend/internal/database/database.go` | Пул PostgreSQL, режим pgx и TLS из URL |
+| Схема | `backend/migrations/000001_initialize.up.sql` | Только схема `jobhub`, без доменных таблиц |
+| SQL | `backend/sql/queries/health.sql` | Только запрос времени |
+| Модели | `backend/internal/database/dbgen/models.go` | Доменные структуры ещё не генерировались |
+| Middleware | `backend/internal/middleware/http.go` | Логи, заголовки, CORS; только GET и OPTIONS |
+| Авторизация | Проверенный код backend | Ещё не было сессий, ролей и проверки владения |
+| Тесты | Тесты backend | Конфигурация, пул, health; без сквозных сценариев каталога |
+| Frontend | `frontend/src/App.tsx` | Корень и неизвестные пути вели к витрине компонентов |
+| HTTP-адаптер | `frontend/src/api/http/HttpJobsRepository.ts` | Вызывал ещё не существовавшие Go-маршруты |
+| Mock-адаптер | `frontend/src/api/mock/MockJobsRepository.ts` | Данные в памяти сбрасывались при обновлении страницы |
 
-Existing health response: `{"status":"ok","database":"up","service":"jobhub-ai"}`.
-Existing error shape: `{"error":{"code":"NOT_FOUND","message":"Endpoint not found"}}`.
-There are no existing marketplace request DTOs or response DTOs to match.
+Тогда health возвращал `{"status":"ok","database":"up","service":"jobhub-ai"}`,
+а ошибка маршрута — `{"error":{"code":"NOT_FOUND","message":"Endpoint not found"}}`.
+Реального контракта DTO для каталога ещё не было.
 
-## Required capability inventory
+## Перечень отсутствовавших возможностей
 
-Every capability below is absent from the current Go source and migrations.
-
-| Area | Missing backend support | Priority |
+| Область | Что требовалось от backend | Приоритет |
 | --- | --- | --- |
-| Authentication | Register, login, logout, current user, sessions, roles, suspension | MVP 1 |
-| Jobs | List/detail/create/update/delete, publication lifecycle, ownership, filters | MVP 1 |
-| Companies | List/detail/create/update, membership, public company jobs | MVP 1 |
-| Applications | Submit, candidate list, employer applicants, status change, withdrawal | MVP 1 |
-| Saved jobs | Candidate list/save/unsave | MVP 1 |
-| Profile | Private candidate profile, structured experience/education/skills/preferences | MVP 1 |
-| Resume | Upload/replace/delete/preview, private storage and authorized access | MVP 1 |
-| Moderation | Admin provisioning, hide/remove/restore, reasons/history, suspension | MVP 1 |
-| Reviews/ratings | Public list, submit/edit own review, moderation and server aggregation | MVP 2 |
-| Following/searches | Follow/unfollow companies, persistent saved searches, alert preference | MVP 2 |
-| Insights/retention | Salary/interview data, recent views, notifications | MVP 3 |
-| Reports/verification | Report submission, queues, richer review tools, verification workflow | MVP 4 |
+| Авторизация | Регистрация, вход, выход, текущий пользователь, сессии, роли и блокировка | MVP 1 |
+| Вакансии | Список, детали, создание, изменение, удаление, публикация, права и фильтры | MVP 1 |
+| Компании | Список, детали, членство и вакансии компании | MVP 1 |
+| Отклики | Отправка, списки, статус, отзыв отклика | MVP 1 |
+| Сохранённые вакансии | Список, сохранение и удаление | MVP 1 |
+| Профиль | Приватные данные, опыт, образование, навыки и предпочтения | MVP 1 |
+| Резюме | Загрузка, замена, удаление, просмотр и защищённое хранение | MVP 1 |
+| Модерация | Создание админа, скрытие/восстановление, причины, история и блокировка | MVP 1 |
+| Отзывы | Список, собственный отзыв, модерация и агрегация | MVP 2 |
+| Подписки и поиск | Компании, сохранённые поиски, уведомления | MVP 2 |
+| Аналитика | Зарплаты, собеседования, просмотры, уведомления | MVP 3 |
+| Жалобы и проверки | Очереди, инструменты проверки, верификация | MVP 4 |
 
-## Gaps in the frontend foundation
+## Пробелы frontend на тот момент
 
-- Selecting the HTTP adapter does not make jobs integrated: every job endpoint currently returns 404.
-- The HTTP adapter passes domain query property names directly to Axios. They differ from the intended URL query names (`query` vs `q`, arrays vs repeated singular keys). Explicit serialization is required.
-- URL parsing currently casts untrusted strings to enums and accepts fractional page values. Shared validated schemas must replace these casts.
-- The mock search accepts sort/date filters but does not implement them. It cannot verify real search behavior.
-- `VITE_USE_MOCKS` currently defaults to true in every build, and the repository module imports both adapters. Production must reject mock mode and must not silently fall back to it after an HTTP failure.
-- The current DTOs are frontend proposals, not a backend contract. `JobSummary` is insufficient for vacancy detail and edit forms.
-- There is no session transport, CSRF handling, guest return-context flow, or server-driven role navigation yet.
-- Showcase interactions do not prove persistence, authorization, application submission, or moderation. No product feature is considered complete based on this showcase.
+- Выбор HTTP-адаптера не делал вакансии интегрированными: маршруты ещё
+  возвращали 404.
+- Имена параметров доменного поиска отличались от URL (`query`/`q`, массивы
+  и повторяющиеся ключи); требовалась явная сериализация.
+- Парсер URL приводил недоверенные строки к enum и принимал дробные номера
+  страниц; требовалась проверка схемой.
+- Mock-поиск принимал сортировку и дату, но не применял их.
+- `VITE_USE_MOCKS` по умолчанию был включён; Production требовал запрета
+  mock-режима без скрытого fallback после ошибки HTTP.
+- Предложенные DTO frontend не были серверным контрактом; `JobSummary`
+  не покрывал детали и редактирование.
+- Не было передачи сессии, CSRF, возвращения гостя к действию и
+  навигации по роли.
+- Витрина компонентов не доказывала сохранение данных и проверку прав.
 
-## Scope and next step
+## План, который следовал из проверки
 
-The new integration brief supersedes a frontend-only definition of completion.
-Keep React/Vite, the repository boundary, TanStack Query, Gin, pgx, sqlc, and
-PostgreSQL/Supabase hosting. Implement MVP 1 in vertical slices against the real
-Go API before starting company reputation or retention features.
+Сохранить React/Vite, слой репозиториев, TanStack Query, Gin, pgx, sqlc и
+PostgreSQL/Supabase. Реализовать MVP 1 вертикальными сценариями против
+настоящего Go API до перехода к репутации компаний и удержанию пользователей.
+Предложение по контракту: [mvp1-api-contract.md](mvp1-api-contract.md).
 
-See [the proposed MVP 1 contract](mvp1-api-contract.md). It explicitly distinguishes
-new decisions from existing behavior. Backend implementation follows approval
-because the earlier instruction kept backend changes out of scope and the new
-brief requires missing contracts to be reviewed before backend changes.
+## Что было проверено
 
-## Verification performed
-
-- Inspected all tracked Go source, routes, middleware, migration schema, SQL,
-  generated model declarations, and tests relevant to this inventory.
-- `cd backend && go test ./...` passed.
-- `cd backend && go vet ./...` passed.
-- No live database schema was introspected and no migration was executed.
-  Conclusions describe repository-managed capabilities, not unversioned objects
-  that may exist in a separately configured Supabase project.
-- No runtime source, backend configuration, credentials, or existing Stage 1
-  changes were modified by this audit.
+- Изучены отслеживаемый Go-код, маршруты, middleware, миграции, SQL,
+  генерируемые модели и относящиеся тесты.
+- На тот момент прошли `cd backend && go test ./...` и `go vet ./...`.
+- Живая схема БД не проверялась; миграции не выполнялись. Выводы относились
+  только к управляемому репозиторием состоянию, а не к возможным
+  неотслеживаемым объектам Supabase.
+- Runtime-код, конфигурация, секреты и прежние изменения этапа не менялись.

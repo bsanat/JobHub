@@ -1,24 +1,23 @@
-# Data safety notes
+# Безопасность данных
 
-JobHub handles resumes, accounts, applications and provider data. These notes
-summarize the default safety posture for everyday changes.
+JobHub обрабатывает резюме, аккаунты, отклики и данные провайдеров. Ниже
+перечислены базовые правила для повседневных изменений.
 
-## Private user data
+## Личные данные
 
-- Do not place resumes in public frontend directories.
-- Do not include private user content in fixtures, screenshots or docs.
-- Do not log raw session tokens, passwords or uploaded resume content.
-- Keep candidate and employer account boundaries explicit in tests.
+- Не размещайте резюме в публичных каталогах frontend.
+- Не включайте личные данные в фикстуры, снимки экрана и документацию.
+- Не записывайте в логи токены сессий, пароли и содержимое резюме.
+- Явно проверяйте разграничение аккаунтов соискателей и работодателей.
 
-## Provider data
+## Данные провайдеров
 
-- Preserve source, external ID and source URL provenance.
-- Do not assume raw company names identify the same employer.
-- Do not infer salary, publication date or lifecycle state when a provider did
-  not supply it.
-- Hide sources in production until permissions are confirmed.
+- Сохраняйте источник, внешний ID и исходный URL.
+- Не считайте одинаковые названия компаний доказательством одного работодателя.
+- Не выдумывайте зарплату, дату публикации или статус, которых нет у провайдера.
+- Скрывайте источник в Production до подтверждения прав.
 
-## Operational data
+## Операционные данные
 
-Use placeholder values in examples and redact real connection details from
-diagnostics.
+В примерах используйте заполнители; реальные реквизиты подключений удаляйте
+из диагностических сообщений.

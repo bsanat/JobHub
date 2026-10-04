@@ -1,21 +1,19 @@
-# Auth and session notes
+# Авторизация и сессии
 
-JobHub sessions are server-managed and should stay opaque to the frontend.
+Сессиями JobHub управляет сервер; frontend не должен знать их внутреннее устройство.
 
-## Session model
+## Модель сессии
 
-- Login and registration create HttpOnly cookie sessions.
-- Mutation requests use the CSRF header expected by the backend.
-- Session tokens are stored server-side only as hashes.
-- Logout should clear the browser cookie and invalidate the server-side session.
+- Вход и регистрация создают сессию в HttpOnly-cookie.
+- Изменяющие запросы передают CSRF-заголовок, ожидаемый backend.
+- Токены сессий хранятся на сервере только в виде хешей.
+- Выход очищает cookie и делает серверную сессию недействительной.
 
-## Role boundaries
+## Разграничение ролей
 
-- Candidate-only routes must reject employer-only sessions.
-- Employer-only routes must reject candidate-only sessions.
-- Employer company access requires membership or ownership validation in the
-  backend.
-- Admin users are provisioned through backend tooling, not public signup.
+- Маршруты соискателя отклоняют сессии работодателя и наоборот.
+- Доступ работодателя к компании требует серверной проверки членства или владения.
+- Администраторы создаются серверной командой, а не публичной регистрацией.
 
-When auth behavior changes, update handler tests and avoid exposing token values
-in logs or frontend state.
+При изменении авторизации обновляйте тесты обработчиков. Не раскрывайте
+токены в логах или состоянии frontend.

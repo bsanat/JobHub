@@ -1,101 +1,99 @@
-# Greenhouse development POC
+# Экспериментальная интеграция Greenhouse
 
-Implemented 25 September 2026, following [ATS source research](ats-vacancy-sources.md).
-Only Greenhouse is added. There is no scheduler, production enablement, new schema,
-remote migration, Lever implementation or frontend change.
+Реализована 25 сентября 2026 года после [исследования ATS](ats-vacancy-sources.md).
+Добавлен только Greenhouse: без расписания, включения в Production, новой
+схемы, удалённой миграции, Lever и изменений frontend.
 
-## Contract and mapping
+## Контракт и сопоставление полей
 
-The adapter performs one GET to the fixed official host:
+Адаптер делает один GET к фиксированному официальному хосту:
 `https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs?content=true`.
-It does not request HTML pages, application questions or credentials. GET needs no
-API key. Redirects are refused; errors never include request URLs, response bodies
-or wrapped transport errors. No retries or detail enrichment are performed.
-See the [official Job Board contract](https://docs.greenhouse.io/job-board.html).
+HTML-страницы, вопросы анкеты и учётные данные не запрашиваются. Ключ API
+не требуется. Redirect запрещён. Ошибки не содержат URL, тела ответа и
+внутренних транспортных ошибок. Повторов и дополнительных запросов деталей
+нет. [Официальный контракт Job Board](https://docs.greenhouse.io/job-board.html).
 
-| Greenhouse field | Existing provider-neutral `jobs.ImportedJob` / persistence |
+| Поле Greenhouse | Нормализованная запись `jobs.ImportedJob` |
 | --- | --- |
-| Posting `id` | Lossless positive decimal string `external_id`; never float64, requisition ID or internal job ID |
-| Configured board token | Source key `greenhouse:<board_token>`; no real tokens compiled into code |
-| `title` | Plain-text title, required |
-| `absolute_url` | Exact HTTPS URL retained in `source_url` and `apply_url`, including tracking query; credentials rejected |
-| `content` | Entity-decoded plain text; script/style content discarded; description kind `full` |
-| `location.name` | Raw location text; no guessed city/country or remote eligibility |
-| `company_name`, if supplied | Raw company name; no automatic company ownership/link |
-| `updated_at`, if supplied | Parsed UTC timestamp and original timestamp; invalid value rejects the record |
-| `internal_job_id: null` | Prospect post skipped, not treated as an open vacancy |
-| Missing salary/type/work mode/company/publication fields | Remain empty in the Go import model and NULL in nullable DB columns; sample values are nullable |
+| Posting `id` | Точная положительная десятичная строка `external_id`, не float64 и не internal job ID |
+| Board token | Источник `greenhouse:<board_token>`, реальных токенов в коде нет |
+| `title` | Обязательное текстовое название |
+| `absolute_url` | Точный HTTPS `source_url` и `apply_url` с tracking-параметрами; credentials запрещены |
+| `content` | Текст после декодирования entities; script/style удалены; `description_kind='full'` |
+| `location.name` | Исходное место без догадок о городе/стране/удалённости |
+| `company_name` | Исходное имя без автоматической связи с локальной компанией |
+| `updated_at` | UTC-время и исходное значение; некорректная дата отклоняет запись |
+| `internal_job_id: null` | Prospect post пропускается |
+| Отсутствующие поля | Зарплата, занятость, формат, компания и дата публикации остаются пустыми/`NULL` |
 
-No inference from department names, free-text salaries or arbitrary metadata.
-No additional provider-specific vacancy columns. Native application paths remain
-unchanged; persisted ATS jobs always use external application behavior.
+Отделы, свободный текст зарплаты и произвольные метаданные не служат
+основанием для догадок. Дополнительные колонки под провайдера не нужны.
+Импортированная ATS-вакансия всегда использует внешний способ отклика.
 
-## Shared execution and identity
+## Общий импорт и идентичность
 
-`providers.VacancyProvider.Collect` returns normalized records, request/fetched/
-malformed/skipped counts and a completeness observation. `ingestion.Service.Run`
-owns canonical validation, deterministic ID-sorted samples, exact-ID dedupe, run
-records and the existing atomic PostgreSQL upsert. `RunJooble` now wraps the same
-path and keeps its configured freshness duration and partial-search semantics.
+`providers.VacancyProvider.Collect` возвращает записи, счётчики запросов,
+полученных, некорректных и пропущенных записей и признак полноты.
+`ingestion.Service.Run` отвечает за проверку, детерминированные примеры,
+устранение повторов по ID, запись запусков и атомарный PostgreSQL upsert.
+`RunJooble` использует тот же путь, сохраняя собственную политику свежести и
+частичной поисковой выдачи.
 
-The existing `UNIQUE(source, external_id)` preserves the local UUID and first-seen
-time. Collection start is the observation timestamp, so the existing SQL guard
-rejects an older run overwriting a newer observation. Duplicate records count as
-skipped; the last valid occurrence wins, and duplicates invalidate completeness.
-Failures never persist collected vacancies. Failure messages are safe categories.
+`UNIQUE(source, external_id)` сохраняет локальный UUID и дату первого
+обнаружения. Время начала сбора служит временем наблюдения; старый запуск
+не перезаписывает новый. Повторные ID учитываются как пропущенные;
+последнее корректное вхождение выигрывает, а полнота теряется. Ошибка не
+сохраняет собранные вакансии. Сообщения об ошибке — безопасные категории.
 
-Completeness requires a valid jobs array, matching `meta.total`, no malformed
-records and no duplicate IDs. Missing totals, caps, malformed data and fetch errors
-cannot claim a complete snapshot. A recognized prospect is intentionally excluded.
-This flag is evidence about retrieval, not an atomic upstream snapshot guarantee.
+Полный снимок требует корректного массива jobs, совпадения `meta.total`,
+отсутствия некорректных записей и повторов. Пропущенный total, лимит,
+ошибки или некорректные записи не позволяют заявить полноту. Prospect post
+исключается намеренно. Признак относится к получению данных и не доказывает
+атомарный снимок у провайдера.
 
-**There is no disappearance reconciliation or automatic ATS expiry in this POC**,
-even for complete snapshots. The development policy explicitly supplies a year-9999
-`fresh_until` because the existing column is mandatory. This is a local display
-sentinel, not a provider expiry claim or production freshness policy. Empty boards
-do not expire or refresh previous rows. Disable/delete development sources after
-the experiment; production lifecycle policy remains a separate implementation.
+**Этот POC не закрывает исчезнувшие вакансии и не устанавливает ATS expiry.**
+Для обязательного `fresh_until` локально используется дата в 9999 году.
+Это технический маркер, не срок вакансии у провайдера и не Production
+политика. Пустая доска не закрывает и не освежает старые записи. После
+эксперимента отключите/удалите тестовые источники.
 
-## Server-side configuration and bounds
+## Конфигурация и лимиты
 
-Use a private JSON configuration file outside the repository for real boards:
+Для реальных досок храните приватный JSON-файл вне репозитория:
 
 ```json
 {
-  "boards": [
-    {
-      "board_token": "REPLACE_WITH_AUTHORIZED_BOARD",
-      "display_name": "Authorized employer display label",
-      "authorized_for_poc": false,
-      "test_board": false
-    }
-  ],
+  "boards": [{
+    "board_token": "REPLACE_WITH_AUTHORIZED_BOARD",
+    "display_name": "Разрешённый работодатель",
+    "authorized_for_poc": false,
+    "test_board": false
+  }],
   "max_requests": 12,
   "max_jobs": 200
 }
 ```
 
-Set `authorized_for_poc=true` only after recording employer/platform permission
-for this development experiment. It is an operator attestation, not automatic
-ownership verification, and never changes production permission. The display label
-is source metadata, not an asserted company identity.
+`authorized_for_poc=true` задаёт оператор только после документального
+разрешения на эксперимент. Это заявление оператора, не автоматическая
+проверка владения и не разрешение для Production. Отображаемое название —
+метаданные источника, а не доказательство компании.
 
-Configuration permits at most two ordinary boards plus one optional test board,
-12 requests and 200 processed raw records. Duplicate and malformed records consume
-the job budget. Budgets are shared across selected boards **within an invocation**;
-track all live invocations against the experiment's cumulative 12-request limit.
-Do not repeatedly restart the command to expand the authorized allowance.
+Разрешены до двух обычных досок и одна тестовая, не более 12 запросов и
+200 исходных записей. Повторы и ошибки расходуют бюджет записей. Бюджет
+запросов делится между досками одного вызова; все живые запуски должны
+вместе укладываться в общий разрешённый лимит эксперимента 12 запросов.
+Нельзя перезапускать команду ради обхода лимита.
 
-Responses are limited to 5 MiB, with a 20-second HTTP timeout, a two-minute command
-deadline and at least one second between selected boards. Greenhouse lists cannot
-be paginated by this adapter: oversized boards are rejected before normalization,
-never silently truncated into a supposedly complete snapshot. The server may
-transmit more than 200 entries before the client can count them. Select genuinely
-small boards in advance. No endpoint override or arbitrary-host discovery exists.
+Ответ ограничен 5 МиБ, HTTP timeout — 20 секунд, вся команда — две
+минуты; между досками не меньше секунды. Пагинации у этого адаптера нет:
+слишком большая доска отклоняется, а не обрезается с ложным признаком
+полноты. Сервер может передать больше 200 записей до подсчёта клиентом;
+заранее выбирайте небольшие доски. Произвольный endpoint запрещён.
 
-## Dry-run
+## Проверка без записи (dry-run)
 
-From `backend/`, run the included synthetic example without any network or DB:
+Синтетический пример из `backend/` без сети и базы:
 
 ```sh
 go run ./cmd/jobhub collect \
@@ -104,40 +102,36 @@ go run ./cmd/jobhub collect \
   --fixture internal/providers/greenhouse/testdata/board.json
 ```
 
-For an authorized live board, omit `--fixture`, select the source from private
-config, and retain `--dry-run`:
+Для разрешённой реальной доски уберите `--fixture`, выберите источник из
+приватной конфигурации, но оставьте `--dry-run`:
 
 ```sh
 go run ./cmd/jobhub collect --config /private/path/ats.json \
   --source greenhouse:REPLACE_WITH_AUTHORIZED_BOARD --dry-run --sample 5
 ```
 
-Exactly one of `--dry-run`, `--ingest` or `--health` is required. No implicit write
-mode exists. `--fixture` is dry-run-only and requires one selected source. Staging
-and production environments are refused, including dry-run.
+Ровно один режим обязателен: `--dry-run`, `--ingest` или `--health`.
+`--fixture` допустим только с dry-run и одним источником. Staging и
+Production запрещены, в том числе для dry-run. Dry-run не читает URL базы,
+не подключается к PostgreSQL, не регистрирует источник, не пишет запуски,
+не обновляет health и cursor. Он показывает счётчики, признак полноты и до
+десяти примеров без описаний, сырых payload и query/fragment URL. В fixture
+режиме `RequestCount=1` означает один имитированный запрос, а
+`network_requests=0` — фактическое отсутствие сети. Счётчики вставки и
+обновления равны нулю, не прогнозу.
 
-Dry-run does not load a database URL, connect to PostgreSQL, register a source,
-create ingestion runs, mutate health, or advance any cursor. It returns request,
-fetched, normalized, malformed, skipped and duplicate counts, completeness and up
-to ten samples. Samples omit descriptions/raw payloads and remove URL query/fragment
-values; persistence keeps the original URL. In fixture mode, `RequestCount=1`
-means one simulated adapter request and `network_requests=0` states the actual
-network use. Inserted/updated values are zero, not predicted persistence counts.
+Наличие некорректных записей в допустимом ответе даёт частичный успешный
+сбор с явными пропусками. Ошибки сети, схемы, размера и бюджета завершают
+команду с ненулевым кодом. Проверяйте `complete_snapshot` и счётчики, а
+не только код завершения.
 
-A valid response with malformed records succeeds as a partial collection and
-reports those skips explicitly; fetch/schema/size/budget failures return a nonzero
-exit status. Review `complete_snapshot` and counters, not just process exit status.
+## Необязательный изолированный импорт и состояние источника
 
-## Optional isolated ingestion and source health
-
-Ingestion requires explicit `APP_ENV=development`, a separate
-`ATS_DEV_DATABASE_URL`, a numeric loopback host, explicit port and a database name
-beginning `jobhub_ats_poc_`. Only the `sslmode` connection query option is accepted;
-remote host/service overrides are rejected. `DATABASE_URL` is never used by this
-command. Set credentials through the server environment without printing them.
-
-Prepare an isolated local database using the existing migrations; the command
-never runs migrations. Then use the same private authorized configuration:
+Запись требует `APP_ENV=development`, отдельный `ATS_DEV_DATABASE_URL`,
+числовой loopback-host, явный порт и имя базы с префиксом `jobhub_ats_poc_`.
+Из query-параметров соединения разрешён только `sslmode`. Удалённые host и
+service override запрещены. Команда не использует `DATABASE_URL` и не
+запускает миграции. Настройте отдельную локальную базу и затем выполните:
 
 ```sh
 go run ./cmd/jobhub collect --config /private/path/ats.json \
@@ -147,57 +141,47 @@ go run ./cmd/jobhub collect --config /private/path/ats.json \
   --source greenhouse:REPLACE_WITH_AUTHORIZED_BOARD --health
 ```
 
-Only isolated ingestion registers sources, with production permissions false.
-An existing disabled, incompatible-provider or production-approved source is
-refused rather than overwritten/enabled. The normal public pipeline can display
-local development results, while production-mode list/count/detail exclude them.
+Только изолированный импорт регистрирует источник с Production permissions
+false. Существующий выключенный, несовместимый или Production-approved
+источник не перезаписывается и не включается. Локальный каталог может
+показывать экспериментальные данные; Production-режим их исключает.
 
-Health is a read-only projection of `job_sources` and `ingestion_runs`:
+Health читает `job_sources` и `ingestion_runs`: последний запуск,
+последний успех, фактические запросы и записи, безопасный код ошибки,
+состояние «не запускался / работает / ошибка / выключен / успешен только
+для разработки». Пустая доска может быть успешной. Это показатель
+исполнения, не полноты покрытия и не разрешения для Production.
 
-- `last_attempt`: newest run's persisted start time;
-- `last_success`: latest successful run completion, unchanged by failed runs;
-- `request_count`, `jobs_seen`: latest run's actual counters;
-- `failure_category`: latest run's sanitized error code, NULL on success;
-- execution status: never synced, running, failed, disabled, or successful
-  development-only; a production-approved source is flagged for review.
+## Выполненная проверка
 
-A successful empty board has zero jobs and is not failing. This small projection
-is execution health, not a claim of complete coverage or production approval.
-Completeness/malformed diagnostics are in the collection report; no new persisted
-metrics or cached registry fields are invented. Dry-run health is not persisted.
+Реальной разрешённой доски не было. **Внешних запросов Greenhouse: 0;
+реальных вакансий: 0.** Использовались синтетические фикстуры и отдельный
+локальный PostgreSQL.
 
-## Validation performed
-
-No live employer board was supplied/authorized during this implementation turn.
-**External Greenhouse requests: 0. Live jobs fetched: 0.** The following results
-are from synthetic fixtures and an isolated local PostgreSQL instance.
-
-| Check | Result |
+| Проверка | Результат |
 | --- | --- |
-| Offline CLI dry-run | 3 fetched, 2 normalized, 1 malformed/skipped, 0 duplicates; complete=false; 1 simulated request, 0 network requests, 0 DB mutations |
-| HTTP-to-PostgreSQL fixture | First fetch inserted 1; second fetch updated 1 and inserted 0; one persisted row, same UUID and first-seen timestamp |
-| Exact identity / URL | Large ID beyond float64 integer precision retained exactly; original URL including tracking retained; external CTA verified |
-| Unknown fields | Salary, employment, workplace, company link and upstream publication time remain NULL |
-| Failed fetch | HTTP 500 recorded as failure; title/last-seen/last-synced unchanged; last successful run retained |
-| Empty snapshot | Successful zero-job run; prior job neither expired nor refreshed |
-| Internal applications | Existing candidate store rejects ATS application; no application row created |
-| Dry-run write guard | Panic-on-write store and real PostgreSQL read-only connection; no new ingestion run or vacancy change |
-| Secret hygiene | Transport/body/argument sentinel secrets absent from errors/logs; query values removed from samples |
-| Limits | Oversized responses, malformed containers/IDs/URLs/times, shared concurrent request budget, source-count caps, production/remote DB refusal tested |
-| Required checks | `go test -race ./...` with isolated PostgreSQL, `go vet ./...`, `go build ./...`, `git diff --check` |
+| Offline dry-run | 3 получено, 2 нормализовано, 1 пропущено, 0 повторов; снимок неполный; 0 сетевых запросов и изменений БД |
+| Fixture HTTP -> PostgreSQL | Первый сбор вставил 1, второй обновил 1; UUID и дата первого обнаружения не изменились |
+| ID и URL | Большой числовой ID сохранён точно, URL с tracking сохранён, внешний отклик проверен |
+| Неизвестные поля | Зарплата, занятость, формат, компания и дата публикации остались `NULL` |
+| Ошибка запроса | HTTP 500 записан как ошибка без обновления вакансии и последнего успеха |
+| Пустой снимок | Успешный запуск с 0 записей; прежняя вакансия не закрыта и не обновлена |
+| Внутренний отклик | Для ATS-вакансии отклонён, запись отклика не создана |
+| Защита dry-run | Проверены запрет записи и read-only соединение с PostgreSQL |
+| Секреты | Не попали в ошибки, логи и примеры |
+| Лимиты | Проверены размер ответа, некорректные данные, бюджет, число источников и отказ от удалённой БД |
+| Код | Пройдены `go test -race ./...`, `go vet ./...`, `go build ./...`, `git diff --check` |
 
-The HTTP persistence scenario used five loopback fixture requests, not provider
-quota: first sync, second sync, dry-run, failed fetch, empty board. Tests clean
-up their source/job/run rows. No new migration or sqlc query/generated-code change
-was needed; all nine existing migrations were applied only to the disposable
-local test database.
+Пять loopback-запросов в сценарии сохранения относились к фикстурам,
+не к квоте провайдера. Тесты удаляли свои записи. Девять существующих
+миграций применялись только к одноразовой локальной базе; новых миграций
+и изменений sqlc не было.
 
-## Remaining gates
+## Что нужно перед продолжением
 
-Before live collection: identify up to two authorized small boards, confirm size,
-record permission, and keep the cumulative live request budget at twelve. Before
-production: resolve storage, full-text redistribution, commercial use, attribution,
-removal and retention rights; implement/review freshness and source ownership;
-replace this development-only registry/configuration boundary with an approved
-production onboarding design. Public GET availability and a passing POC do not
-satisfy these gates. No production source is enabled by this change.
+Перед живым сбором: выбрать до двух небольших разрешённых досок,
+подтвердить их размер и разрешение, соблюдать совокупный бюджет 12
+запросов. Перед Production: подтвердить права хранения, полного текста,
+повторного распространения, коммерческого использования, атрибуции,
+удаления и сроков; реализовать политику актуальности и владения источником.
+Публичный GET и успешный POC этих условий не заменяют.

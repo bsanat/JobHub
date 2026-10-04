@@ -1,314 +1,150 @@
-# JobHub AI
+<p align="center">
+  <img src="frontend/public/brand/jobhub-logo.png" alt="Логотип JobHub" width="320">
+</p>
 
-JobHub AI — веб-приложение для поиска вакансий в Казахстане.
+# JobHub
 
-Текущий этап: **MVP 1C**. Проект поддерживает авторизацию, вакансии JobHub и Jooble, профиль соискателя, приватное PDF-резюме, сохраненные вакансии и полный цикл отклика на собственные вакансии JobHub.
+JobHub — сайт вакансий для Казахстана. Соискатели ищут работу, сохраняют
+вакансии, заполняют профиль и отправляют отклики. Работодатели управляют
+компанией, публикуют вакансии и рассматривают кандидатов. Интерфейс
+доступен на казахском и русском языках.
 
-Jooble сейчас используется только как proof of concept. Для production его нельзя считать одобренным источником, пока не подтверждены права на хранение, показ, переиспользование, удаление и атрибуцию вакансий.
+**Рабочий сайт:** [jobhub-lovat.vercel.app](https://jobhub-lovat.vercel.app/)
 
-## Стек
+## Что работает
 
-- Frontend: React, TypeScript, Vite, TanStack Query, React Router, i18next, React Hook Form, Zod, Lucide.
-- Backend: Go, Gin, pgx, sqlc, golang-migrate.
-- База данных: PostgreSQL локально через Docker, Supabase Postgres для staging/production.
-- Импорт вакансий: server-side Jooble importer. API-ключи не попадают в браузер.
+- Публичный каталог вакансий и компаний, поиск, сортировка и отдельные
+  страницы вакансий и компаний.
+- Регистрация соискателя и работодателя, сессии в HttpOnly-cookie и защита
+  изменяющих запросов CSRF-заголовком.
+- Кабинет работодателя: создание, редактирование, публикация, приостановка,
+  закрытие вакансий и просмотр откликов своей компании.
+- Профиль соискателя, сохранённые вакансии, подписки на компании, PDF-резюме
+  и отклики с сохранением версии резюме на момент отправки.
+- Импортируемые вакансии и вакансии JobHub обрабатываются по разным правилам:
+  на внешнюю вакансию отклик ведёт к источнику, на собственную — внутри сайта.
+- Автоматическая публикация подходящих вакансий в Telegram-канал
+  [@jobhu_test_jobs_2026](https://t.me/jobhu_test_jobs_2026) после
+  одобрения и появления в публичном каталоге. Повторные сообщения
+  блокируются записью в базе данных.
 
-## Что уже есть
+## Архитектура
 
-- Публичный API:
-  - `GET /api/v1/health`
-  - `GET /api/v1/jobs`
-  - `GET /api/v1/jobs/:id`
-  - `GET /api/v1/companies`
-  - `GET /api/v1/companies/:id`
-- Auth API:
-  - `POST /api/v1/auth/register`
-  - `POST /api/v1/auth/login`
-  - `GET /api/v1/auth/me`
-  - `POST /api/v1/auth/logout`
-- Employer vacancy API:
-  - `GET /api/v1/employer/jobs`
-  - `GET /api/v1/employer/jobs/:id`
-  - `POST /api/v1/jobs`
-  - `PATCH /api/v1/jobs/:id`
-  - `DELETE /api/v1/jobs/:id`
-  - `GET /api/v1/employer/company`, `PATCH /api/v1/employer/company`
-- Candidate API:
-  - `GET /api/v1/profile`, `PATCH /api/v1/profile`
-  - `POST /api/v1/profile/resume`, `GET /api/v1/profile/resume`, `GET /api/v1/profile/resume/content`, `DELETE /api/v1/profile/resume`
-  - `GET /api/v1/saved-jobs`, `PUT /api/v1/jobs/:id/saved`, `DELETE /api/v1/jobs/:id/saved`
-  - `GET /api/v1/companies/:id/follow`, `PUT /api/v1/companies/:id/follow`, `DELETE /api/v1/companies/:id/follow`
-  - `POST /api/v1/jobs/:id/applications`, `GET /api/v1/applications`, `PATCH /api/v1/applications/:id/withdraw`
-- Employer applicant API:
-  - `GET /api/v1/employer/jobs/:id/applications`
-  - `GET /api/v1/employer/applications/:id/resume`
-  - `PATCH /api/v1/employer/applications/:id`
-- Схема БД с поддержкой разных источников вакансий.
-- Регистрация соискателя и работодателя.
-- При регистрации работодателя создается компания и ownership membership.
-- Сессии через HttpOnly cookie, CSRF header для mutations, session token хранится в БД только как hash.
-- Дедупликация импортированных вакансий через `UNIQUE(source, external_id)`.
-- Атомарный импорт с логированием статистики.
-- Внешние вакансии открываются только через external CTA.
-- Frontend: главная страница, список вакансий, детальная страница, поиск, сортировка, loading/empty/error states.
-- Кабинет работодателя: список вакансий, создание, редактирование, публикация, пауза, закрытие и soft delete.
-- Собственные вакансии проходят lifecycle `draft → published ↔ paused → closed`; `closed` нельзя опубликовать повторно.
-- Структурированный профиль соискателя: опыт, образование, навыки, языки, предпочтения и серверный процент заполнения.
-- Приватное PDF-резюме хранится вне публичной директории; доступ проверяет Go backend. Максимальный размер — 10 МБ.
-- Сохранение вакансий идемпотентно. На одну вакансию разрешен один отклик одного соискателя.
-- Работодатель видит отклики только на вакансии своей компании и переводит их вперед по этапам `sent → viewed → in_review → contacted → interview → offer` или отклоняет.
-- Отклик сохраняет конкретную версию резюме. Замена активного резюме не меняет уже отправленный отклик.
-- Внутренний отклик доступен только для опубликованных собственных вакансий JobHub; Jooble сохраняет внешний CTA.
-- Публичный каталог и профили компаний с открытыми вакансиями, verified-статусом и подпиской соискателя.
-- Работодатель может редактировать публичный профиль своей компании; ownership проверяет backend.
-- i18n: казахский и русский. Архитектура ключей сохраняет возможность добавить английский позже.
+| Компонент | Технологии | Production |
+| --- | --- | --- |
+| Frontend | React, TypeScript, Vite, TanStack Query, React Router, i18next | Сервис Vercel `/` |
+| Backend | Go, Gin, pgx, sqlc | Сервис Vercel `/api/...` |
+| Данные | PostgreSQL, миграции golang-migrate | Отдельный проект Supabase `JobHub Production` |
+| Приватные PDF-резюме | Серверное хранилище | Закрытый bucket Supabase Storage `resumes` |
+| Telegram publisher | PostgreSQL trigger, `pg_net`, `pg_cron`, Go webhook | Supabase вызывает защищённый endpoint Vercel |
 
-## Быстрый запуск локально
+Секреты находятся только в серверных переменных Vercel, Supabase Vault и,
+для резервного GitHub Actions workflow, в GitHub Secrets. Frontend не
+подключается к базе напрямую. Подробнее: [документация publisher](docs/telegram-publisher-webhook.md).
 
-Нужно установить:
+## Локальная разработка
 
-- Docker + Docker Compose v2
-- Go 1.25+
-- Node.js 22.12+ и npm
-
-Создать локальный `.env`:
+Нужны Go 1.25+, Node.js 22.12+ и npm. Команда `make dev` в текущем
+репозитории использует локальный PostgreSQL через Docker Compose; **для
+Production Docker не нужен**. Перед локальным запуском создайте `.env`:
 
 ```sh
 cp .env.example .env
-```
-
-### Локальный запуск с demo-вакансиями
-
-Весь проект запускается одной командой:
-
-```sh
 make dev
 ```
 
-Команда поднимает локальный Docker PostgreSQL, создает локальную POC-базу при
-необходимости, применяет миграции, загружает demo-компании и demo-вакансии, затем
-запускает backend и frontend. Поэтому вакансии и компании должны быть видны
-после одного запуска. Команда всегда переопределяет backend в
-`development`-режим и не использует staging Supabase как локальную базу.
-Название POC-базы можно переопределить через `JOBHUB_POC_DATABASE`.
+`make dev` поднимает локальную базу, применяет миграции, загружает
+демонстрационные данные и запускает backend и frontend. Адреса:
 
-Остановить оба процесса можно через `Ctrl+C`.
+- Сайт: <http://localhost:5173>
+- Проверка API: <http://localhost:8080/api/v1/health>
 
-Если нужен только backend:
+Остановите процессы через `Ctrl+C`; для остановки контейнеров используйте
+`make local-down`. Не направляйте локальные seed-команды и разрушающие тесты
+на staging или Production Supabase.
+
+Если backend уже запущен отдельно, не поднимайте второй процесс на том же
+порту. Команды локальной разработки перечислены в
+[справочнике](docs/developer-command-reference.md).
+
+## Конфигурация Production
+
+Проект Vercel развёрнут из репозитория как два сервиса (`frontend` и
+`backend`). [`vercel.json`](vercel.json) направляет `/api/...` в Go backend,
+а остальные публичные пути — во frontend. Backend использует отдельный
+Production-проект Supabase. При изменении переменных Vercel требуется новый
+deployment.
+
+Главные серверные переменные Vercel Production:
+
+| Переменная | Назначение |
+| --- | --- |
+| `DATABASE_URL` | Подключение Go API к Production Supabase |
+| `PGX_QUERY_EXEC_MODE` | Режим pgx для используемого типа подключения |
+| `FRONTEND_ORIGIN` | Разрешённый адрес frontend |
+| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Серверный доступ к закрытому хранилищу резюме |
+| `TELEGRAM_BOT_TOKEN` | Отправка сообщений через Telegram Bot API |
+| `TELEGRAM_WEBHOOK_SECRET` | Проверка вызовов внутреннего publisher endpoint |
+| `TELEGRAM_PUBLIC_CHANNEL_ID`, `TELEGRAM_PUBLIC_CHANNEL_USERNAME` | Канал публикации |
+| `JOBHUB_PUBLIC_BASE_URL` | Основа ссылки на вакансию в сообщении |
+
+Не копируйте реальные значения из `.env` в код, README или frontend
+`VITE_*` переменные. Для миграций используйте отдельное
+`DATABASE_MIGRATION_URL` и правила из [инструкции](docs/migration-runbook.md).
+Переменные и шаги настройки Telegram подробно описаны в
+[документации publisher](docs/telegram-publisher-webhook.md).
+
+## Правила видимости вакансий
+
+Вакансия JobHub видна публично, только если опубликована, одобрена
+модерацией, не удалена и не просрочена, а компания и её владелец активны.
+Импортируемые вакансии дополнительно зависят от состояния и прав
+источника. Черновики, приостановленные и закрытые вакансии не попадают в
+публичный каталог. Общие правила описаны в
+[заметке о видимости](docs/job-visibility-rules.md).
+
+## Проверки перед изменениями
 
 ```sh
-make backend-dev
+cd backend
+go test ./...
+go vet ./...
+go build ./...
 ```
-
-### Docker-запуск с пустой локальной базой
-
-Запустить PostgreSQL, миграции и backend:
-
-```sh
-make local-up
-```
-
-Запустить frontend:
 
 ```sh
 cd frontend
 npm ci
-npm run dev
-```
-
-Открыть:
-
-- Frontend: http://localhost:5173
-- Backend health check: http://localhost:8080/api/v1/health
-
-Остановить локальные сервисы:
-
-```sh
-make local-down
-```
-
-## Запуск backend вручную
-
-Если нужно запустить Go backend без Docker-контейнера backend:
-
-```sh
-docker compose --profile local up -d postgres
-make migrate-local
-
-set -a
-. ./.env
-set +a
-
-cd backend
-go run ./cmd/api
-```
-
-Не запускайте Docker backend и ручной Go backend на одном порту одновременно.
-
-## Импорт вакансий Jooble
-
-Реальный ключ хранится только в локальном `.env`:
-
-```dotenv
-JOOBLE_API_KEY=<your-jooble-kazakhstan-api-key>
-```
-
-Запуск импорта:
-
-```sh
-make migrate-local
-make import-jooble
-```
-
-Импорт ограничен для POC. `JOOBLE_MAX_REQUESTS` не может быть больше 50. API-ключ не логируется и не должен попадать в git.
-
-Проверить вакансии:
-
-```sh
-curl 'http://localhost:8080/api/v1/jobs?page=1&page_size=20'
-```
-
-## Supabase
-
-Для staging/production backend подключается к Supabase Postgres через переменные окружения. Go backend остается основным backend-сервисом.
-
-Пример только с placeholder-значениями:
-
-```dotenv
-APP_ENV=staging
-DATABASE_URL=postgresql://postgres.<project-ref>:<PASSWORD>@<host>:5432/postgres?sslmode=require&search_path=public
-DATABASE_MIGRATION_URL=postgresql://postgres.<project-ref>:<PASSWORD>@<host>:5432/postgres?sslmode=require&search_path=public
-PGX_QUERY_EXEC_MODE=cache_statement
-```
-
-Важно:
-
-- Для Supabase используйте `sslmode=require`.
-- Для локального Docker Postgres используйте `sslmode=disable`.
-- Миграции запускайте через direct или session connection.
-- Не запускайте миграции через transaction pooler на порту `6543`.
-- Если приложение использует transaction pooler, установите `PGX_QUERY_EXEC_MODE=exec`.
-- Не открывайте схему `jobhub` через Supabase Data API или anon key.
-
-Запуск remote migrations:
-
-```sh
-make migrate-version
-make migrate-staging
-```
-
-Команды используют локальный Go runner и не требуют Docker. Для staging
-обязательно задайте `APP_ENV=staging` и `DATABASE_MIGRATION_URL` с direct или
-session подключением на порту `5432`. `make migrate-version` безопасно показывает
-текущую версию, dirty-состояние и ожидающие версии. Production, transaction
-pooler, `sslmode=disable`, автоматические down/reset/force операции запрещены.
-
-## Admin provisioning
-
-Admin не регистрируется публично. Создать первого admin можно только backend-командой:
-
-```sh
-set -a
-. ./.env
-set +a
-
-export ADMIN_PASSWORD='<strong-admin-password>'
-cd backend
-go run ./cmd/create-admin --full-name 'Admin Name' --email admin@example.com
-```
-
-Пароль не печатается и не хранится в репозитории.
-
-## Проверка employer flow
-
-1. Зарегистрируйтесь как работодатель и укажите компанию.
-2. Откройте `/employer/vacancies/new`.
-3. Сохраните черновик или сразу опубликуйте вакансию.
-4. Проверьте публикацию в `/jobs` и `/jobs/:id`.
-5. Через `/employer/vacancies` приостановите, повторно опубликуйте или закройте вакансию.
-
-Черновики, приостановленные, закрытые, удаленные и просроченные вакансии не показываются публично.
-
-## Проверка candidate flow
-
-1. Зарегистрируйтесь как соискатель и заполните `/profile`.
-2. Загрузите PDF-резюме размером не более 10 МБ.
-3. Сохраните вакансию JobHub или Jooble на странице вакансии.
-4. На опубликованной вакансии JobHub отправьте отклик и проверьте его в `/applications`.
-5. Войдите как работодатель и откройте кандидатов через `/employer/vacancies/:jobId/applicants`.
-
-Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`. На Vercel настройте приватный Supabase Storage bucket `resumes`, а также серверные `SUPABASE_URL` и `SUPABASE_SECRET_KEY`; ключ нельзя передавать во frontend. Без этих переменных загрузка резюме на Vercel недоступна. Из-за лимита запроса Vercel допустимый PDF на production — до 4 МиБ (локально — 10 МиБ).
-
-Telegram publisher можно запускать напрямую с Supabase Postgres без Docker. Настройка, проверка и команда запуска описаны в [docs/telegram-vacancy-publisher.md](docs/telegram-vacancy-publisher.md).
-
-## Переменные окружения
-
-| Variable | Для чего |
-| --- | --- |
-| `DATABASE_URL` | Основное подключение backend к PostgreSQL |
-| `DATABASE_MIGRATION_URL` | Отдельное подключение для миграций |
-| `PGX_QUERY_EXEC_MODE` | Режим pgx, обычно `cache_statement` или `exec` |
-| `FRONTEND_ORIGIN` | Разрешенный frontend origin для CORS |
-| `VITE_API_URL` | URL backend API для frontend |
-| `VITE_USE_MOCKS` | Включает mock-данные во frontend |
-| `JOOBLE_API_KEY` | Server-side ключ Jooble |
-| `JOOBLE_MAX_REQUESTS` | Лимит запросов импорта, максимум 50 |
-| `JOOBLE_SEARCHES` | Поисковые запросы в формате `keywords|location` |
-| `TELEGRAM_BOT_TOKEN` | Server-side токен Telegram bot |
-| `TELEGRAM_PUBLIC_CHANNEL_ID` | Negative numeric ID публичного JobHub channel для publisher |
-| `TELEGRAM_PUBLISHER_ENABLED` | Включает отправку публичных вакансий из разрешённых источников в Telegram |
-| `TELEGRAM_PUBLISHER_DRY_RUN` | Печатает Telegram posts без отправки и без отметки `sent` |
-| `TELEGRAM_PUBLISH_WITHOUT_LINK` | Временная публикация без ссылки на сайт, пока нет публичного HTTPS URL |
-| `TELEGRAM_PUBLISH_TEST_SOURCES` | Явный staging-only режим для тестовой публикации импортированных вакансий без подтверждённых production-прав |
-| `JOBHUB_PUBLIC_BASE_URL` | Публичный HTTPS URL frontend для ссылок `/jobs/:id` в Telegram |
-| `RESUME_STORAGE_DIR` | Приватная директория для PDF-резюме |
-| `SUPABASE_URL` | URL проекта Supabase для серверного Storage |
-| `SUPABASE_SECRET_KEY` | Секретный ключ Supabase только для backend; доступ к приватному bucket `resumes` |
-
-Никогда не коммитьте `.env`, API-ключи, пароли от базы, Supabase keys или connection strings с реальными credentials.
-
-## Проверки
-
-Backend:
-
-```sh
-cd backend
-go test -race ./...
-go vet ./...
-go build ./...
-go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
-```
-
-Frontend:
-
-```sh
-cd frontend
 npm run lint
 npm run typecheck
 npm run build
 ```
 
-Repository:
+После изменения SQL-запросов, конфигурации sqlc или используемых
+генерируемым кодом типов запустите генерацию:
 
 ```sh
-git diff --check
-git status
+cd backend
+go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 ```
 
-## Ограничения текущего этапа
+Перед передачей результата проверьте `git diff --check`. Тесты,
+меняющие данные, выполняйте только на отдельной локальной тестовой базе.
 
-Это отложено на следующие этапы:
+## Документация
 
-- админ-модерация
-- уведомления, чат и публичный каталог кандидатов
-- облачное object storage для резюме; сейчас используется приватный persistent volume
-- production-разрешение на использование внешних вакансий
+Навигация по темам: [docs/documentation-index.md](docs/documentation-index.md).
+В ней есть инструкции по разработке, API, безопасности, источникам
+вакансий, миграциям и Telegram publisher.
 
-## Безопасность
+## Безопасность и ограничения
 
-- `.env` игнорируется git.
-- `.env.example` содержит только placeholder-значения.
-- Jooble API key хранится только на backend стороне.
-- Импортированные вакансии не создают фейковые аккаунты работодателей.
-- Внешние вакансии ведут на внешний apply link.
-- Production Jooble import отключен, пока не подтверждены права провайдера.
+- `.env` и настоящие ключи не должны попадать в Git.
+- Доступ к приватным резюме и откликам проверяет Go backend; скрытая кнопка
+  в интерфейсе не является проверкой прав.
+- Доступ к схеме `jobhub` через публичные ключи Supabase Data API не
+  предоставляется.
+- Для внешних источников нужны отдельно подтверждённые права на хранение,
+  показ и повторную публикацию вакансий.
+- В Production размер PDF ограничен лимитом запроса Vercel; локальный лимит
+  может отличаться. Проверяйте действующие ограничения перед загрузкой.

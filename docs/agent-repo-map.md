@@ -1,39 +1,40 @@
-# Agent repo map
+# Карта репозитория для агента
 
-This map is a compact locator for common JobHub work. Verify paths before using
-it; the source code is authoritative.
+Краткий указатель по репозиторию JobHub. Перед использованием проверяйте пути:
+источником истины остаётся код.
 
-## Frontend
+## Фронтенд
 
-- `frontend/src/pages/` contains route-level pages.
-- `frontend/src/components/` contains shared and feature components.
-- `frontend/src/api/http/` maps HTTP DTOs into frontend models.
-- `frontend/src/api/models/` defines frontend domain shapes.
+- `frontend/src/pages/` — страницы маршрутов.
+- `frontend/src/components/` — общие и функциональные компоненты.
+- `frontend/src/api/http/` — преобразование HTTP DTO в модели frontend.
+- `frontend/src/api/models/` — доменные типы frontend.
 - `frontend/src/i18n/locales/kk.ts` and `frontend/src/i18n/locales/ru.ts`
-  hold active UI copy.
-- `frontend/src/styles/` contains global and marketplace styles.
+  содержат тексты действующего интерфейса.
+- `frontend/src/styles/` — общие стили и стили каталога.
 
-## Backend
+## Бэкенд
 
-- `backend/cmd/api/` starts the API service.
-- `backend/cmd/telegram-publisher/` posts eligible public vacancies from permitted sources to Telegram.
-- `backend/internal/handlers/` owns HTTP routes and request/response handling.
+- `backend/cmd/api/` запускает API.
+- `backend/cmd/telegram-publisher/` публикует подходящие вакансии в Telegram.
+- `backend/internal/handlers/` обрабатывает HTTP-маршруты и запросы.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,
-  `backend/internal/companies/` and `backend/internal/auth/` own domain logic.
-- `backend/internal/candidates/supabase_storage.go` stores private resumes in Supabase Storage for serverless deployments.
-- `backend/internal/telegrampublisher/` owns Telegram publication formatting,
-  duplicate tracking and retry orchestration.
-- `backend/internal/handlers/telegram_publish.go` exposes the protected
-  one-shot Telegram publisher endpoint used by Supabase notifications.
-- `backend/sql/queries/` contains sqlc query sources.
-- `backend/migrations/` contains applied database migrations.
-- `backend/internal/providers/` contains external vacancy provider adapters.
+  `backend/internal/companies/` и `backend/internal/auth/` — доменная логика.
+- `backend/internal/candidates/supabase_storage.go` хранит приватные резюме
+  в Supabase Storage при serverless-развёртывании.
+- `backend/internal/telegrampublisher/` форматирует сообщения, предотвращает
+  дубликаты и управляет повторами.
+- `backend/internal/handlers/telegram_publish.go` — защищённый endpoint
+  однократного запуска publisher по уведомлению Supabase.
+- `backend/sql/queries/` — исходные запросы sqlc.
+- `backend/migrations/` — миграции базы данных.
+- `backend/internal/providers/` — адаптеры внешних источников вакансий.
 
-## Docs and operations
+## Документация и эксплуатация
 
-- `README.md` is the primary project overview.
-- `docs/` contains architecture, provider and workflow notes.
-- `Makefile` exposes local startup, migration, import and seed commands.
-- `.github/workflows/telegram-publisher.yml` schedules the one-shot Telegram publisher outside Vercel.
+- `README.md` — основной обзор проекта.
+- `docs/` — архитектура, источники и рабочие инструкции.
+- `Makefile` — запуск, миграции, импорт и демоданные.
+- `.github/workflows/telegram-publisher.yml` — резервный запуск publisher вне Vercel.
 - `scripts/supabase-telegram-publisher.sql` and
-  `docs/telegram-publisher-webhook.md` cover the production webhook and retry cron.
+  `docs/telegram-publisher-webhook.md` описывают Production webhook и cron.

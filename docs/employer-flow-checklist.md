@@ -1,24 +1,23 @@
-# Employer flow checklist
+# Проверка сценария работодателя
 
-Use this checklist when changing employer vacancy or company-profile behavior.
+Используйте при изменении вакансий работодателя или профиля компании.
 
-## Vacancy lifecycle
+## Жизненный цикл вакансии
 
-- Draft vacancies are editable but not public.
-- Published vacancies can appear in public search when all visibility predicates
-  pass.
-- Paused vacancies are hidden but can return to published.
-- Closed vacancies cannot be republished.
-- Soft-deleted vacancies stay hidden.
+- Черновик можно редактировать, но он не виден публично.
+- Опубликованная вакансия попадает в поиск только при соблюдении всех правил видимости.
+- Приостановленная вакансия скрыта, но её можно опубликовать повторно.
+- Закрытую вакансию нельзя опубликовать заново.
+- Помеченные как удалённые вакансии остаются скрытыми.
 
-## Ownership
+## Права владельца
 
-- Employer vacancy reads and mutations must check company ownership server-side.
-- Applicant lists must only include applications for the employer's company.
-- Resume download access must be tied to the matching owned application.
+- Чтение и изменение вакансий требует серверной проверки владения компанией.
+- Списки кандидатов содержат отклики только на вакансии этой компании.
+- Скачивание резюме разрешено только для соответствующего отклика на свою вакансию.
 
-## UI verification
+## Проверка интерфейса
 
-- Check create, edit, publish, pause and close paths.
-- Check empty and loading states for vacancy and applicant lists.
-- Verify Kazakh and Russian text in the employer workspace navigation.
+- Проверьте создание, редактирование, публикацию, паузу и закрытие.
+- Проверьте пустые состояния и загрузку списков вакансий и кандидатов.
+- Проверьте казахский и русский тексты навигации работодателя.
