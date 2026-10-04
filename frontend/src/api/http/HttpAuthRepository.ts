@@ -30,6 +30,8 @@ export class HttpAuthRepository implements AuthRepository {
   async loginWithGoogleToken(accessToken: string): Promise<AuthSession> {
     const { data } = await apiClient.post<AuthSessionDto>("/auth/oauth/google", {
       access_token: accessToken,
+    }, {
+      timeout: 15_000,
     });
     return mapAuthSession(data);
   }

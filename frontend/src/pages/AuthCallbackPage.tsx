@@ -25,6 +25,14 @@ export function AuthCallbackPage() {
         setError(t("auth.errors.googleNotConfigured"));
         return;
       }
+      const code = params.get("code");
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          if (active) setError(t("auth.errors.google"));
+          return;
+        }
+      }
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !data.session?.access_token) {
         if (active) setError(t("auth.errors.google"));
