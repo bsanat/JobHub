@@ -1,0 +1,149 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "JobHub Docs",
+  "description": "Документация JobHub для разработчиков: архитектура, frontend, backend, API, Supabase, деплой и Telegram publisher.",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#38BDF8",
+    "dark": "#1D4ED8"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "github": "https://github.com/juniorqazaq/JobHub",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Старт",
+        "groups": [
+          {
+            "group": "Обзор проекта",
+            "pages": [
+              "README",
+              "docs/documentation-index",
+              "docs/agent-repo-map",
+              "docs/contribution-workflow"
+            ]
+          },
+          {
+            "group": "Локальная разработка",
+            "pages": [
+              "docs/local-environment-checklist",
+              "docs/developer-command-reference",
+              "docs/local-troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Приложение",
+        "groups": [
+          {
+            "group": "Пользовательские сценарии",
+            "pages": [
+              "docs/candidate-flow-checklist",
+              "docs/employer-flow-checklist",
+              "docs/company-profile-checklist",
+              "docs/job-visibility-rules",
+              "docs/resume-storage-notes"
+            ]
+          },
+          {
+            "group": "Frontend и качество",
+            "pages": [
+              "docs/frontend-verification",
+              "docs/i18n-guidelines",
+              "docs/accessibility-checklist",
+              "docs/testing-matrix"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Backend",
+        "groups": [
+          {
+            "group": "API и сервисы",
+            "pages": [
+              "docs/api-route-notes",
+              "docs/mvp1-api-contract",
+              "docs/backend-verification",
+              "docs/auth-session-notes"
+            ]
+          },
+          {
+            "group": "База данных и операции",
+            "pages": [
+              "docs/migration-runbook",
+              "docs/data-safety-notes",
+              "docs/security-checklist",
+              "docs/release-readiness",
+              "docs/ops-handoff-template"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Вакансии",
+        "groups": [
+          {
+            "group": "Источники и импорт",
+            "pages": [
+              "docs/vacancy-supply-architecture",
+              "docs/vacancy-supply-2026",
+              "docs/mvp0-vacancy-supply-research",
+              "docs/mvp0-source-schema",
+              "docs/ats-vacancy-sources",
+              "docs/greenhouse-poc",
+              "docs/kz-company-source-discovery-2026",
+              "docs/provider-permissions-checklist",
+              "docs/company-logo-sources",
+              "docs/source-health-runbook",
+              "docs/seed-demo-notes"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Telegram",
+        "groups": [
+          {
+            "group": "Публикация вакансий",
+            "pages": [
+              "docs/telegram-vacancy-publisher",
+              "docs/telegram-publisher-webhook",
+              "docs/telegram-vacancy-collector"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Проверки",
+        "groups": [
+          {
+            "group": "Аудит и поддержка",
+            "pages": [
+              "docs/integration-audit",
+              "docs/pr-review-checklist",
+              "docs/dependency-update-notes"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/juniorqazaq/JobHub"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/juniorqazaq/JobHub"
+    }
+  }
+}
