@@ -56,7 +56,10 @@ func (s *SupabaseFileStore) request(ctx context.Context, method, target string, 
 		return nil, err
 	}
 	req.Header.Set("apikey", s.key)
-	req.Header.Set("Authorization", "Bearer "+s.key)
+	// New secret keys are opaque API keys, not JWT bearer tokens.
+	if !strings.HasPrefix(s.key, "sb_secret_") {
+		req.Header.Set("Authorization", "Bearer "+s.key)
+	}
 	return req, nil
 }
 
@@ -77,7 +80,7 @@ func (s *SupabaseFileStore) Put(ctx context.Context, key string, source io.Reade
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("upload resume: storage returned HTTP %d", resp.StatusCode)
+		return storageResponseError("upload", resp)
 	}
 	return nil
 }
@@ -96,8 +99,8 @@ func (s *SupabaseFileStore) Open(ctx context.Context, key string) (io.ReadCloser
 		return nil, fmt.Errorf("download resume: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-		return nil, fmt.Errorf("download resume: storage returned HTTP %d", resp.StatusCode)
+		defer resp.Body.Close()
+		return nil, storageResponseError("download", resp)
 	}
 	return resp.Body, nil
 }
@@ -123,7 +126,41 @@ func (s *SupabaseFileStore) Delete(ctx context.Context, key string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("delete resume: storage returned HTTP %d", resp.StatusCode)
+		return storageResponseError("delete", resp)
 	}
 	return nil
+}
+
+func storageResponseError(operation string, resp *http.Response) error {
+	var body struct {
+		Code    string `json:"code"`
+		Error   string `json:"error"`
+		Message string `json:"message"`
+	}
+	reason := "unclassified"
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&body); err == nil {
+		// Only known labels reach logs; provider messages can contain private data.
+		for _, value := range []string{body.Code, body.Error, body.Message} {
+			switch value {
+			case "NoSuchBucket", "Bucket not found":
+				reason = "bucket_not_found"
+			case "InvalidJWT", "Invalid JWT":
+				reason = "invalid_jwt"
+			case "InvalidApiKey", "Invalid API key":
+				reason = "invalid_api_key"
+			case "AccessDenied", "Unauthorized":
+				reason = "access_denied"
+			case "EntityTooLarge":
+				reason = "file_too_large"
+			case "InvalidMimeType":
+				reason = "invalid_mime_type"
+			case "KeyAlreadyExists", "ResourceAlreadyExists":
+				reason = "already_exists"
+			}
+			if reason != "unclassified" {
+				break
+			}
+		}
+	}
+	return fmt.Errorf("%s resume: storage returned HTTP %d (%s)", operation, resp.StatusCode, reason)
 }

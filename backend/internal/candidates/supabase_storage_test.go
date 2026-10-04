@@ -11,12 +11,27 @@ import (
 )
 
 func TestSupabaseFileStoreLifecycle(t *testing.T) {
+	for _, secret := range []string{"sb_secret_test_only", "eyJhbGciOiJIUzI1NiJ9.test.signature"} {
+		t.Run(strings.Split(secret, ".")[0], func(t *testing.T) {
+			testSupabaseFileStoreLifecycle(t, secret)
+		})
+	}
+}
+
+func testSupabaseFileStoreLifecycle(t *testing.T, secret string) {
+	t.Helper()
 	key := strings.Repeat("a", 64) + ".pdf"
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
-		if r.Header.Get("Authorization") != "Bearer secret" || r.Header.Get("apikey") != "secret" {
+		wantAuthorization := "Bearer " + secret
+		if strings.HasPrefix(secret, "sb_secret_") {
+			wantAuthorization = ""
+		}
+		if r.Header.Get("Authorization") != wantAuthorization || r.Header.Get("apikey") != secret {
 			t.Errorf("missing server-side authorization")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		switch r.Method {
 		case http.MethodPost:
@@ -49,7 +64,7 @@ func TestSupabaseFileStoreLifecycle(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	store, err := NewSupabaseFileStore(server.URL, "secret", "resumes", server.Client())
+	store, err := NewSupabaseFileStore(server.URL, secret, "resumes", server.Client())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,5 +131,31 @@ func TestSupabaseFileStoreDoesNotReturnProviderBody(t *testing.T) {
 	err = store.Put(context.Background(), strings.Repeat("b", 64)+".pdf", strings.NewReader("%PDF"))
 	if err == nil || strings.Contains(err.Error(), "sensitive provider details") {
 		t.Fatalf("unsafe error: %v", err)
+	}
+}
+
+func TestStorageResponseErrorSafeReasons(t *testing.T) {
+	for _, tc := range []struct{ name, body, reason string }{
+		{"bucket", `{"statusCode":"404","error":"Bucket not found","message":"Bucket not found"}`, "bucket_not_found"},
+		{"jwt", `{"code":"InvalidJWT","message":"private token details"}`, "invalid_jwt"},
+		{"key", `{"message":"Invalid API key"}`, "invalid_api_key"},
+		{"access", `{"code":"AccessDenied","message":"private object path"}`, "access_denied"},
+		{"size", `{"code":"EntityTooLarge"}`, "file_too_large"},
+		{"mime", `{"code":"InvalidMimeType"}`, "invalid_mime_type"},
+		{"duplicate", `{"code":"KeyAlreadyExists"}`, "already_exists"},
+		{"unknown", `{"code":"sb_secret_private","message":"private object path"}`, "unclassified"},
+		{"malformed", `sensitive provider details`, "unclassified"},
+		{"oversized", `{"message":"` + strings.Repeat("x", 4096) + `","code":"InvalidJWT"}`, "unclassified"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, operation := range []string{"upload", "download", "delete"} {
+				resp := &http.Response{StatusCode: 400, Body: io.NopCloser(strings.NewReader(tc.body))}
+				err := storageResponseError(operation, resp)
+				want := operation + " resume: storage returned HTTP 400 (" + tc.reason + ")"
+				if err.Error() != want {
+					t.Fatalf("error = %q, want %q", err.Error(), want)
+				}
+			}
+		})
 	}
 }
