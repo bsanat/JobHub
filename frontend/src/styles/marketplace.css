@@ -377,17 +377,7 @@
   cursor: pointer;
 }
 .auth-google-button:hover { border-color: var(--color-primary); }
-.auth-google-button span {
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #fff;
-  color: #1a73e8;
-  border: 1px solid var(--color-border);
-  font-weight: 900;
-}
+.auth-google-mark { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; }
 .auth-divider {
   display: flex;
   align-items: center;

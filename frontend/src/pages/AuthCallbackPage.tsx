@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../app/authContext";
@@ -14,10 +14,13 @@ export function AuthCallbackPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [error, setError] = useState("");
+  const handledRef = useRef(false);
 
   useEffect(() => {
     let active = true;
     async function completeGoogleSignIn() {
+      if (handledRef.current) return;
+      handledRef.current = true;
       if (!supabase) {
         setError(t("auth.errors.googleNotConfigured"));
         return;
@@ -31,7 +34,7 @@ export function AuthCallbackPage() {
         const session = await auth.loginWithGoogleToken(data.session.access_token);
         await supabase.auth.signOut();
         const destination = onboardingDestination(safeReturnTo(params.get("returnTo")), session.user.role);
-        navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
+        if (active) navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
       } catch {
         if (active) setError(t("auth.errors.google"));
       }

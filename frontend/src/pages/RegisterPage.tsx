@@ -7,6 +7,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "../app/authContext";
 import type { UserRole } from "../api/models/auth";
+import { GoogleMark } from "../components/auth/GoogleMark";
 import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
@@ -79,7 +80,7 @@ export function RegisterPage() {
             <button type="button" className={role === "employer" ? "active" : ""} onClick={() => setRole("employer")}><BriefcaseBusiness size={20} /><span>{t("auth.roles.employer")}</span></button>
           </div>
           <button type="button" className="auth-google-button" onClick={startGoogleRegistration}>
-            <span aria-hidden="true">G</span>
+            <GoogleMark />
             {t("auth.googleRegister")}
           </button>
           <p className="auth-oauth-note">{t("auth.googleRegisterNote")}</p>

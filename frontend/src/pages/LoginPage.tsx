@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "../app/authContext";
+import { GoogleMark } from "../components/auth/GoogleMark";
 import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
@@ -63,7 +64,7 @@ export function LoginPage() {
           <p className="auth-eyebrow">{t("auth.loginEyebrow")}</p>
           <h1 id="login-title">{t("auth.loginTitle")}</h1>
           <button type="button" className="auth-google-button" onClick={startGoogleLogin}>
-            <span aria-hidden="true">G</span>
+            <GoogleMark />
             {t("auth.googleLogin")}
           </button>
           <div className="auth-divider"><span>{t("auth.orEmail")}</span></div>
