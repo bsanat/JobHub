@@ -23,6 +23,8 @@ it; the source code is authoritative.
 - `backend/internal/candidates/supabase_storage.go` stores private resumes in Supabase Storage for serverless deployments.
 - `backend/internal/telegrampublisher/` owns Telegram publication formatting,
   duplicate tracking and retry orchestration.
+- `backend/internal/handlers/telegram_publish.go` exposes the protected
+  one-shot Telegram publisher endpoint used by Supabase notifications.
 - `backend/sql/queries/` contains sqlc query sources.
 - `backend/migrations/` contains applied database migrations.
 - `backend/internal/providers/` contains external vacancy provider adapters.
@@ -33,3 +35,5 @@ it; the source code is authoritative.
 - `docs/` contains architecture, provider and workflow notes.
 - `Makefile` exposes local startup, migration, import and seed commands.
 - `.github/workflows/telegram-publisher.yml` schedules the one-shot Telegram publisher outside Vercel.
+- `scripts/supabase-telegram-publisher.sql` and
+  `docs/telegram-publisher-webhook.md` cover the production webhook and retry cron.

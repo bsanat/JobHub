@@ -67,6 +67,9 @@ func run(logger *slog.Logger) error {
 	candidateService := candidates.NewService(candidates.NewPostgresStore(pool), resumeFiles)
 	companyStore := companies.NewPostgresStore(pool, cfg.Environment == "production")
 	router := handlers.NewRouter(services.NewHealthService(pool), logger, cfg.FrontendOrigin, jobStore, authService, candidateService, companyStore, cfg.Environment)
+	if err := registerTelegramWebhook(router, pool, logger); err != nil {
+		return err
+	}
 	if err := router.SetTrustedProxies(nil); err != nil {
 		return err
 	}
