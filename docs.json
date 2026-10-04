@@ -20,7 +20,7 @@
           {
             "group": "Обзор проекта",
             "pages": [
-              "README",
+              "index",
               "docs/documentation-index",
               "docs/agent-repo-map",
               "docs/contribution-workflow"
