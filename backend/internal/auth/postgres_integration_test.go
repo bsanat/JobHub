@@ -25,14 +25,21 @@ func TestAuthServiceIntegration(t *testing.T) {
 	service := NewService(pool)
 	suffix := strings.ReplaceAll(time.Now().UTC().Format("150405.000000000"), ".", "")
 	email := "employer-" + suffix + "@example.com"
+	companyName := "Integration LLP " + suffix
 
 	session, token, err := service.Register(ctx, RegisterInput{
-		FullName: "Employer Owner", Email: email, Password: "verysecure1", Role: RoleEmployer, CompanyName: "Integration LLP",
+		FullName: "Employer Owner", Email: email, Password: "verysecure1", Role: RoleEmployer, CompanyName: companyName,
 	})
 	if err != nil {
 		t.Fatalf("register employer: %v", err)
 	}
-	if session.Company == nil || session.Company.Name != "Integration LLP" || token == "" || session.CSRFToken == "" {
+	defer func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM jobhub.users WHERE id=$1`, session.User.ID)
+		if session.Company != nil {
+			_, _ = pool.Exec(context.Background(), `DELETE FROM jobhub.companies WHERE id=$1`, session.Company.ID)
+		}
+	}()
+	if session.Company == nil || session.Company.Name != companyName || token == "" || session.CSRFToken == "" {
 		t.Fatalf("unexpected session: %#v token=%q", session, token)
 	}
 	var membershipCount int

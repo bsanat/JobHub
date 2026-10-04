@@ -1,4 +1,10 @@
-import type { UserRole, UserStatus } from "../../models/auth";
+import type {
+  UserRole,
+  UserStatus,
+  OnboardingPersona,
+  OnboardingGoal,
+  OnboardingReferral,
+} from "../../models/auth";
 
 export interface AuthSessionDto {
   user: {
@@ -14,4 +20,19 @@ export interface AuthSessionDto {
   };
   csrf_token: string;
   expires_at: string;
+  onboarding_required: boolean;
+}
+
+export interface OnboardingDto {
+  required: boolean;
+  persona: OnboardingPersona;
+  persona_other: string;
+  goal: OnboardingGoal;
+  city_id: string;
+  profession: string;
+  referral: OnboardingReferral;
+  referral_other: string;
+  step: number;
+  version: number;
+  completed_at: string | null;
 }

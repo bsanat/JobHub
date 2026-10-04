@@ -129,7 +129,7 @@ API calls are verified through `frontend/src/api/http/*` and backend handlers.
 | Кнопка или действие | Запрос API | Изменение данных | Ожидаемый результат | Код |
 | --- | --- | --- | --- | --- |
 | Show/hide password | none | none | Toggles password input type | `LoginPage` |
-| Submit login | `POST /api/v1/auth/login` | Creates session, sets cookies | Redirects to safe `returnTo` or default route | `LoginPage`, `HttpAuthRepository` |
+| Submit login | `POST /api/v1/auth/login` | Создаёт сессию и cookies | При `onboarding_required=true` продолжает опрос; иначе безопасный `returnTo` или кабинет | `LoginPage`, `HttpAuthRepository` |
 | Register link | none | none | Opens `/register?returnTo=...` | `LoginPage` |
 
 ## Register
@@ -149,10 +149,12 @@ API calls are verified through `frontend/src/api/http/*` and backend handlers.
 | Choose job seeker role | none | none | Form role becomes `job_seeker` | `RegisterPage` |
 | Choose employer role | none | none | Form role becomes `employer`, company field is relevant | `RegisterPage` |
 | Show/hide password | none | none | Toggles password input type | `RegisterPage` |
-| Submit registration | `POST /api/v1/auth/register` | Creates user/session and related role records | Employer redirects to `/employer`; job seeker to `returnTo` | `RegisterPage`, `HttpAuthRepository` |
+| Submit registration | `POST /api/v1/auth/register` | Создаёт пользователя, сессию, роль и строку `account_onboarding` | Открывает `/onboarding`; после завершения — безопасный `returnTo` или кабинет | `RegisterPage`, `HttpAuthRepository` |
 | Login link | none | none | Opens `/login?returnTo=...` | `RegisterPage` |
 
 ## Account
+
+Сценарий первого входа после регистрации: [опрос аккаунта](/docs/account-onboarding).
 
 | Поле | Значение |
 | --- | --- |

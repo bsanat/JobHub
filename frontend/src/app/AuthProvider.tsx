@@ -13,17 +13,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
   });
   const registerMutation = useMutation({
     mutationFn: (input: RegisterRequest) => repositories.auth.register(input),
-    onSuccess: (session) => queryClient.setQueryData<AuthSession | null>(["auth", "me"], session),
+    onSuccess: (session) => {
+      queryClient.removeQueries({ queryKey: ["auth", "onboarding"] });
+      queryClient.setQueryData<AuthSession | null>(["auth", "me"], session);
+    },
   });
   const loginMutation = useMutation({
     mutationFn: (input: LoginRequest) => repositories.auth.login(input),
-    onSuccess: (session) => queryClient.setQueryData<AuthSession | null>(["auth", "me"], session),
+    onSuccess: (session) => {
+      queryClient.removeQueries({ queryKey: ["auth", "onboarding"] });
+      queryClient.setQueryData<AuthSession | null>(["auth", "me"], session);
+    },
   });
 
   const logout = async () => {
     const session = queryClient.getQueryData<AuthSession>(["auth", "me"]);
     if (session?.csrfToken) await repositories.auth.logout(session.csrfToken);
     queryClient.setQueryData<AuthSession | null>(["auth", "me"], null);
+    queryClient.removeQueries({ queryKey: ["auth", "onboarding"] });
   };
 
   const session = sessionQuery.data ?? undefined;

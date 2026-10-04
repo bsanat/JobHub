@@ -12,6 +12,7 @@ import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
 import { authErrorCode } from "./authUtils";
+import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
 const schema = z.object({
   fullName: z.string().trim().min(1),
@@ -43,8 +44,9 @@ export function RegisterPage() {
       return;
     }
     try {
-      await auth.register({ fullName: values.fullName, email: values.email, password: values.password, role, companyName: values.companyName });
-      navigate(role === "employer" ? "/employer" : safeReturnTo(params.get("returnTo"), "/profile"), { replace: true });
+      const session = await auth.register({ fullName: values.fullName, email: values.email, password: values.password, role, companyName: values.companyName });
+      const destination = onboardingDestination(role === "employer" ? "/employer" : params.get("returnTo"), role);
+      navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
     } catch (error) {
       const code = authErrorCode(error);
       setServerError(code === "EMAIL_ALREADY_EXISTS" ? t("auth.errors.emailExists") : t("auth.errors.generic"));

@@ -21,6 +21,7 @@ confirmed user-facing routes, see [Каталог страниц сайта](/do
 | `/companies/:companyId` | `CompanyProfilePage` | Гость, соискатель | Company detail, public jobs, follow state for candidate |
 | `/login` | `LoginPage` | Гость | `POST /api/v1/auth/login` |
 | `/register` | `RegisterPage` | Гость | `POST /api/v1/auth/register` |
+| `/onboarding` | `OnboardingPage` | Новый аккаунт с активной сессией | `GET/PUT /api/v1/auth/onboarding`; [подробности](/docs/account-onboarding) |
 | `/account` | `AccountPage` | Authenticated | Session info through `AuthProvider` and `GET /api/v1/auth/me` |
 | `/profile` | `ProfilePage` | `job_seeker` | Candidate profile → `GET/PATCH /api/v1/profile` |
 | `/saved` | `SavedPage`, `SavedJobsPanel`, `SavedCompaniesPanel` | `job_seeker` | «Сохранённые»: вакансии → `GET /api/v1/saved-jobs`, компании → `GET /api/v1/companies/following`; `?tab=companies` открывает компании |

@@ -6,6 +6,8 @@
 ## Фронтенд
 
 - `frontend/src/pages/` — страницы маршрутов.
+- `frontend/src/pages/OnboardingPage.tsx` — опрос `/onboarding` после регистрации;
+  `frontend/src/app/OnboardingGate.tsx` восстанавливает незавершённый опрос.
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
@@ -22,6 +24,8 @@
 ## Бэкенд
 
 - `backend/cmd/api/` запускает API.
+- `backend/internal/auth/onboarding.go` — ответы аккаунта и защита версий;
+  `backend/internal/handlers/onboarding.go` — GET/PUT `/api/v1/auth/onboarding`.
 - `backend/cmd/telegram-publisher/` публикует подходящие вакансии в Telegram.
 - `backend/internal/handlers/` обрабатывает HTTP-маршруты и запросы.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,

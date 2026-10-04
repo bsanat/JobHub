@@ -1,8 +1,14 @@
 import { apiClient } from "../client";
-import type { AuthSession, LoginRequest, RegisterRequest } from "../models/auth";
+import type {
+  AuthSession,
+  LoginRequest,
+  RegisterRequest,
+  OnboardingAnswers,
+  OnboardingState,
+} from "../models/auth";
 import type { AuthRepository } from "../repositories/AuthRepository";
-import { mapAuthSession } from "./authMappers";
-import type { AuthSessionDto } from "./dto/authDto";
+import { mapAuthSession, mapOnboarding } from "./authMappers";
+import type { AuthSessionDto, OnboardingDto } from "./dto/authDto";
 
 export class HttpAuthRepository implements AuthRepository {
   async register(input: RegisterRequest): Promise<AuthSession> {
@@ -27,6 +33,38 @@ export class HttpAuthRepository implements AuthRepository {
   }
 
   async logout(csrfToken: string): Promise<void> {
-    await apiClient.post("/auth/logout", undefined, { headers: { "X-CSRF-Token": csrfToken } });
+    await apiClient.post("/auth/logout", undefined, {
+      headers: { "X-CSRF-Token": csrfToken },
+    });
+  }
+
+  async onboarding(): Promise<OnboardingState> {
+    const { data } = await apiClient.get<OnboardingDto>("/auth/onboarding");
+    return mapOnboarding(data);
+  }
+
+  async saveOnboarding(
+    input: OnboardingAnswers,
+    version: number,
+    complete: boolean,
+    csrfToken: string,
+  ): Promise<OnboardingState> {
+    const { data } = await apiClient.put<OnboardingDto>(
+      "/auth/onboarding",
+      {
+        persona: input.persona,
+        persona_other: input.personaOther,
+        goal: input.goal,
+        city_id: input.cityId,
+        profession: input.profession,
+        referral: input.referral,
+        referral_other: input.referralOther,
+        step: input.step,
+        version,
+        complete,
+      },
+      { headers: { "X-CSRF-Token": csrfToken } },
+    );
+    return mapOnboarding(data);
   }
 }

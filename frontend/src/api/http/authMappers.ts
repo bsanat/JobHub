@@ -1,5 +1,5 @@
-import type { AuthSession } from "../models/auth";
-import type { AuthSessionDto } from "./dto/authDto";
+import type { AuthSession, OnboardingState } from "../models/auth";
+import type { AuthSessionDto, OnboardingDto } from "./dto/authDto";
 
 export function mapAuthSession(dto: AuthSessionDto): AuthSession {
   return {
@@ -13,5 +13,22 @@ export function mapAuthSession(dto: AuthSessionDto): AuthSession {
     company: dto.company,
     csrfToken: dto.csrf_token,
     expiresAt: dto.expires_at,
+    onboardingRequired: dto.onboarding_required === true,
+  };
+}
+
+export function mapOnboarding(dto: OnboardingDto): OnboardingState {
+  return {
+    required: dto.required,
+    persona: dto.persona,
+    personaOther: dto.persona_other,
+    goal: dto.goal,
+    cityId: dto.city_id,
+    profession: dto.profession,
+    referral: dto.referral,
+    referralOther: dto.referral_other,
+    step: dto.step,
+    version: dto.version,
+    completedAt: dto.completed_at,
   };
 }

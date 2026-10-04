@@ -36,10 +36,11 @@ type loginRequest struct {
 }
 
 type sessionResponse struct {
-	User      auth.User     `json:"user"`
-	Company   *auth.Company `json:"company,omitempty"`
-	CSRFToken string        `json:"csrf_token"`
-	ExpiresAt time.Time     `json:"expires_at"`
+	User               auth.User     `json:"user"`
+	Company            *auth.Company `json:"company,omitempty"`
+	CSRFToken          string        `json:"csrf_token"`
+	ExpiresAt          time.Time     `json:"expires_at"`
+	OnboardingRequired bool          `json:"onboarding_required"`
 }
 
 func RegisterAuthRoutes(router *gin.Engine, service auth.Service, logger *slog.Logger, origin, environment string) {
@@ -49,6 +50,9 @@ func RegisterAuthRoutes(router *gin.Engine, service auth.Service, logger *slog.L
 	group.POST("/login", h.requireTrustedOrigin(), h.login)
 	group.GET("/me", h.me)
 	group.POST("/logout", h.requireTrustedOrigin(), h.requireCSRF(), h.logout)
+	if onboarding, ok := service.(auth.OnboardingService); ok {
+		RegisterOnboardingRoutes(group, h, onboarding)
+	}
 }
 
 func (h authHandler) register(c *gin.Context) {
@@ -179,5 +183,5 @@ func (h authHandler) clearSessionCookie(c *gin.Context) {
 }
 
 func mapSessionResponse(session auth.Session) sessionResponse {
-	return sessionResponse{User: session.User, Company: session.Company, CSRFToken: session.CSRFToken, ExpiresAt: session.ExpiresAt}
+	return sessionResponse{User: session.User, Company: session.Company, CSRFToken: session.CSRFToken, ExpiresAt: session.ExpiresAt, OnboardingRequired: session.OnboardingRequired}
 }

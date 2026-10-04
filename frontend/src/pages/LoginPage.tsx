@@ -11,6 +11,7 @@ import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
 import { authErrorCode } from "./authUtils";
+import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
 const schema = z.object({
   email: z.email(),
@@ -32,8 +33,8 @@ export function LoginPage() {
     setServerError("");
     try {
       const session = await auth.login(values);
-      const destination = session.user.role === "employer" ? "/employer" : session.user.role === "job_seeker" ? "/profile" : "/admin";
-      navigate(safeReturnTo(params.get("returnTo"), destination), { replace: true });
+      const destination = onboardingDestination(params.get("returnTo"), session.user.role);
+      navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
     } catch (error) {
       const code = authErrorCode(error);
       setServerError(code === "INVALID_CREDENTIALS" ? t("auth.errors.invalidCredentials") : t("auth.errors.generic"));

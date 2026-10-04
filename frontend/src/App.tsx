@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { JobHubLoader } from "./components/ui/JobHubLoader";
+import { OnboardingGate } from "./app/OnboardingGate";
 
 const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
 const JobsPage = lazy(() => import("./pages/JobsPage").then((module) => ({ default: module.JobsPage })));
 const JobDetailPage = lazy(() => import("./pages/JobDetailPage").then((module) => ({ default: module.JobDetailPage })));
 const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })));
 const RegisterPage = lazy(() => import("./pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage").then((module) => ({ default: module.OnboardingPage })));
 const AccountPage = lazy(() => import("./pages/AccountPage").then((module) => ({ default: module.AccountPage })));
 const EmployerPage = lazy(() => import("./pages/EmployerPage").then((module) => ({ default: module.EmployerPage })));
 const EmployerVacanciesPage = lazy(() => import("./pages/EmployerVacanciesPage").then((module) => ({ default: module.EmployerVacanciesPage })));
@@ -34,7 +36,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <Suspense fallback={<div className="route-loading"><JobHubLoader /></div>}>
-        <Routes>
+        <OnboardingGate><Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:jobId" element={<JobDetailPage />} />
@@ -42,6 +44,7 @@ export default function App() {
           <Route path="/companies/:companyId" element={<CompanyProfilePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
           <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
           <Route path="/workspace" element={<ProtectedRoute role="job_seeker"><Navigate to="/profile" replace /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute role="job_seeker"><ProfilePage /></ProtectedRoute>} />
@@ -60,7 +63,7 @@ export default function App() {
           <Route path="/dev/ui" element={<ComponentShowcasePage />} />
           <Route path="/dev/components" element={<Navigate to="/dev/ui" replace />} />
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        </Routes></OnboardingGate>
       </Suspense>
     </>
   );

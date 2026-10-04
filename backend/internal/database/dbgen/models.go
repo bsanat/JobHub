@@ -13,6 +13,23 @@ type CompanyDuplicateMap struct {
 	CanonicalID interface{}
 }
 
+// Private registration questionnaire. Only new registrations get a row; existing accounts are not enrolled. Access is through the authenticated Go API only.
+type JobhubAccountOnboarding struct {
+	UserID        pgtype.UUID
+	Persona       string
+	PersonaOther  string
+	Goal          string
+	CityID        string
+	Profession    string
+	Referral      string
+	ReferralOther string
+	Step          int32
+	Version       int64
+	CompletedAt   pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
 type JobhubApplication struct {
 	ID          pgtype.UUID
 	JobID       pgtype.UUID
@@ -268,6 +285,19 @@ type JobhubSkill struct {
 	Name           string
 	NormalizedName string
 	CreatedAt      pgtype.Timestamptz
+}
+
+type JobhubTelegramPublication struct {
+	ID                pgtype.UUID
+	JobID             pgtype.UUID
+	ChannelID         int64
+	TelegramMessageID pgtype.Int8
+	Status            string
+	ErrorCode         pgtype.Text
+	Attempts          int32
+	SentAt            pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
 }
 
 type JobhubUser struct {

@@ -41,11 +41,12 @@ type Company struct {
 }
 
 type Session struct {
-	ID        string
-	User      User
-	Company   *Company
-	CSRFToken string
-	ExpiresAt time.Time
+	ID                 string
+	User               User
+	Company            *Company
+	CSRFToken          string
+	ExpiresAt          time.Time
+	OnboardingRequired bool
 }
 
 type RegisterInput struct {

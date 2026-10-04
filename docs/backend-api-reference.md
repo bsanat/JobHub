@@ -15,10 +15,15 @@ Base path: `/api/v1`. Frontend production calls the same domain through `/api/v1
 | `POST` | `/auth/login` | Guest, trusted origin | `email`, `password` | Session response; sets cookies | `400`, `401`, `403`, `500` | `auth.go`, `auth.Service.Login` |
 | `GET` | `/auth/me` | Session cookie | none | Session response | `401` | `auth.go`, `auth.Service.Authenticate` |
 | `POST` | `/auth/logout` | Session + CSRF + trusted origin | none | `204` | `403`, `500` | `auth.go`, `auth.Service.Logout` |
+| `GET` | `/auth/onboarding` | Активная сессия | Нет | Собственные ответы, `required`, `step`, `version`, `completed_at` | `401`, `500` | `handlers/onboarding.go`, `AuthService.GetOnboarding` |
+| `PUT` | `/auth/onboarding` | Сессия + CSRF + trusted origin | Ответы, `step`, `version`, `complete`; [контракт](/docs/account-onboarding) | Сохранённое состояние | `400`, `401`, `403`, `409`, `500` | `handlers/onboarding.go`, `AuthService.SaveOnboarding` |
 | `GET` | `/employer/me` | `employer` | none | `user`, `company` | `401`, `403` | `router.go` |
 | `GET` | `/admin/me` | `admin` | none | `user` | `401`, `403` | `router.go` |
 
 ## Public jobs and companies
+
+Session response также содержит `onboarding_required`. Поле проверяется frontend
+после регистрации и входа, а также при восстановлении сессии.
 
 | Method | Path | Auth | Query/body | Response | Uses |
 | --- | --- | --- | --- | --- | --- |
@@ -78,4 +83,3 @@ All employer endpoints require `employer`; mutations require trusted origin and 
 | `POST` | `/internal/telegram-publish` | Header `X-JobHub-Publisher-Secret`, configured by `TELEGRAM_WEBHOOK_SECRET` | Runs one Telegram publisher batch and returns `checked`, `sent`, `failed`, `unknown` |
 
 This route is registered only if `TELEGRAM_WEBHOOK_SECRET` is present and valid during API startup.
-

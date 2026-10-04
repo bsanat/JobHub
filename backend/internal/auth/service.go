@@ -71,6 +71,9 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Sessio
 		}
 		company = &Company{ID: formatUUID(created.ID), Name: created.Name}
 	}
+	if _, err := tx.Exec(ctx, `INSERT INTO jobhub.account_onboarding (user_id) VALUES ($1)`, user.ID); err != nil {
+		return Session{}, "", fmt.Errorf("create onboarding: %w", err)
+	}
 	session, token, err := s.createSession(ctx, q, user, company)
 	if err != nil {
 		return Session{}, "", err
@@ -78,6 +81,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Sessio
 	if err := tx.Commit(ctx); err != nil {
 		return Session{}, "", fmt.Errorf("commit registration: %w", err)
 	}
+	session.OnboardingRequired = true
 	return session, token, nil
 }
 
@@ -105,10 +109,15 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (Session, str
 			company = &Company{ID: formatUUID(c.ID), Name: c.Name}
 		}
 	}
+	state, err := s.GetOnboarding(ctx, formatUUID(user.ID))
+	if err != nil {
+		return Session{}, "", fmt.Errorf("read onboarding: %w", err)
+	}
 	session, token, err := s.createSession(ctx, s.queries, user, company)
 	if err != nil {
 		return Session{}, "", err
 	}
+	session.OnboardingRequired = state.Required
 	return session, token, nil
 }
 
@@ -130,6 +139,11 @@ func (s *AuthService) Authenticate(ctx context.Context, token string) (Session, 
 		return Session{}, ErrSuspended
 	}
 	session := mapSession(row.JobhubSession, row.JobhubUser, "")
+	state, err := s.GetOnboarding(ctx, session.User.ID)
+	if err != nil {
+		return Session{}, fmt.Errorf("read onboarding: %w", err)
+	}
+	session.OnboardingRequired = state.Required
 	if row.JobhubUser.Role == RoleEmployer {
 		if c, err := s.queries.GetCompanyForUser(ctx, row.JobhubUser.ID); err == nil {
 			session.Company = &Company{ID: formatUUID(c.ID), Name: c.Name}
