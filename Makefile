@@ -1,9 +1,15 @@
-.PHONY: dev backend-dev local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo telegram-publisher-dev
+.PHONY: dev backend-dev dev-docker backend-dev-docker local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo telegram-publisher-dev
 
 dev:
-	./scripts/dev-local.sh
+	./scripts/dev-supabase.sh
 
 backend-dev:
+	./scripts/dev-supabase.sh backend
+
+dev-docker:
+	./scripts/dev-local.sh
+
+backend-dev-docker:
 	./scripts/dev-local.sh backend
 
 local-up:

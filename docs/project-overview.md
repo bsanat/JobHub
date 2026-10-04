@@ -55,8 +55,9 @@ JobHub — веб-приложение для поиска и публикаци
 
 | Команда | Где запускать | Что делает |
 | --- | --- | --- |
-| `make dev` | root | Запускает `scripts/dev-local.sh` для локальной разработки |
-| `make backend-dev` | root | Запускает backend-часть через `scripts/dev-local.sh backend` |
+| `make dev` | root | Запускает `scripts/dev-supabase.sh` для разработки против Supabase из `.env` |
+| `make backend-dev` | root | Запускает backend-часть через `scripts/dev-supabase.sh backend` |
+| `make dev-docker` | root | Запускает старый локальный PostgreSQL flow через `scripts/dev-local.sh` |
 | `make local-up` | root | Поднимает локальный Docker Compose profile `local` |
 | `make local-down` | root | Останавливает локальный Docker Compose profile `local` |
 | `make migrate-local` | root | Запускает миграции в локальном Docker Compose окружении |
@@ -80,4 +81,3 @@ JobHub — веб-приложение для поиска и публикаци
 - [Migration runbook](/docs/migration-runbook)
 
 Часть старых документов пересекается по темам: `telegram-vacancy-publisher.md`, `telegram-publisher-webhook.md`, `backend-verification.md`, `testing-matrix.md`, `release-readiness.md`. Они не удалены; новые страницы дают карту фактического состояния и ссылаются на них как на детали.
-

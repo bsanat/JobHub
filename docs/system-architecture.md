@@ -66,7 +66,7 @@ Eligibility is implemented in `backend/internal/telegrampublisher/store.go` and 
 
 | Environment | Подтверждено | Не подтверждено |
 | --- | --- | --- |
-| Local | `make dev`, `make local-up`, local frontend `5173`, backend default `8080`, local migrations through Docker Compose profile `local` | Exact developer machine DB state |
+| Local | `make dev`, local frontend `5173`, backend default `8080`, Supabase `DATABASE_URL` from `.env`; legacy Docker flow remains under `make dev-docker`/`make local-up` | Exact developer machine DB state |
 | Preview | Vercel supports preview by project settings, but repo only confirms `vercel.json` service routing | Separate preview database or secrets are not confirmed by code |
 | Production | Vercel multi-service config, frontend public base URL used in docs/workflow, Supabase/PostgreSQL expected through env vars | Current live Vercel variables and Supabase secrets cannot be verified from repo without exposing secrets |
 
@@ -82,4 +82,3 @@ Eligibility is implemented in `backend/internal/telegrampublisher/store.go` and 
 | Vercel routing | `vercel.json` |
 | Telegram webhook | `backend/cmd/api/telegram_webhook.go` |
 | Supabase trigger SQL | `scripts/supabase-telegram-publisher.sql` |
-

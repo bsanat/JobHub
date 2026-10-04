@@ -7,7 +7,9 @@
 
 | Задача | Команда | Примечание |
 | --- | --- | --- |
-| Запустить стек разработки | `make dev` | Локальная POC-база; данные staging Supabase не меняются. |
+| Запустить стек разработки | `make dev` | Backend и frontend напрямую против Supabase `DATABASE_URL` из `.env`; Docker не нужен. |
+| Запустить backend | `make backend-dev` | Только Go API против Supabase `DATABASE_URL` из `.env`. |
+| Запустить старый Docker dev-стек | `make dev-docker` | Локальная POC-база; данные staging Supabase не меняются. |
 | Запустить Docker-сервисы с пустой базой | `make local-up` | Собирает и запускает PostgreSQL, миграции и backend. |
 | Остановить Docker-сервисы | `make local-down` | Останавливает локальный профиль Compose. |
 | Применить локальные миграции | `make migrate-local` | Использует локальный PostgreSQL в Docker. |
@@ -28,18 +30,12 @@ npm run dev
 ## Работа с backend
 
 ```sh
-docker compose --profile local up -d postgres
-make migrate-local
-
-set -a
-. ./.env
-set +a
-
-cd backend
-go run ./cmd/api
+make backend-dev
 ```
 
 Не запускайте backend из Docker и Go-процесс вручную на одном порту одновременно.
+`make dev` и `make backend-dev` сами читают `.env`, отключают локальный
+Telegram publisher по умолчанию и используют Supabase без Docker.
 
 ## Проверки
 

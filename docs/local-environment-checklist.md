@@ -4,7 +4,8 @@
 
 ## Необходимые инструменты
 
-- Docker с Docker Compose v2 для существующих локальных Make-команд.
+- Docker с Docker Compose v2 нужен только для legacy-команд `make dev-docker`,
+  `make local-up` и `make migrate-local`.
 - Go 1.25 или новее.
 - Node.js 22.12 или новее с npm.
 - Локальный `.env` на основе `.env.example`.
@@ -25,4 +26,4 @@
 4. Проверьте `http://localhost:8080/api/v1/health`.
 5. По завершении остановите сервисы через `make local-down`.
 
-Команда `make dev` использует локальную POC-базу, описанную в `README.md`.
+Команда `make dev` использует Supabase `DATABASE_URL` из `.env`.

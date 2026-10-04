@@ -8,7 +8,7 @@ description: "Пошаговый вход в проект JobHub: что чит�
 ## Быстрый маршрут
 
 1. Прочитайте [О проекте](/docs/project-overview) и [Архитектуру системы](/docs/system-architecture).
-2. Проверьте локальные требования: Go `1.25+`, Node.js, npm, PostgreSQL-доступ для backend.
+2. Проверьте локальные требования: Go `1.25+`, Node.js, npm и доступ к Supabase PostgreSQL для backend.
 3. Создайте `.env` из `.env.example`. Не копируйте реальные production secrets в документацию, issue, PR или скриншоты.
 4. Для локального full-stack запуска используйте `make dev`.
 5. Frontend работает через typed repositories in `frontend/src/api/`; браузер не подключается напрямую к Supabase.
@@ -34,7 +34,8 @@ cd frontend
 npm run dev
 ```
 
-Если запускаете backend отдельно, убедитесь, что `DATABASE_URL`, `DATABASE_MIGRATION_URL`, `FRONTEND_ORIGIN` and `PORT` заданы корректно.
+Если запускаете backend отдельно, используйте `make backend-dev` или убедитесь,
+что `DATABASE_URL`, `FRONTEND_ORIGIN` and `PORT` заданы корректно.
 
 ## Переменные окружения
 
@@ -71,4 +72,3 @@ npm run dev
 - Не выводите `.env`, tokens, database URLs or private resume content в logs, screenshots или docs.
 - Для JobHub UI сейчас поддерживаются только `kk` и `ru`; новые UI тексты добавляйте в оба locale-файла.
 - Не удаляйте старые docs: помечайте устаревшее и связывайте с новой страницей.
-
