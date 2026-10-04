@@ -11,23 +11,22 @@ import (
 )
 
 func TestSupabaseFileStoreLifecycle(t *testing.T) {
-	for _, secret := range []string{"sb_secret_test_only", "eyJhbGciOiJIUzI1NiJ9.test.signature"} {
-		t.Run(strings.Split(secret, ".")[0], func(t *testing.T) {
-			testSupabaseFileStoreLifecycle(t, secret)
+	for _, tc := range []struct{ name, key, authorization string }{
+		{"secret", "sb_secret_test_only", ""},
+		{"legacy", "eyJhbGciOiJIUzI1NiJ9.test.signature", "Bearer eyJhbGciOiJIUzI1NiJ9.test.signature"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			testSupabaseFileStoreLifecycle(t, tc.key, tc.authorization)
 		})
 	}
 }
 
-func testSupabaseFileStoreLifecycle(t *testing.T, secret string) {
+func testSupabaseFileStoreLifecycle(t *testing.T, secret, wantAuthorization string) {
 	t.Helper()
 	key := strings.Repeat("a", 64) + ".pdf"
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
-		wantAuthorization := "Bearer " + secret
-		if strings.HasPrefix(secret, "sb_secret_") {
-			wantAuthorization = ""
-		}
 		if r.Header.Get("Authorization") != wantAuthorization || r.Header.Get("apikey") != secret {
 			t.Errorf("missing server-side authorization")
 			w.WriteHeader(http.StatusBadRequest)
@@ -138,6 +137,8 @@ func TestStorageResponseErrorSafeReasons(t *testing.T) {
 	for _, tc := range []struct{ name, body, reason string }{
 		{"bucket", `{"statusCode":"404","error":"Bucket not found","message":"Bucket not found"}`, "bucket_not_found"},
 		{"jwt", `{"code":"InvalidJWT","message":"private token details"}`, "invalid_jwt"},
+		{"compact-jws", `{"message":"Invalid Compact JWS"}`, "invalid_jwt"},
+		{"authorization", `{"error":"Bad Request","message":"headers must have required property 'authorization'"}`, "authorization_required"},
 		{"key", `{"message":"Invalid API key"}`, "invalid_api_key"},
 		{"access", `{"code":"AccessDenied","message":"private object path"}`, "access_denied"},
 		{"size", `{"code":"EntityTooLarge"}`, "file_too_large"},

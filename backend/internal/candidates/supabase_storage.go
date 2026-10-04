@@ -144,8 +144,10 @@ func storageResponseError(operation string, resp *http.Response) error {
 			switch value {
 			case "NoSuchBucket", "Bucket not found":
 				reason = "bucket_not_found"
-			case "InvalidJWT", "Invalid JWT":
+			case "InvalidJWT", "Invalid JWT", "Invalid Compact JWS":
 				reason = "invalid_jwt"
+			case "headers must have required property 'authorization'":
+				reason = "authorization_required"
 			case "InvalidApiKey", "Invalid API key":
 				reason = "invalid_api_key"
 			case "AccessDenied", "Unauthorized":
