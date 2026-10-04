@@ -6,6 +6,10 @@
 ## Фронтенд
 
 - `frontend/src/pages/` — страницы маршрутов.
+- `frontend/src/pages/EmployerApplicantsPage.tsx` — `/employer/applications`
+  со всеми откликами владельца и `/employer/vacancies/:jobId/applicants`
+  по вакансии; API и проверка владения — `handlers/candidates.go`
+  и `candidates/postgres_marketplace.go` внутри `backend/internal/`.
 - `frontend/src/pages/OnboardingPage.tsx` — опрос `/onboarding` после регистрации;
   `frontend/src/app/OnboardingGate.tsx` восстанавливает незавершённый опрос.
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями

@@ -664,7 +664,10 @@
 .application-status.status-offer { background: var(--color-success-soft); color: var(--color-success); }
 .application-status.status-rejected, .application-status.status-withdrawn { background: var(--color-error-soft); color: var(--color-error); }
 .applicant-row { display: grid; grid-template-columns: minmax(14rem,1fr) minmax(18rem,1.5fr) minmax(12rem,.7fr); gap: var(--space-5); padding: var(--space-5) var(--space-2); border-bottom: 1px solid var(--color-border); }
+.employer-applicants-page__actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.applicant-row > *, .applicant-row__identity > div { min-width: 0; }
 .applicant-row__identity { display: flex; gap: var(--space-3); }
+.applicant-row__identity .text-link { display: block; overflow-wrap: anywhere; }
 .applicant-row__identity > span { display: grid; flex: 0 0 2.75rem; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text-secondary); }
 .applicant-row h2 { margin: 0; font-size: var(--text-18); }
 .applicant-row p { margin: var(--space-1) 0; color: var(--color-text-secondary); }

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, UserRound } from "lucide-react";
+import { Download, FileText, RefreshCw, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import type { ApplicationStatus } from "../api/models/candidate";
@@ -29,9 +29,10 @@ export function EmployerApplicantsPage() {
   const client = useQueryClient();
   const toast = useToast();
   const apps = useQuery({
-    queryKey: ["employer", "applications", jobId],
+    queryKey: ["employer", "applications", session?.user.id, jobId],
     queryFn: () => repositories.candidate.listEmployerApplications(jobId),
-    enabled: Boolean(jobId),
+    enabled: session?.user.role === "employer",
+    refetchInterval: 30_000,
   });
   const update = useMutation({
     mutationFn: ({
@@ -48,7 +49,7 @@ export function EmployerApplicantsPage() {
       ),
     onSuccess: async () => {
       await client.invalidateQueries({
-        queryKey: ["employer", "applications", jobId],
+        queryKey: ["employer", "applications"],
       });
       toast.showToast({ title: t("employerApplicants.updated") });
     },
@@ -79,11 +80,27 @@ export function EmployerApplicantsPage() {
       <section className="employer-applicants-page">
         <header className="workbench-page-header">
           <div>
-            <h1>{t("employerApplicants.title")}</h1>
+            <h1>
+              {t(jobId ? "employerApplicants.title" : "employer.applications")}
+            </h1>
           </div>
-          <Link className="text-link" to="/employer/vacancies">
-            {t("employerApplicants.back")}
-          </Link>
+          <div className="employer-applicants-page__actions">
+            <Link
+              className="text-link"
+              to={jobId ? "/employer/applications" : "/employer/vacancies"}
+            >
+              {t(jobId ? "employerApplicants.all" : "employerApplicants.back")}
+            </Link>
+            <Button
+              variant="quiet"
+              aria-label={t("employerApplicants.refresh")}
+              title={t("employerApplicants.refresh")}
+              disabled={apps.isFetching}
+              onClick={() => void apps.refetch()}
+            >
+              <RefreshCw size={18} aria-hidden="true" />
+            </Button>
+          </div>
         </header>
         {apps.isPending ? (
           <JobListSkeleton label={t("employerApplicants.loading")} />
@@ -99,7 +116,11 @@ export function EmployerApplicantsPage() {
         {apps.data?.length === 0 ? (
           <EmptyState
             title={t("employerApplicants.emptyTitle")}
-            description={t("employerApplicants.emptyDescription")}
+            description={t(
+              jobId
+                ? "employerApplicants.emptyDescription"
+                : "employerApplicants.emptyAllDescription",
+            )}
           />
         ) : null}
         {apps.data?.length ? (
@@ -113,6 +134,12 @@ export function EmployerApplicantsPage() {
                   <div>
                     <h2>{app.candidateName}</h2>
                     <p>{app.candidatePosition || t("common.notProvided")}</p>
+                    <Link
+                      className="text-link"
+                      to={`/employer/vacancies/${app.jobId}/applicants`}
+                    >
+                      {app.jobTitle || t("employerApplicants.vacancy")}
+                    </Link>
                     <small>{formatDate(app.createdAt, i18n.language)}</small>
                   </div>
                 </div>

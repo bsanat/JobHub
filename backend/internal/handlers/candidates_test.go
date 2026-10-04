@@ -31,6 +31,8 @@ func TestCandidateRoutesEnforceRoles(t *testing.T) {
 	}{
 		{"employer cannot read profile", auth.RoleEmployer, http.MethodGet, "/api/v1/profile", http.StatusForbidden},
 		{"candidate cannot list employer applicants", auth.RoleJobSeeker, http.MethodGet, "/api/v1/employer/jobs/11111111-1111-4111-8111-111111111111/applications", http.StatusForbidden},
+		{"candidate cannot list company applicants", auth.RoleJobSeeker, http.MethodGet, "/api/v1/employer/applications", http.StatusForbidden},
+		{"admin cannot list company applicants", auth.RoleAdmin, http.MethodGet, "/api/v1/employer/applications", http.StatusForbidden},
 		{"admin cannot read candidate profile", auth.RoleAdmin, http.MethodGet, "/api/v1/profile", http.StatusForbidden},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -43,6 +45,34 @@ func TestCandidateRoutesEnforceRoles(t *testing.T) {
 				t.Fatalf("want %d got %d: %s", tc.want, res.Code, res.Body.String())
 			}
 		})
+	}
+}
+
+func TestEmployerApplicationListsUseAuthenticatedOwner(t *testing.T) {
+	for _, jobID := range []string{"", "22222222-2222-4222-8222-222222222222"} {
+		router, store := candidateRouter(auth.RoleEmployer, nil)
+		path := "/api/v1/employer/applications"
+		if jobID != "" {
+			path = "/api/v1/employer/jobs/" + jobID + "/applications"
+		}
+		res := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, path+"?employer_id=someone-else", nil)
+		req.AddCookie(&http.Cookie{Name: auth.SessionCookieName, Value: "token"})
+		router.ServeHTTP(res, req)
+		if res.Code != http.StatusOK || store.listEmployerID != "11111111-1111-4111-8111-111111111111" || store.listJobID != jobID {
+			t.Fatalf("unexpected list scope: status=%d owner=%q job=%q", res.Code, store.listEmployerID, store.listJobID)
+		}
+	}
+}
+
+func TestEmployerApplicationListRequiresAuthentication(t *testing.T) {
+	store := &candidateStoreStub{}
+	service := candidates.NewService(store, candidateFilesStub{})
+	router := NewRouter(checker{}, slog.New(slog.NewTextHandler(io.Discard, nil)), "http://localhost:5173", jobReaderStub{}, &authStub{err: auth.ErrInvalidSession}, service)
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/employer/applications", nil))
+	if res.Code != http.StatusUnauthorized || store.listEmployerID != "" {
+		t.Fatalf("anonymous access: status=%d", res.Code)
 	}
 }
 
@@ -182,8 +212,10 @@ func (candidateFilesStub) Open(context.Context, string) (io.ReadCloser, error) {
 func (candidateFilesStub) Delete(context.Context, string) error { return nil }
 
 type candidateStoreStub struct {
-	err       error
-	saveCalls int
+	err            error
+	saveCalls      int
+	listEmployerID string
+	listJobID      string
 }
 
 func (s *candidateStoreStub) GetProfile(context.Context, string) (candidates.Profile, error) {
@@ -218,8 +250,9 @@ func (s *candidateStoreStub) ListCandidateApplications(context.Context, string) 
 func (s *candidateStoreStub) WithdrawApplication(context.Context, string, string) (candidates.Application, error) {
 	return candidates.Application{}, s.err
 }
-func (s *candidateStoreStub) ListEmployerApplications(context.Context, string, string) ([]candidates.Application, error) {
-	return nil, s.err
+func (s *candidateStoreStub) ListEmployerApplications(_ context.Context, employerID, jobID string) ([]candidates.Application, error) {
+	s.listEmployerID, s.listJobID = employerID, jobID
+	return []candidates.Application{}, s.err
 }
 func (s *candidateStoreStub) UpdateEmployerApplication(context.Context, string, string, string) (candidates.Application, error) {
 	return candidates.Application{}, s.err

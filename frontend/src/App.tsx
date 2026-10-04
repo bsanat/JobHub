@@ -58,6 +58,7 @@ export default function App() {
           <Route path="/employer/vacancies/new" element={<ProtectedRoute role="employer"><EmployerVacancyFormPage /></ProtectedRoute>} />
           <Route path="/employer/vacancies/:jobId/edit" element={<ProtectedRoute role="employer"><EmployerVacancyFormPage /></ProtectedRoute>} />
           <Route path="/employer/vacancies/:jobId/applicants" element={<ProtectedRoute role="employer"><EmployerApplicantsPage /></ProtectedRoute>} />
+          <Route path="/employer/applications" element={<ProtectedRoute role="employer"><EmployerApplicantsPage /></ProtectedRoute>} />
           <Route path="/employer/company" element={<ProtectedRoute role="employer"><EmployerCompanyPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>} />
           <Route path="/dev/ui" element={<ComponentShowcasePage />} />

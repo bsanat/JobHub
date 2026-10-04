@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Pencil, Save, X } from "lucide-react";
+import { ExternalLink, Pencil, Save, Users, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -86,6 +86,10 @@ function CompanyView({ company }: { company: Company }) {
           <ExternalLink size={16} aria-hidden="true" />
         </Link>
       </div>
+      <Link className="text-link" to="/employer/applications">
+        <Users size={17} aria-hidden="true" />
+        {t("employer.applications")}
+      </Link>
       <dl className="account-settings__details">
         <div>
           <dt>{t("companyEdit.industry")}</dt>

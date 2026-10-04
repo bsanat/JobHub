@@ -171,14 +171,17 @@ func (s *PostgresStore) WithdrawApplication(ctx context.Context, candidateID, ap
 }
 
 func (s *PostgresStore) ListEmployerApplications(ctx context.Context, employerID, jobID string) ([]Application, error) {
-	var owns bool
-	if err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM jobhub.jobs j JOIN jobhub.company_memberships cm ON cm.company_id=j.company_id WHERE j.id=$1::uuid AND j.source='jobhub' AND cm.user_id=$2::uuid AND cm.role='owner')`, jobID, employerID).Scan(&owns); err != nil {
-		return nil, err
+	if jobID != "" {
+		var owns bool
+		if err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM jobhub.jobs j JOIN jobhub.company_memberships cm ON cm.company_id=j.company_id WHERE j.id=$1::uuid AND j.source='jobhub' AND cm.user_id=$2::uuid AND cm.role='owner')`, jobID, employerID).Scan(&owns); err != nil {
+			return nil, err
+		}
+		if !owns {
+			return nil, ErrNotFound
+		}
 	}
-	if !owns {
-		return nil, ErrNotFound
-	}
-	rows, err := s.pool.Query(ctx, applicationSelect+` WHERE a.job_id=$1::uuid AND EXISTS(SELECT 1 FROM jobhub.company_memberships cm WHERE cm.company_id=a.company_id AND cm.user_id=$2::uuid AND cm.role='owner') ORDER BY a.created_at DESC`, jobID, employerID)
+	// Ownership is required even when no vacancy filter is supplied.
+	rows, err := s.pool.Query(ctx, employerApplicationSelect+` WHERE ($1::text = '' OR a.job_id=NULLIF($1::text,'')::uuid) AND EXISTS(SELECT 1 FROM jobhub.company_memberships cm WHERE cm.company_id=a.company_id AND cm.user_id=$2::uuid AND cm.role='owner') ORDER BY a.created_at DESC,a.id DESC`, jobID, employerID)
 	if err != nil {
 		return nil, err
 	}
@@ -244,11 +247,18 @@ func validEmployerTransition(current, next string) bool {
 	return ok && nextRank > currentRank
 }
 
-const applicationSelect = `
+const applicationIdentitySelect = `
 	SELECT a.id::text,a.job_id::text,a.company_id::text,a.candidate_id::text,u.full_name,
-	       COALESCE(p.desired_position,p.current_position,''),
+	       COALESCE(p.desired_position,p.current_position,''),`
+
+const applicationSelect = applicationIdentitySelect + `
 	       CASE WHEN jobhub.job_is_public(j) THEN j.title ELSE '' END,
-	       CASE WHEN jobhub.job_is_public(j) THEN c.name ELSE '' END,
+	       CASE WHEN jobhub.job_is_public(j) THEN c.name ELSE '' END,` + applicationDetailsSelect
+
+// Private employer queries retain the vacancy title after it closes.
+const employerApplicationSelect = applicationIdentitySelect + `j.title,c.name,` + applicationDetailsSelect
+
+const applicationDetailsSelect = `
 	       jobhub.job_is_public(j),a.status,COALESCE(a.message,''),
 	       r.id::text,r.original_filename,r.content_type,r.size_bytes,r.uploaded_at,r.status,r.storage_key,
 	       a.created_at,a.updated_at,COALESCE((SELECT max(e.created_at) FROM jobhub.application_status_events e WHERE e.application_id=a.id),a.updated_at)

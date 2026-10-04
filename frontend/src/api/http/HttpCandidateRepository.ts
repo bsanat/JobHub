@@ -74,9 +74,9 @@ export class HttpCandidateRepository implements CandidateRepository {
     );
     return mapApplication(data);
   }
-  async listEmployerApplications(jobId: string) {
+  async listEmployerApplications(jobId?: string) {
     const { data } = await apiClient.get<{ items: Snake[] }>(
-      `/employer/jobs/${jobId}/applications`,
+      jobId ? `/employer/jobs/${jobId}/applications` : "/employer/applications",
     );
     return data.items.map(mapApplication);
   }

@@ -73,6 +73,7 @@ func RegisterCandidateRoutes(router *gin.Engine, service *candidates.Service, au
 	router.GET("/api/v1/applications", append(read, listApplications(service, logger))...)
 	router.PATCH("/api/v1/applications/:id/withdraw", append(write, withdrawApplication(service, logger))...)
 	router.GET("/api/v1/employer/jobs/:id/applications", append(employerRead, listEmployerApplications(service, logger))...)
+	router.GET("/api/v1/employer/applications", append(employerRead, listEmployerApplications(service, logger))...)
 	router.GET("/api/v1/employer/applications/:id/resume", append(employerRead, employerResumeContent(service, logger))...)
 	router.PATCH("/api/v1/employer/applications/:id", append(employerWrite, updateEmployerApplication(service, logger))...)
 }

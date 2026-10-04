@@ -30,7 +30,7 @@ export interface CandidateRepository {
     applicationId: string,
     csrfToken: string,
   ): Promise<CandidateApplication>;
-  listEmployerApplications(jobId: string): Promise<CandidateApplication[]>;
+  listEmployerApplications(jobId?: string): Promise<CandidateApplication[]>;
   updateApplicationStatus(
     applicationId: string,
     status: Exclude<ApplicationStatus, "sent" | "withdrawn">,
