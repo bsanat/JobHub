@@ -192,41 +192,48 @@ API calls are verified through `frontend/src/api/http/*` and backend handlers.
 | Cancel | none | none | Returns to read mode and resets form | `ProfilePage` |
 | Save profile | `PATCH /api/v1/profile` | Updates candidate profile tables | Shows saved profile | `ProfilePage`, `HttpCandidateRepository` |
 
-## Saved jobs
+## Сохранённые: вакансии
+
+Вакансии и компании находятся на одной странице «Сохранённые» (`SavedPage`).
+Переключение разделов изменяет query-параметр `tab`, но сохраняет независимый
+поиск каждой панели до ухода со страницы. Обе панели загружают данные при открытии.
 
 | Поле | Значение |
 | --- | --- |
 | URL | `/saved` |
-| Component | `SavedJobsPage` |
+| Component | `SavedPage`, `SavedJobsPanel` |
 | Пользователи | `job_seeker` |
 | Данные | Candidate saved vacancies |
 | API | `GET /api/v1/saved-jobs`, `DELETE /api/v1/jobs/:id/saved` |
 | Database | `saved_jobs`, joined public job data |
-| Code | `frontend/src/pages/SavedJobsPage.tsx` |
+| Code | `frontend/src/pages/SavedPage.tsx`, `frontend/src/components/candidate/SavedJobsPanel.tsx` |
 
 | Кнопка или действие | Запрос API | Изменение данных | Ожидаемый результат | Код |
 | --- | --- | --- | --- | --- |
-| Browse jobs empty state | none | none | Opens `/jobs` | `SavedJobsPage` |
-| Open saved job | `GET /api/v1/jobs/:id` after navigation | none | Opens detail page | `SavedJobsPage` |
-| Remove saved job | `DELETE /api/v1/jobs/:id/saved` | Deletes `saved_jobs` row | Removes row from list | `SavedJobsPage` |
+| Вакансии / Компании | Нет | Нет | Переключает панель, обновляет URL | `SavedPage` |
+| Смотреть вакансии | Нет | Нет | Открывает `/jobs` | `SavedPage` |
+| Поиск в сохранённых | Нет | Нет | Фильтрует загруженные вакансии в браузере | `SavedJobsPanel` |
+| Открыть вакансию | `GET /api/v1/jobs/:id` после перехода | Нет | Открывает страницу вакансии | `SavedJobsPanel` |
+| Убрать из сохранённых | `DELETE /api/v1/jobs/:id/saved` | Удаляет запись `saved_jobs` | Удаляет строку из списка, в том числе недоступную вакансию | `SavedJobsPanel` |
 
-## Saved companies
+## Сохранённые: компании
 
 | Поле | Значение |
 | --- | --- |
-| URL | `/saved-companies` |
-| Component | `SavedCompaniesPage` |
+| URL | `/saved?tab=companies`; старый `/saved-companies` перенаправляет сюда |
+| Component | `SavedPage`, `SavedCompaniesPanel` |
 | Пользователи | `job_seeker` |
 | Данные | Followed companies |
 | API | `GET /api/v1/companies/following`, `DELETE /api/v1/companies/:id/follow` |
 | Database | `company_follows`, `companies` |
-| Code | `frontend/src/pages/SavedCompaniesPage.tsx` |
+| Code | `frontend/src/pages/SavedPage.tsx`, `frontend/src/components/candidate/SavedCompaniesPanel.tsx` |
 
 | Кнопка или действие | Запрос API | Изменение данных | Ожидаемый результат | Код |
 | --- | --- | --- | --- | --- |
-| Browse companies empty state | none | none | Opens `/companies` | `SavedCompaniesPage` |
-| Open company profile | `GET /api/v1/companies/:id` after navigation | none | Opens company profile | `SavedCompaniesPage` |
-| Unfollow | `DELETE /api/v1/companies/:id/follow` | Deletes `company_follows` | Removes company from saved list | `SavedCompaniesPage` |
+| Смотреть компании | Нет | Нет | Открывает `/companies` | `SavedPage` |
+| Поиск в компаниях | Нет | Нет | Фильтрует загруженные компании по названию, отрасли и городу | `SavedCompaniesPanel` |
+| Открыть компанию | `GET /api/v1/companies/:id` после перехода | Нет | Открывает профиль компании | `SavedCompaniesPanel` |
+| Отписаться | `DELETE /api/v1/companies/:id/follow` | Удаляет запись `company_follows` | Удаляет компанию из списка | `SavedCompaniesPanel` |
 
 ## Candidate applications
 
@@ -384,4 +391,3 @@ Admin CRUD actions are **не подтверждено** in inspected frontend/b
 | `/workspace` | Protected job seeker redirect to `/profile` |
 | `/preferences` | Protected job seeker redirect to `/resume#preferences` |
 | `*` | `NotFoundPage`, links to `/` and `/jobs` |
-

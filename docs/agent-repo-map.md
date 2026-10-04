@@ -6,7 +6,13 @@
 ## Фронтенд
 
 - `frontend/src/pages/` — страницы маршрутов.
+- `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
+  и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
+  `/saved-companies` перенаправляет на `/saved?tab=companies`.
 - `frontend/src/components/` — общие и функциональные компоненты.
+- `frontend/src/components/employer/EmployerWorkspaceLayout.tsx` and
+  `frontend/src/components/candidate/CandidateWorkspaceLayout.tsx` — навигация
+  кабинетов; их стили находятся в `frontend/src/styles/workspace.css`.
 - `frontend/src/api/http/` — преобразование HTTP DTO в модели frontend.
 - `frontend/src/api/models/` — доменные типы frontend.
 - `frontend/src/i18n/locales/kk.ts` and `frontend/src/i18n/locales/ru.ts`

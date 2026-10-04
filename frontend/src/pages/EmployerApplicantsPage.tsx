@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import type { ApplicationStatus } from "../api/models/candidate";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
-import { EmployerWorkspaceNav } from "../components/employer/EmployerWorkspaceNav";
+import { EmployerWorkspaceLayout } from "../components/employer/EmployerWorkspaceLayout";
 import { Button } from "../components/ui/Button";
 import {
   EmptyState,
@@ -13,7 +13,6 @@ import {
   JobListSkeleton,
 } from "../components/ui/Feedback";
 import { useToast } from "../components/ui/useToast";
-import { SiteShell } from "../layouts/SiteShell";
 
 const actions: Exclude<ApplicationStatus, "sent" | "withdrawn">[] = [
   "viewed",
@@ -76,14 +75,11 @@ export function EmployerApplicantsPage() {
     }
   };
   return (
-    <SiteShell>
-      <main className="employer-page page-container">
-        <EmployerWorkspaceNav />
-        <header className="employer-list-header">
+    <EmployerWorkspaceLayout>
+      <section className="employer-applicants-page">
+        <header className="workbench-page-header">
           <div>
-            <p className="auth-eyebrow">{t("employerApplicants.eyebrow")}</p>
             <h1>{t("employerApplicants.title")}</h1>
-            <p>{t("employerApplicants.description")}</p>
           </div>
           <Link className="text-link" to="/employer/vacancies">
             {t("employerApplicants.back")}
@@ -173,8 +169,8 @@ export function EmployerApplicantsPage() {
             ))}
           </div>
         ) : null}
-      </main>
-    </SiteShell>
+      </section>
+    </EmployerWorkspaceLayout>
   );
 }
 function formatDate(value: string, language: string) {

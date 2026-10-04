@@ -10,7 +10,7 @@ import { z } from "zod";
 import type { NativeJobInput } from "../api/models/job";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
-import { EmployerWorkspaceNav } from "../components/employer/EmployerWorkspaceNav";
+import { EmployerWorkspaceLayout } from "../components/employer/EmployerWorkspaceLayout";
 import { Button } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/Feedback";
 import {
@@ -20,7 +20,6 @@ import {
   Textarea,
 } from "../components/ui/FormControls";
 import { useToast } from "../components/ui/useToast";
-import { SiteShell } from "../layouts/SiteShell";
 import { CitySelect } from "../components/location/CitySelect";
 import { isCityId } from "../lib/cities";
 
@@ -150,7 +149,9 @@ export function EmployerVacancyFormPage() {
       requirements: job.data.requirements || "",
       niceToHave: job.data.niceToHave || "",
       skills: job.data.tags.join(", "),
-      cityId: job.data.cityId || (job.data.location ? `legacy:${job.data.location}` : ""),
+      cityId:
+        job.data.cityId ||
+        (job.data.location ? `legacy:${job.data.location}` : ""),
       workMode: job.data.workMode || "on_site",
       employmentType:
         job.data.employmentType === "part_time" ||
@@ -223,31 +224,26 @@ export function EmployerVacancyFormPage() {
   });
   if (job.isError)
     return (
-      <SiteShell>
-        <main className="employer-page page-container">
-          <ErrorState
-            title={t("employer.loadErrorTitle")}
-            description={t("employer.loadErrorDescription")}
-            actionLabel={t("common.retry")}
-            onAction={() => void job.refetch()}
-          />
-        </main>
-      </SiteShell>
+      <EmployerWorkspaceLayout>
+        <ErrorState
+          title={t("employer.loadErrorTitle")}
+          description={t("employer.loadErrorDescription")}
+          actionLabel={t("common.retry")}
+          onAction={() => void job.refetch()}
+        />
+      </EmployerWorkspaceLayout>
     );
   return (
-    <SiteShell>
-      <main className="employer-page page-container">
-        <EmployerWorkspaceNav />
+    <EmployerWorkspaceLayout>
+      <section className="employer-vacancy-form-page">
         <Link className="back-link" to="/employer/vacancies">
           <ArrowLeft size={17} />
           {t("employer.backToVacancies")}
         </Link>
         <header className="vacancy-form-header">
-          <p className="auth-eyebrow">{t("auth.employerEyebrow")}</p>
           <h1>
             {editing ? t("employer.editVacancy") : t("employer.newVacancy")}
           </h1>
-          <p>{t("employer.formDescription")}</p>
         </header>
         {editing && job.isPending ? (
           <p role="status">{t("employer.loadingVacancy")}</p>
@@ -268,7 +264,26 @@ export function EmployerVacancyFormPage() {
                   error={fieldError(form.formState.errors.category?.message, t)}
                   {...form.register("category")}
                 />
-                <Controller control={form.control} name="cityId" render={({ field }) => <CitySelect label={t("employer.fields.location")} anyLabel={t("employer.selectCity")} required value={field.value} legacyLabel={job.data?.cityId ? undefined : job.data?.location} error={fieldError(form.formState.errors.cityId?.message, t)} onChange={field.onChange} />} />
+                <Controller
+                  control={form.control}
+                  name="cityId"
+                  render={({ field }) => (
+                    <CitySelect
+                      label={t("employer.fields.location")}
+                      anyLabel={t("employer.selectCity")}
+                      required
+                      value={field.value}
+                      legacyLabel={
+                        job.data?.cityId ? undefined : job.data?.location
+                      }
+                      error={fieldError(
+                        form.formState.errors.cityId?.message,
+                        t,
+                      )}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
                 <Select
                   label={t("employer.fields.workMode")}
                   {...form.register("workMode")}
@@ -442,8 +457,8 @@ export function EmployerVacancyFormPage() {
             </div>
           </form>
         )}
-      </main>
-    </SiteShell>
+      </section>
+    </EmployerWorkspaceLayout>
   );
 }
 

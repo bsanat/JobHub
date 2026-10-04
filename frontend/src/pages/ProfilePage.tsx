@@ -1,6 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  ExternalLink,
+  GraduationCap,
+  Link2,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Save,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -25,7 +39,6 @@ import { ErrorState, Skeleton } from "../components/ui/Feedback";
 import { useToast } from "../components/ui/useToast";
 import { CandidateWorkspaceLayout } from "../components/candidate/CandidateWorkspaceLayout";
 import { CandidateIdentityHeader } from "../components/candidate/CandidateIdentityHeader";
-import { CandidateAccountSection } from "../components/candidate/CandidateAccountSection";
 import { CitySelect } from "../components/location/CitySelect";
 import { cityName, isCityId } from "../lib/cities";
 import {
@@ -35,7 +48,9 @@ import {
   safeProfileUrl,
 } from "../lib/profileContact";
 
-const optionalUrl = z.string().refine((value) => !value || safeProfileUrl(value));
+const optionalUrl = z
+  .string()
+  .refine((value) => !value || safeProfileUrl(value));
 const schema = z.object({
   fullName: z.string().trim().min(1),
   photoUrl: optionalUrl,
@@ -183,7 +198,10 @@ export function ProfilePage() {
     requestAnimationFrame(() => form.setFocus("fullName"));
   };
   const cancelEditing = () => {
-    if (form.formState.isDirty && !window.confirm(t("profile.discardConfirm"))) {
+    if (
+      form.formState.isDirty &&
+      !window.confirm(t("profile.discardConfirm"))
+    ) {
       return;
     }
     form.reset(toForm(profile.data!));
@@ -215,406 +233,419 @@ export function ProfilePage() {
     <CandidateWorkspaceLayout>
       <section className="profile-page">
         <CandidateIdentityHeader
-          eyebrow={t("profile.eyebrow")}
           profile={profile.data!}
-          user={session!.user}
+          actions={
+            !isEditing ? (
+              <Button
+                ref={editButtonRef}
+                type="button"
+                variant="primary"
+                leadingIcon={<Pencil size={17} />}
+                onClick={startEditing}
+              >
+                {t("profile.edit")}
+              </Button>
+            ) : null
+          }
         />
-        {!isEditing ? (
-          <div className="profile-view-actions">
-            <Button
-              ref={editButtonRef}
-              type="button"
-              variant="secondary"
-              leadingIcon={<Pencil size={17} />}
-              onClick={startEditing}
-            >
-              {t("profile.edit")}
-            </Button>
-          </div>
-        ) : null}
         {!isEditing ? (
           <ProfileView profile={profile.data!} />
         ) : (
-        <form className="profile-form" onSubmit={submit} noValidate>
-          <ProfileSection title={t("profile.sections.about")}>
-            <div className="profile-grid">
-              <Input
-                label={t("profile.fields.fullName")}
-                error={
-                  form.formState.errors.fullName
-                    ? t("profile.validation.required")
-                    : undefined
-                }
-                {...form.register("fullName")}
-              />
-              <Controller
-                control={form.control}
-                name="cityId"
-                render={({ field }) => (
-                  <CitySelect
-                    label={t("profile.fields.city")}
-                    anyLabel={t("common.notProvided")}
-                    value={field.value}
-                    legacyLabel={profile.data?.city}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              <Input
-                label={t("profile.fields.birthDate")}
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                hint={
-                  profile.data?.birthYear && !profile.data.birthDate
-                    ? t("profile.hints.legacyBirthYear", {
-                        year: profile.data.birthYear,
-                      })
-                    : t("profile.hints.birthDatePrivate")
-                }
-                error={
-                  form.formState.errors.birthDate
-                    ? t("profile.validation.birthDate")
-                    : undefined
-                }
-                {...form.register("birthDate")}
-              />
-              <Input
-                label={t("profile.fields.phone")}
-                type="tel"
-                placeholder="+7 700 000 00 00"
-                error={
-                  form.formState.errors.phone
-                    ? t("profile.validation.phone")
-                    : undefined
-                }
-                {...form.register("phone")}
-              />
-              <Input
-                label={t("profile.fields.currentPosition")}
-                {...form.register("currentPosition")}
-              />
-              <Input
-                label={t("profile.fields.desiredPosition")}
-                {...form.register("desiredPosition")}
-              />
-              <Input
-                label={t("profile.fields.yearsExperience")}
-                inputMode="decimal"
-                {...form.register("yearsExperience")}
-              />
-              <Select
-                label={t("profile.fields.experienceLevel")}
-                {...form.register("experienceLevel")}
-              >
-                <option value="">{t("common.notProvided")}</option>
-                {["internship", "junior", "middle", "senior", "lead"].map(
-                  (x) => (
-                    <option key={x} value={x}>
-                      {t(`profile.experienceLevels.${x}`)}
-                    </option>
-                  ),
-                )}
-              </Select>
-            </div>
-            <Textarea
-              label={t("profile.fields.about")}
-              rows={5}
-              {...form.register("about")}
-            />
-            <div className="profile-grid">
-              <Input
-                label={t("profile.fields.skills")}
-                hint={t("profile.hints.commaSeparated")}
-                {...form.register("skills")}
-              />
-              <Input
-                label={t("profile.fields.certifications")}
-                hint={t("profile.hints.commaSeparated")}
-                {...form.register("certifications")}
-              />
-            </div>
-          </ProfileSection>
-          <ProfileSection
-            title={t("profile.sections.experience")}
-            action={
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leadingIcon={<Plus size={16} />}
-                onClick={() =>
-                  experience.append({
-                    company: "",
-                    position: "",
-                    employmentType: "full_time",
-                    startDate: "",
-                    endDate: "",
-                    isCurrent: false,
-                    description: "",
-                    achievements: "",
-                    skills: "",
-                  })
-                }
-              >
-                {t("profile.addExperience")}
-              </Button>
-            }
-          >
-            {experience.fields.length === 0 ? (
-              <p className="section-empty">{t("profile.noExperience")}</p>
-            ) : (
-              experience.fields.map((field, index) => (
-                <div className="repeatable-row" key={field.id}>
-                  <div className="profile-grid">
-                    <Input
-                      label={t("profile.fields.company")}
-                      error={
-                        form.formState.errors.workExperience?.[index]?.company
-                          ? t("profile.validation.required")
-                          : undefined
-                      }
-                      {...form.register(`workExperience.${index}.company`)}
-                    />
-                    <Input
-                      label={t("profile.fields.position")}
-                      {...form.register(`workExperience.${index}.position`)}
-                    />
-                    <Select
-                      label={t("profile.fields.employmentType")}
-                      {...form.register(
-                        `workExperience.${index}.employmentType`,
-                      )}
-                    >
-                      {employmentTypes.map((x) => (
-                        <option key={x} value={x}>
-                          {t(`employer.employmentTypes.${x}`)}
-                        </option>
-                      ))}
-                    </Select>
-                    <Input
-                      label={t("profile.fields.startDate")}
-                      type="date"
-                      {...form.register(`workExperience.${index}.startDate`)}
-                    />
-                    <Input
-                      label={t("profile.fields.endDate")}
-                      type="date"
-                      disabled={watchedExperience?.[index]?.isCurrent}
-                      {...form.register(`workExperience.${index}.endDate`)}
-                    />
-                    <Checkbox
-                      label={t("profile.fields.currentJob")}
-                      {...form.register(`workExperience.${index}.isCurrent`)}
-                    />
-                  </div>
-                  <Textarea
-                    label={t("profile.fields.description")}
-                    {...form.register(`workExperience.${index}.description`)}
-                  />
-                  <Textarea
-                    label={t("profile.fields.achievements")}
-                    {...form.register(`workExperience.${index}.achievements`)}
-                  />
-                  <Input
-                    label={t("profile.fields.skills")}
-                    {...form.register(`workExperience.${index}.skills`)}
-                  />
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    size="sm"
-                    leadingIcon={<Trash2 size={15} />}
-                    onClick={() => experience.remove(index)}
-                  >
-                    {t("common.remove")}
-                  </Button>
-                </div>
-              ))
-            )}
-          </ProfileSection>
-          <ProfileSection
-            title={t("profile.sections.education")}
-            action={
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leadingIcon={<Plus size={16} />}
-                onClick={() =>
-                  education.append({
-                    institution: "",
-                    degree: "",
-                    fieldOfStudy: "",
-                    startYear: "",
-                    graduationYear: "",
-                    description: "",
-                  })
-                }
-              >
-                {t("profile.addEducation")}
-              </Button>
-            }
-          >
-            {education.fields.length === 0 ? (
-              <p className="section-empty">{t("profile.noEducation")}</p>
-            ) : (
-              education.fields.map((field, index) => (
-                <div className="repeatable-row" key={field.id}>
-                  <div className="profile-grid">
-                    <Input
-                      label={t("profile.fields.institution")}
-                      {...form.register(`education.${index}.institution`)}
-                    />
-                    <Input
-                      label={t("profile.fields.degree")}
-                      {...form.register(`education.${index}.degree`)}
-                    />
-                    <Input
-                      label={t("profile.fields.fieldOfStudy")}
-                      {...form.register(`education.${index}.fieldOfStudy`)}
-                    />
-                    <Input
-                      label={t("profile.fields.startYear")}
-                      inputMode="numeric"
-                      {...form.register(`education.${index}.startYear`)}
-                    />
-                    <Input
-                      label={t("profile.fields.graduationYear")}
-                      inputMode="numeric"
-                      {...form.register(`education.${index}.graduationYear`)}
-                    />
-                  </div>
-                  <Textarea
-                    label={t("profile.fields.description")}
-                    {...form.register(`education.${index}.description`)}
-                  />
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    size="sm"
-                    leadingIcon={<Trash2 size={15} />}
-                    onClick={() => education.remove(index)}
-                  >
-                    {t("common.remove")}
-                  </Button>
-                </div>
-              ))
-            )}
-          </ProfileSection>
-          <ProfileSection
-            title={t("profile.sections.languages")}
-            action={
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leadingIcon={<Plus size={16} />}
-                onClick={() =>
-                  languages.append({ language: "", proficiency: "B1" })
-                }
-              >
-                {t("profile.addLanguage")}
-              </Button>
-            }
-          >
-            {languages.fields.map((field, index) => (
-              <div className="language-row" key={field.id}>
+          <form className="profile-form" onSubmit={submit} noValidate>
+            <ProfileSection title={t("profile.sections.about")}>
+              <div className="profile-grid">
                 <Input
-                  label={t("profile.fields.language")}
-                  {...form.register(`languages.${index}.language`)}
+                  label={t("profile.fields.fullName")}
+                  error={
+                    form.formState.errors.fullName
+                      ? t("profile.validation.required")
+                      : undefined
+                  }
+                  {...form.register("fullName")}
+                />
+                <Controller
+                  control={form.control}
+                  name="cityId"
+                  render={({ field }) => (
+                    <CitySelect
+                      label={t("profile.fields.city")}
+                      anyLabel={t("common.notProvided")}
+                      value={field.value}
+                      legacyLabel={profile.data?.city}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                <Input
+                  label={t("profile.fields.birthDate")}
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  hint={
+                    profile.data?.birthYear && !profile.data.birthDate
+                      ? t("profile.hints.legacyBirthYear", {
+                          year: profile.data.birthYear,
+                        })
+                      : t("profile.hints.birthDatePrivate")
+                  }
+                  error={
+                    form.formState.errors.birthDate
+                      ? t("profile.validation.birthDate")
+                      : undefined
+                  }
+                  {...form.register("birthDate")}
+                />
+                <Input
+                  label={t("profile.fields.phone")}
+                  type="tel"
+                  placeholder="+7 700 000 00 00"
+                  error={
+                    form.formState.errors.phone
+                      ? t("profile.validation.phone")
+                      : undefined
+                  }
+                  {...form.register("phone")}
+                />
+                <Input
+                  label={t("profile.fields.currentPosition")}
+                  {...form.register("currentPosition")}
+                />
+                <Input
+                  label={t("profile.fields.desiredPosition")}
+                  {...form.register("desiredPosition")}
+                />
+                <Input
+                  label={t("profile.fields.yearsExperience")}
+                  inputMode="decimal"
+                  {...form.register("yearsExperience")}
                 />
                 <Select
-                  label={t("profile.fields.proficiency")}
-                  {...form.register(`languages.${index}.proficiency`)}
+                  label={t("profile.fields.experienceLevel")}
+                  {...form.register("experienceLevel")}
                 >
-                  {languageLevels.map((x) => (
-                    <option value={x} key={x}>
-                      {t(`profile.proficiency.${x}`)}
-                    </option>
-                  ))}
+                  <option value="">{t("common.notProvided")}</option>
+                  {["internship", "junior", "middle", "senior", "lead"].map(
+                    (x) => (
+                      <option key={x} value={x}>
+                        {t(`profile.experienceLevels.${x}`)}
+                      </option>
+                    ),
+                  )}
                 </Select>
+              </div>
+              <Textarea
+                label={t("profile.fields.about")}
+                rows={5}
+                {...form.register("about")}
+              />
+              <div className="profile-grid">
+                <Input
+                  label={t("profile.fields.skills")}
+                  hint={t("profile.hints.commaSeparated")}
+                  {...form.register("skills")}
+                />
+                <Input
+                  label={t("profile.fields.certifications")}
+                  hint={t("profile.hints.commaSeparated")}
+                  {...form.register("certifications")}
+                />
+              </div>
+            </ProfileSection>
+            <ProfileSection
+              title={t("profile.sections.experience")}
+              action={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<Plus size={16} />}
+                  onClick={() =>
+                    experience.append({
+                      company: "",
+                      position: "",
+                      employmentType: "full_time",
+                      startDate: "",
+                      endDate: "",
+                      isCurrent: false,
+                      description: "",
+                      achievements: "",
+                      skills: "",
+                    })
+                  }
+                >
+                  {t("profile.addExperience")}
+                </Button>
+              }
+            >
+              {experience.fields.length === 0 ? (
+                <p className="section-empty">{t("profile.noExperience")}</p>
+              ) : (
+                experience.fields.map((field, index) => (
+                  <div className="repeatable-row" key={field.id}>
+                    <div className="profile-grid">
+                      <Input
+                        label={t("profile.fields.company")}
+                        error={
+                          form.formState.errors.workExperience?.[index]?.company
+                            ? t("profile.validation.required")
+                            : undefined
+                        }
+                        {...form.register(`workExperience.${index}.company`)}
+                      />
+                      <Input
+                        label={t("profile.fields.position")}
+                        {...form.register(`workExperience.${index}.position`)}
+                      />
+                      <Select
+                        label={t("profile.fields.employmentType")}
+                        {...form.register(
+                          `workExperience.${index}.employmentType`,
+                        )}
+                      >
+                        {employmentTypes.map((x) => (
+                          <option key={x} value={x}>
+                            {t(`employer.employmentTypes.${x}`)}
+                          </option>
+                        ))}
+                      </Select>
+                      <Input
+                        label={t("profile.fields.startDate")}
+                        type="date"
+                        {...form.register(`workExperience.${index}.startDate`)}
+                      />
+                      <Input
+                        label={t("profile.fields.endDate")}
+                        type="date"
+                        disabled={watchedExperience?.[index]?.isCurrent}
+                        {...form.register(`workExperience.${index}.endDate`)}
+                      />
+                      <Checkbox
+                        label={t("profile.fields.currentJob")}
+                        {...form.register(`workExperience.${index}.isCurrent`)}
+                      />
+                    </div>
+                    <Textarea
+                      label={t("profile.fields.description")}
+                      {...form.register(`workExperience.${index}.description`)}
+                    />
+                    <Textarea
+                      label={t("profile.fields.achievements")}
+                      {...form.register(`workExperience.${index}.achievements`)}
+                    />
+                    <Input
+                      label={t("profile.fields.skills")}
+                      {...form.register(`workExperience.${index}.skills`)}
+                    />
+                    <Button
+                      type="button"
+                      variant="quiet"
+                      size="sm"
+                      leadingIcon={<Trash2 size={15} />}
+                      onClick={() => experience.remove(index)}
+                    >
+                      {t("common.remove")}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </ProfileSection>
+            <ProfileSection
+              title={t("profile.sections.education")}
+              action={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<Plus size={16} />}
+                  onClick={() =>
+                    education.append({
+                      institution: "",
+                      degree: "",
+                      fieldOfStudy: "",
+                      startYear: "",
+                      graduationYear: "",
+                      description: "",
+                    })
+                  }
+                >
+                  {t("profile.addEducation")}
+                </Button>
+              }
+            >
+              {education.fields.length === 0 ? (
+                <p className="section-empty">{t("profile.noEducation")}</p>
+              ) : (
+                education.fields.map((field, index) => (
+                  <div className="repeatable-row" key={field.id}>
+                    <div className="profile-grid">
+                      <Input
+                        label={t("profile.fields.institution")}
+                        {...form.register(`education.${index}.institution`)}
+                      />
+                      <Input
+                        label={t("profile.fields.degree")}
+                        {...form.register(`education.${index}.degree`)}
+                      />
+                      <Input
+                        label={t("profile.fields.fieldOfStudy")}
+                        {...form.register(`education.${index}.fieldOfStudy`)}
+                      />
+                      <Input
+                        label={t("profile.fields.startYear")}
+                        inputMode="numeric"
+                        {...form.register(`education.${index}.startYear`)}
+                      />
+                      <Input
+                        label={t("profile.fields.graduationYear")}
+                        inputMode="numeric"
+                        {...form.register(`education.${index}.graduationYear`)}
+                      />
+                    </div>
+                    <Textarea
+                      label={t("profile.fields.description")}
+                      {...form.register(`education.${index}.description`)}
+                    />
+                    <Button
+                      type="button"
+                      variant="quiet"
+                      size="sm"
+                      leadingIcon={<Trash2 size={15} />}
+                      onClick={() => education.remove(index)}
+                    >
+                      {t("common.remove")}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </ProfileSection>
+            <ProfileSection
+              title={t("profile.sections.languages")}
+              action={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<Plus size={16} />}
+                  onClick={() =>
+                    languages.append({ language: "", proficiency: "B1" })
+                  }
+                >
+                  {t("profile.addLanguage")}
+                </Button>
+              }
+            >
+              {languages.fields.map((field, index) => (
+                <div className="language-row" key={field.id}>
+                  <Input
+                    label={t("profile.fields.language")}
+                    {...form.register(`languages.${index}.language`)}
+                  />
+                  <Select
+                    label={t("profile.fields.proficiency")}
+                    {...form.register(`languages.${index}.proficiency`)}
+                  >
+                    {languageLevels.map((x) => (
+                      <option value={x} key={x}>
+                        {t(`profile.proficiency.${x}`)}
+                      </option>
+                    ))}
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="quiet"
+                    size="sm"
+                    className="language-row__remove"
+                    onClick={() => languages.remove(index)}
+                  >
+                    {t("common.remove")}
+                  </Button>
+                </div>
+              ))}
+            </ProfileSection>
+            <ProfileSection title={t("profile.sections.linksPrivacy")}>
+              <div className="profile-grid">
+                <Input
+                  label={t("profile.fields.github")}
+                  type="url"
+                  error={
+                    form.formState.errors.github
+                      ? t("profile.validation.url")
+                      : undefined
+                  }
+                  {...form.register("github")}
+                />
+                <Input
+                  label={t("profile.fields.linkedin")}
+                  type="url"
+                  error={
+                    form.formState.errors.linkedin
+                      ? t("profile.validation.url")
+                      : undefined
+                  }
+                  {...form.register("linkedin")}
+                />
+                <Input
+                  label={t("profile.fields.portfolio")}
+                  type="url"
+                  error={
+                    form.formState.errors.portfolio
+                      ? t("profile.validation.url")
+                      : undefined
+                  }
+                  {...form.register("portfolio")}
+                />
+                <Input
+                  label={t("profile.fields.website")}
+                  type="url"
+                  error={
+                    form.formState.errors.website
+                      ? t("profile.validation.url")
+                      : undefined
+                  }
+                  {...form.register("website")}
+                />
+              </div>
+              <div className="privacy-list">
+                <Switch
+                  label={t("profile.fields.allowEmployerContact")}
+                  {...form.register("allowEmployerContact")}
+                />
+                <Switch
+                  label={t("profile.fields.showProfileToEmployers")}
+                  {...form.register("showProfileToEmployers")}
+                />
+                <Switch
+                  label={t("profile.fields.showSalaryExpectations")}
+                  {...form.register("showSalaryExpectations")}
+                />
+              </div>
+            </ProfileSection>
+            <div className="profile-save-bar">
+              <span>
+                {form.formState.isDirty
+                  ? t("profile.unsaved")
+                  : t("profile.upToDate")}
+              </span>
+              <div className="profile-save-bar__actions">
                 <Button
                   type="button"
                   variant="quiet"
-                  size="sm"
-                  className="language-row__remove"
-                  onClick={() => languages.remove(index)}
+                  leadingIcon={<X size={17} />}
+                  disabled={save.isPending}
+                  onClick={cancelEditing}
                 >
-                  {t("common.remove")}
+                  {t("profile.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  leadingIcon={<Save size={17} />}
+                  isLoading={save.isPending}
+                >
+                  {t("profile.save")}
                 </Button>
               </div>
-            ))}
-          </ProfileSection>
-          <ProfileSection title={t("profile.sections.linksPrivacy")}>
-            <div className="profile-grid">
-              <Input
-                label={t("profile.fields.github")}
-                type="url"
-                error={form.formState.errors.github ? t("profile.validation.url") : undefined}
-                {...form.register("github")}
-              />
-              <Input
-                label={t("profile.fields.linkedin")}
-                type="url"
-                error={form.formState.errors.linkedin ? t("profile.validation.url") : undefined}
-                {...form.register("linkedin")}
-              />
-              <Input
-                label={t("profile.fields.portfolio")}
-                type="url"
-                error={form.formState.errors.portfolio ? t("profile.validation.url") : undefined}
-                {...form.register("portfolio")}
-              />
-              <Input
-                label={t("profile.fields.website")}
-                type="url"
-                error={form.formState.errors.website ? t("profile.validation.url") : undefined}
-                {...form.register("website")}
-              />
             </div>
-            <div className="privacy-list">
-              <Switch
-                label={t("profile.fields.allowEmployerContact")}
-                {...form.register("allowEmployerContact")}
-              />
-              <Switch
-                label={t("profile.fields.showProfileToEmployers")}
-                {...form.register("showProfileToEmployers")}
-              />
-              <Switch
-                label={t("profile.fields.showSalaryExpectations")}
-                {...form.register("showSalaryExpectations")}
-              />
-            </div>
-          </ProfileSection>
-          <div className="profile-save-bar">
-            <span>
-              {form.formState.isDirty
-                ? t("profile.unsaved")
-                : t("profile.upToDate")}
-            </span>
-            <div className="profile-save-bar__actions">
-              <Button
-                type="button"
-                variant="quiet"
-                leadingIcon={<X size={17} />}
-                disabled={save.isPending}
-                onClick={cancelEditing}
-              >
-                {t("profile.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                leadingIcon={<Save size={17} />}
-                isLoading={save.isPending}
-              >
-                {t("profile.save")}
-              </Button>
-            </div>
-          </div>
-        </form>
+          </form>
         )}
-        <CandidateAccountSection />
       </section>
     </CandidateWorkspaceLayout>
   );
@@ -622,17 +653,22 @@ export function ProfilePage() {
 
 function ProfileSection({
   title,
+  description,
   action,
   children,
 }: {
   title: string;
+  description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="profile-section">
       <header>
-        <h2>{title}</h2>
+        <div>
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
+        </div>
         {action}
       </header>
       <div className="profile-section__body">{children}</div>
@@ -642,131 +678,330 @@ function ProfileSection({
 
 function ProfileView({ profile }: { profile: CandidateProfile }) {
   const { t, i18n } = useTranslation();
+  const [activeSection, setActiveSection] = useState("about");
   const empty = t("common.notProvided");
   const dateLocale = i18n.resolvedLanguage === "ru" ? "ru-RU" : "kk-KZ";
+  const locale = i18n.resolvedLanguage ?? i18n.language;
+  const city = cityName(profile.cityId, locale) || profile.city || empty;
   const birthDate = profile.birthDate
-    ? new Intl.DateTimeFormat(dateLocale, { dateStyle: "long", timeZone: "UTC" }).format(
-        new Date(`${profile.birthDate}T00:00:00Z`),
-      )
+    ? new Intl.DateTimeFormat(dateLocale, {
+        dateStyle: "long",
+        timeZone: "UTC",
+      }).format(new Date(`${profile.birthDate}T00:00:00Z`))
     : profile.birthYear
       ? t("profile.legacyBirthYearValue", { year: profile.birthYear })
       : empty;
 
   return (
     <div className="profile-view">
-      <ProfileSection title={t("profile.sections.about")}>
-        <dl className="profile-view-grid">
-          <ProfileFact label={t("profile.fields.fullName")} value={profile.fullName} />
-          <ProfileFact label={t("profile.fields.city")} value={cityName(profile.cityId, i18n.resolvedLanguage ?? i18n.language) || profile.city || empty} />
-          <ProfileFact label={t("profile.fields.birthDate")} value={birthDate} />
-          <ProfileFact
+      <nav className="profile-section-nav" aria-label={t("profile.tabsLabel")}>
+        {(["about", "career", "contacts"] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={activeSection === key}
+            onClick={() => setActiveSection(key)}
+          >
+            {t(`profile.tabs.${key}`)}
+          </button>
+        ))}
+      </nav>
+      <div className="profile-view-panel" hidden={activeSection !== "about"}>
+        <section
+          className="profile-overview"
+          aria-label={t("profile.sections.about")}
+        >
+          <ProfileSummaryCard
+            icon={<MapPin size={18} />}
+            label={t("profile.fields.city")}
+            value={city}
+          />
+          <ProfileSummaryCard
+            icon={<BriefcaseBusiness size={18} />}
+            label={t("profile.fields.yearsExperience")}
+            value={profile.yearsExperience?.toString() || empty}
+          />
+          <ProfileSummaryCard
+            icon={<Sparkles size={18} />}
+            label={t("profile.fields.experienceLevel")}
+            value={
+              profile.experienceLevel
+                ? t(`profile.experienceLevels.${profile.experienceLevel}`)
+                : empty
+            }
+          />
+          <ProfileSummaryCard
+            icon={<Phone size={18} />}
             label={t("profile.fields.phone")}
             value={
               profile.phone ? (
-                <a href={`tel:${profile.phone}`}>{formatProfilePhone(profile.phone)}</a>
-              ) : empty
+                <a href={`tel:${profile.phone}`}>
+                  {formatProfilePhone(profile.phone)}
+                </a>
+              ) : (
+                empty
+              )
             }
           />
-          <ProfileFact label={t("profile.fields.currentPosition")} value={profile.currentPosition || empty} />
-          <ProfileFact label={t("profile.fields.desiredPosition")} value={profile.desiredPosition || empty} />
-          <ProfileFact label={t("profile.fields.yearsExperience")} value={profile.yearsExperience?.toString() || empty} />
-          <ProfileFact
-            label={t("profile.fields.experienceLevel")}
-            value={profile.experienceLevel ? t(`profile.experienceLevels.${profile.experienceLevel}`) : empty}
-          />
-        </dl>
-        <div className="profile-view-copy">
-          <h3>{t("profile.fields.about")}</h3>
-          <p>{profile.about || empty}</p>
-        </div>
-        <TagGroup label={t("profile.fields.skills")} values={profile.skills} empty={empty} />
-        <TagGroup label={t("profile.fields.certifications")} values={profile.certifications} empty={empty} />
-      </ProfileSection>
+        </section>
 
-      <ProfileSection title={t("profile.sections.experience")}>
-        {profile.workExperience.length ? profile.workExperience.map((item) => (
-          <article className="profile-timeline-item" key={item.id ?? `${item.company}-${item.startDate}`}>
-            <div>
-              <h3>{item.position}</h3>
-              <p>{item.company} · {t(`employer.employmentTypes.${item.employmentType}`)}</p>
+        <ProfileSection title={t("profile.sections.about")}>
+          <div className="profile-about-layout">
+            <div className="profile-view-copy profile-view-copy--lead">
+              <h3>{t("profile.fields.about")}</h3>
+              <p>{profile.about || empty}</p>
             </div>
-            <span>{item.startDate} — {item.isCurrent ? t("profile.present") : item.endDate}</span>
-            {item.description ? <p>{item.description}</p> : null}
-            {item.achievements ? <p>{item.achievements}</p> : null}
-            <TagGroup label={t("profile.fields.skills")} values={item.skills} empty={empty} compact />
-          </article>
-        )) : <p className="section-empty">{t("profile.noExperience")}</p>}
-      </ProfileSection>
-
-      <ProfileSection title={t("profile.sections.education")}>
-        {profile.education.length ? profile.education.map((item) => (
-          <article className="profile-timeline-item" key={item.id ?? `${item.institution}-${item.startYear}`}>
-            <div><h3>{item.degree}, {item.fieldOfStudy}</h3><p>{item.institution}</p></div>
-            <span>{item.startYear} — {item.graduationYear || t("profile.present")}</span>
-            {item.description ? <p>{item.description}</p> : null}
-          </article>
-        )) : <p className="section-empty">{t("profile.noEducation")}</p>}
-      </ProfileSection>
-
-      <ProfileSection title={t("profile.sections.languages")}>
-        {profile.languages.length ? (
-          <dl className="profile-view-grid">
-            {profile.languages.map((item) => (
+            <dl className="profile-mini-facts">
               <ProfileFact
-                key={item.id ?? item.language}
-                label={item.language}
-                value={t(`profile.proficiency.${item.proficiency}`)}
+                label={t("profile.fields.birthDate")}
+                value={birthDate}
+              />
+              <ProfileFact
+                label={t("profile.fields.currentPosition")}
+                value={profile.currentPosition || empty}
+              />
+            </dl>
+          </div>
+          <div className="profile-two-column">
+            <TagGroup
+              label={t("profile.fields.skills")}
+              values={profile.skills}
+              empty={empty}
+            />
+            <TagGroup
+              label={t("profile.fields.certifications")}
+              values={profile.certifications}
+              empty={empty}
+            />
+          </div>
+        </ProfileSection>
+      </div>
+      <div className="profile-view-panel" hidden={activeSection !== "career"}>
+        <ProfileSection title={t("profile.sections.experience")}>
+          {profile.workExperience.length ? (
+            profile.workExperience.map((item) => (
+              <article
+                className="profile-timeline-item"
+                key={item.id ?? `${item.company}-${item.startDate}`}
+              >
+                <div>
+                  <span className="profile-timeline-icon" aria-hidden="true">
+                    <BriefcaseBusiness size={17} />
+                  </span>
+                  <h3>{item.position}</h3>
+                  <p>
+                    {item.company} ·{" "}
+                    {t(`employer.employmentTypes.${item.employmentType}`)}
+                  </p>
+                </div>
+                <span>
+                  {item.startDate} —{" "}
+                  {item.isCurrent ? t("profile.present") : item.endDate}
+                </span>
+                {item.description ? <p>{item.description}</p> : null}
+                {item.achievements ? <p>{item.achievements}</p> : null}
+                <TagGroup
+                  label={t("profile.fields.skills")}
+                  values={item.skills}
+                  empty={empty}
+                  compact
+                />
+              </article>
+            ))
+          ) : (
+            <p className="section-empty">{t("profile.noExperience")}</p>
+          )}
+        </ProfileSection>
+
+        <ProfileSection title={t("profile.sections.education")}>
+          {profile.education.length ? (
+            profile.education.map((item) => (
+              <article
+                className="profile-timeline-item"
+                key={item.id ?? `${item.institution}-${item.startYear}`}
+              >
+                <div>
+                  <span className="profile-timeline-icon" aria-hidden="true">
+                    <GraduationCap size={17} />
+                  </span>
+                  <h3>
+                    {item.degree}, {item.fieldOfStudy}
+                  </h3>
+                  <p>{item.institution}</p>
+                </div>
+                <span>
+                  {item.startYear} —{" "}
+                  {item.graduationYear || t("profile.present")}
+                </span>
+                {item.description ? <p>{item.description}</p> : null}
+              </article>
+            ))
+          ) : (
+            <p className="section-empty">{t("profile.noEducation")}</p>
+          )}
+        </ProfileSection>
+
+        <ProfileSection title={t("profile.sections.languages")}>
+          {profile.languages.length ? (
+            <dl className="profile-compact-list">
+              {profile.languages.map((item) => (
+                <ProfileFact
+                  key={item.id ?? item.language}
+                  label={item.language}
+                  value={t(`profile.proficiency.${item.proficiency}`)}
+                />
+              ))}
+            </dl>
+          ) : (
+            <p className="section-empty">{t("profile.noLanguages")}</p>
+          )}
+        </ProfileSection>
+      </div>
+      <div className="profile-view-panel" hidden={activeSection !== "contacts"}>
+        <ProfileSection title={t("profile.sections.linksPrivacy")}>
+          <div className="profile-link-list profile-link-list--compact">
+            {(
+              [
+                [t("profile.fields.github"), profile.github],
+                [t("profile.fields.linkedin"), profile.linkedin],
+                [t("profile.fields.portfolio"), profile.portfolio],
+                [t("profile.fields.website"), profile.website],
+              ] as const
+            ).map(([label, value]) => (
+              <SafeProfileLink
+                key={label}
+                label={label}
+                value={value}
+                empty={empty}
               />
             ))}
+          </div>
+          <dl className="profile-privacy-pills">
+            <ProfileFact
+              icon={<ShieldCheck size={15} />}
+              label={t("profile.fields.allowEmployerContact")}
+              value={t(
+                profile.allowEmployerContact ? "common.yes" : "common.no",
+              )}
+            />
+            <ProfileFact
+              icon={<ShieldCheck size={15} />}
+              label={t("profile.fields.showProfileToEmployers")}
+              value={t(
+                profile.showProfileToEmployers ? "common.yes" : "common.no",
+              )}
+            />
+            <ProfileFact
+              icon={<ShieldCheck size={15} />}
+              label={t("profile.fields.showSalaryExpectations")}
+              value={t(
+                profile.showSalaryExpectations ? "common.yes" : "common.no",
+              )}
+            />
           </dl>
-        ) : <p className="section-empty">{t("profile.noLanguages")}</p>}
-      </ProfileSection>
-
-      <ProfileSection title={t("profile.sections.linksPrivacy")}>
-        <div className="profile-link-list">
-          {([
-            [t("profile.fields.github"), profile.github],
-            [t("profile.fields.linkedin"), profile.linkedin],
-            [t("profile.fields.portfolio"), profile.portfolio],
-            [t("profile.fields.website"), profile.website],
-          ] as const).map(([label, value]) => (
-            <SafeProfileLink key={label} label={label} value={value} empty={empty} />
-          ))}
-        </div>
-        <dl className="profile-view-grid profile-privacy-view">
-          <ProfileFact label={t("profile.fields.allowEmployerContact")} value={t(profile.allowEmployerContact ? "common.yes" : "common.no")} />
-          <ProfileFact label={t("profile.fields.showProfileToEmployers")} value={t(profile.showProfileToEmployers ? "common.yes" : "common.no")} />
-          <ProfileFact label={t("profile.fields.showSalaryExpectations")} value={t(profile.showSalaryExpectations ? "common.yes" : "common.no")} />
-        </dl>
-      </ProfileSection>
+        </ProfileSection>
+      </div>
     </div>
   );
 }
 
-function ProfileFact({ label, value }: { label: string; value: React.ReactNode }) {
-  return <div><dt>{label}</dt><dd>{value}</dd></div>;
-}
-
-function TagGroup({ label, values, empty, compact = false }: { label: string; values: string[]; empty: string; compact?: boolean }) {
+function ProfileSummaryCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
   return (
-    <div className={compact ? "profile-tags profile-tags--compact" : "profile-tags"}>
-      <h3>{label}</h3>
-      {values.length ? <ul>{values.map((value) => <li key={value}>{value}</li>)}</ul> : <p>{empty}</p>}
+    <div className="profile-summary-card">
+      <span aria-hidden="true">{icon}</span>
+      <div>
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </div>
     </div>
   );
 }
 
-function SafeProfileLink({ label, value, empty }: { label: string; value?: string; empty: string }) {
+function ProfileFact({
+  icon,
+  label,
+  value,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div>
+      {icon ? <span aria-hidden="true">{icon}</span> : null}
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function TagGroup({
+  label,
+  values,
+  empty,
+  compact = false,
+}: {
+  label: string;
+  values: string[];
+  empty: string;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={
+        compact ? "profile-tags profile-tags--compact" : "profile-tags"
+      }
+    >
+      <h3>{label}</h3>
+      {values.length ? (
+        <ul>
+          {values.map((value) => (
+            <li key={value}>{value}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>{empty}</p>
+      )}
+    </div>
+  );
+}
+
+function SafeProfileLink({
+  label,
+  value,
+  empty,
+}: {
+  label: string;
+  value?: string;
+  empty: string;
+}) {
   const { t } = useTranslation();
   const href = safeProfileUrl(value);
   return (
     <div>
       <span>{label}</span>
       {href ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`${label}. ${t("profile.opensNewTab")}`}>
-          <span>{value}</span><ExternalLink size={15} aria-hidden="true" />
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${label}. ${t("profile.opensNewTab")}`}
+        >
+          <Link2 size={15} aria-hidden="true" />
+          <span>{value}</span>
+          <ExternalLink size={15} aria-hidden="true" />
         </a>
-      ) : <strong>{value || empty}</strong>}
+      ) : (
+        <strong>{value || empty}</strong>
+      )}
     </div>
   );
 }
@@ -860,7 +1095,11 @@ function toInput(v: FormValues): CandidateProfileInput {
   return {
     fullName: v.fullName,
     photoUrl: v.photoUrl || undefined,
-    city: isCityId(v.cityId) ? cityName(v.cityId, "kk") : v.cityId.startsWith("legacy:") ? v.cityId.slice(7) : undefined,
+    city: isCityId(v.cityId)
+      ? cityName(v.cityId, "kk")
+      : v.cityId.startsWith("legacy:")
+        ? v.cityId.slice(7)
+        : undefined,
     cityId: isCityId(v.cityId) ? v.cityId : undefined,
     birthYear: number(v.birthYear),
     birthDate: v.birthDate || undefined,

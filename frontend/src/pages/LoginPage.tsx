@@ -31,8 +31,9 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setServerError("");
     try {
-      await auth.login(values);
-      navigate(safeReturnTo(params.get("returnTo")), { replace: true });
+      const session = await auth.login(values);
+      const destination = session.user.role === "employer" ? "/employer" : session.user.role === "job_seeker" ? "/profile" : "/admin";
+      navigate(safeReturnTo(params.get("returnTo"), destination), { replace: true });
     } catch (error) {
       const code = authErrorCode(error);
       setServerError(code === "INVALID_CREDENTIALS" ? t("auth.errors.invalidCredentials") : t("auth.errors.generic"));
@@ -54,7 +55,7 @@ export function LoginPage() {
             {serverError ? <p className="auth-error" role="alert">{serverError}</p> : null}
             <Button type="submit" isLoading={formState.isSubmitting}>{t("auth.loginSubmit")}</Button>
           </form>
-          <p className="auth-switch">{t("auth.noAccount")} <Link to={`/register?returnTo=${encodeURIComponent(safeReturnTo(params.get("returnTo")))}`}>{t("auth.registerLink")}</Link></p>
+          <p className="auth-switch">{t("auth.noAccount")} <Link to={params.has("returnTo") ? `/register?returnTo=${encodeURIComponent(safeReturnTo(params.get("returnTo")))}` : "/register"}>{t("auth.registerLink")}</Link></p>
         </section>
       </main>
     </SiteShell>

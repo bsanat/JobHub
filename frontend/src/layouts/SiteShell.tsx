@@ -9,7 +9,7 @@ import { setSearchCityPreference, usePreferredSearchCity } from "../lib/searchCi
 
 type Language = "kk" | "ru";
 
-export function SiteShell({ children, variant = "default" }: PropsWithChildren<{ variant?: "default" | "landing" }>) {
+export function SiteShell({ children, variant = "default" }: PropsWithChildren<{ variant?: "default" | "landing" | "workspace" }>) {
   const { t, i18n } = useTranslation();
   const auth = useAuth();
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
                 to={
                   auth.session.user.role === "job_seeker"
                     ? "/profile"
-                    : "/account"
+                    : auth.session.user.role === "employer" ? "/employer" : "/account"
                 }
               >
                 <span aria-hidden="true">

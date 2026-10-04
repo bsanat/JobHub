@@ -14,8 +14,7 @@ const EmployerVacancyFormPage = lazy(() => import("./pages/EmployerVacancyFormPa
 const AdminPage = lazy(() => import("./pages/AdminPage").then((module) => ({ default: module.AdminPage })));
 const ProtectedRoute = lazy(() => import("./pages/ProtectedRoute").then((module) => ({ default: module.ProtectedRoute })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((module) => ({ default: module.ProfilePage })));
-const SavedJobsPage = lazy(() => import("./pages/SavedJobsPage").then((module) => ({ default: module.SavedJobsPage })));
-const SavedCompaniesPage = lazy(() => import("./pages/SavedCompaniesPage").then((module) => ({ default: module.SavedCompaniesPage })));
+const SavedPage = lazy(() => import("./pages/SavedPage").then((module) => ({ default: module.SavedPage })));
 const ApplicationsPage = lazy(() => import("./pages/ApplicationsPage").then((module) => ({ default: module.ApplicationsPage })));
 const EmployerApplicantsPage = lazy(() => import("./pages/EmployerApplicantsPage").then((module) => ({ default: module.EmployerApplicantsPage })));
 const ResumePage = lazy(() => import("./pages/ResumePage").then((module) => ({ default: module.ResumePage })));
@@ -46,8 +45,8 @@ export default function App() {
           <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
           <Route path="/workspace" element={<ProtectedRoute role="job_seeker"><Navigate to="/profile" replace /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute role="job_seeker"><ProfilePage /></ProtectedRoute>} />
-          <Route path="/saved" element={<ProtectedRoute role="job_seeker"><SavedJobsPage /></ProtectedRoute>} />
-          <Route path="/saved-companies" element={<ProtectedRoute role="job_seeker"><SavedCompaniesPage /></ProtectedRoute>} />
+          <Route path="/saved" element={<ProtectedRoute role="job_seeker"><SavedPage /></ProtectedRoute>} />
+          <Route path="/saved-companies" element={<ProtectedRoute role="job_seeker"><Navigate to="/saved?tab=companies" replace /></ProtectedRoute>} />
           <Route path="/applications" element={<ProtectedRoute role="job_seeker"><ApplicationsPage /></ProtectedRoute>} />
           <Route path="/resume" element={<ProtectedRoute role="job_seeker"><ResumePage /></ProtectedRoute>} />
           <Route path="/preferences" element={<ProtectedRoute role="job_seeker"><Navigate to="/resume#preferences" replace /></ProtectedRoute>} />

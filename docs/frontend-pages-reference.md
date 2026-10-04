@@ -23,8 +23,8 @@ confirmed user-facing routes, see [Каталог страниц сайта](/do
 | `/register` | `RegisterPage` | Гость | `POST /api/v1/auth/register` |
 | `/account` | `AccountPage` | Authenticated | Session info through `AuthProvider` and `GET /api/v1/auth/me` |
 | `/profile` | `ProfilePage` | `job_seeker` | Candidate profile → `GET/PATCH /api/v1/profile` |
-| `/saved` | `SavedJobsPage` | `job_seeker` | Saved jobs → `GET /api/v1/saved-jobs` |
-| `/saved-companies` | `SavedCompaniesPage` | `job_seeker` | Followed companies → `GET /api/v1/companies/following` |
+| `/saved` | `SavedPage`, `SavedJobsPanel`, `SavedCompaniesPanel` | `job_seeker` | «Сохранённые»: вакансии → `GET /api/v1/saved-jobs`, компании → `GET /api/v1/companies/following`; `?tab=companies` открывает компании |
+| `/saved-companies` | `Navigate` | `job_seeker` | Старый адрес: перенаправление на `/saved?tab=companies` |
 | `/applications` | `ApplicationsPage` | `job_seeker` | Candidate applications → `GET /api/v1/applications` |
 | `/resume` | `ResumePage` | `job_seeker` | Resume metadata/content → `/api/v1/profile/resume...` |
 | `/employer` | `EmployerPage` | `employer` | Employer dashboard; data source depends on child queries |

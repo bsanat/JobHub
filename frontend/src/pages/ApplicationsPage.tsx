@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BriefcaseBusiness, CalendarDays, ChevronRight } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import {
 } from "../components/ui/Feedback";
 import { useToast } from "../components/ui/useToast";
 import { CandidateJobsLayout } from "../components/candidate/CandidateJobsLayout";
+import { CandidateListToolbar } from "../components/candidate/CandidateListToolbar";
 import type { ApplicationStatus } from "../api/models/candidate";
 
 export function ApplicationsPage() {
@@ -21,6 +22,7 @@ export function ApplicationsPage() {
   const client = useQueryClient();
   const toast = useToast();
   const [status, setStatus] = useState<"all" | ApplicationStatus>("all");
+  const [query, setQuery] = useState("");
   const apps = useQuery({
     queryKey: ["applications"],
     queryFn: () => repositories.candidate.listApplications(),
@@ -38,15 +40,43 @@ export function ApplicationsPage() {
         title: t("applications.withdrawError"),
       }),
   });
-  const visibleApplications =
-    status === "all"
-      ? apps.data
-      : apps.data?.filter((application) => application.status === status);
+  const search = query.trim().toLocaleLowerCase();
+  const visibleApplications = apps.data?.filter(
+    (application) =>
+      (status === "all" || application.status === status) &&
+      [
+        application.jobTitle,
+        application.companyName,
+        !application.jobAvailable ? t("applications.unavailableJob") : "",
+      ]
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(search),
+  );
   return (
-    <CandidateJobsLayout tabTitle={t("applications.title")} tabDescription={t("applications.description")}>
-        {apps.data?.length ? (
+    <CandidateJobsLayout
+      tabTitle={t("applications.title")}
+      action={
+        <Link
+          className="ui-button ui-button--secondary ui-button--md"
+          to="/jobs"
+        >
+          {t("applications.browse")}
+          <ChevronRight size={17} />
+        </Link>
+      }
+    >
+      {apps.data?.length ? (
+        <CandidateListToolbar
+          query={query}
+          onQueryChange={setQuery}
+          searchLabel={t("candidateLists.searchApplications")}
+          count={visibleApplications?.length ?? 0}
+        >
           <label className="application-filter">
-            <span>{t("applications.filterLabel")}</span>
+            <span className="visually-hidden">
+              {t("applications.filterLabel")}
+            </span>
             <select
               value={status}
               onChange={(event) =>
@@ -61,103 +91,108 @@ export function ApplicationsPage() {
               ))}
             </select>
           </label>
-        ) : null}
-        {apps.isPending ? (
-          <JobListSkeleton label={t("applications.loading")} />
-        ) : null}
-        {apps.isError ? (
-          <ErrorState
-            title={t("applications.loadErrorTitle")}
-            description={t("applications.loadErrorDescription")}
-            actionLabel={t("common.retry")}
-            onAction={() => void apps.refetch()}
-          />
-        ) : null}
-        {apps.data?.length === 0 ? (
-          <EmptyState
-            illustration="/illustrations/empty-applications.png"
-            title={t("applications.emptyTitle")}
-            description={t("applications.emptyDescription")}
-            secondary={
-              <Link className="ui-button ui-button--primary ui-button--md" to="/jobs">
-                {t("applications.browse")}
-              </Link>
-            }
-          />
-        ) : null}
-        {visibleApplications?.length ? (
-          <div className="application-list">
-            {visibleApplications.map((app) => (
-              <article className="application-row" key={app.id}>
-                <div className="application-row__icon">
-                  <BriefcaseBusiness size={21} />
+        </CandidateListToolbar>
+      ) : null}
+      {apps.isPending ? (
+        <JobListSkeleton label={t("applications.loading")} />
+      ) : null}
+      {apps.isError ? (
+        <ErrorState
+          title={t("applications.loadErrorTitle")}
+          description={t("applications.loadErrorDescription")}
+          actionLabel={t("common.retry")}
+          onAction={() => void apps.refetch()}
+        />
+      ) : null}
+      {apps.data?.length === 0 ? (
+        <EmptyState
+          illustration="/illustrations/empty-applications.png"
+          title={t("applications.emptyTitle")}
+          description={t("applications.emptyDescription")}
+        />
+      ) : null}
+      {visibleApplications?.length ? (
+        <div className="application-list">
+          {visibleApplications.map((app) => (
+            <article className="application-row" key={app.id}>
+              <div className="application-row__icon">
+                <BriefcaseBusiness size={19} aria-hidden="true" />
+              </div>
+              <div className="application-row__main">
+                <div>
+                  <h2>
+                    {app.jobAvailable ? (
+                      <Link to={`/jobs/${app.jobId}`}>{app.jobTitle}</Link>
+                    ) : (
+                      t("applications.unavailableJob")
+                    )}
+                  </h2>
+                  <span className={`application-status status-${app.status}`}>
+                    {t(`applications.statuses.${app.status}`)}
+                  </span>
                 </div>
-                <div className="application-row__main">
-                  <div>
-                    <h2>
-                      {app.jobAvailable
-                        ? app.jobTitle
-                        : t("applications.unavailableJob")}
-                    </h2>
-                    <span className={`application-status status-${app.status}`}>
-                      {t(`applications.statuses.${app.status}`)}
-                    </span>
-                  </div>
-                  {app.jobAvailable ? (
-                    <p>{app.companyName}</p>
-                  ) : (
-                    <p>{t("applications.unavailableHint")}</p>
-                  )}
-                  <div className="application-row__meta">
-                    <span>
-                      <CalendarDays size={15} />
-                      {t("applications.submittedAt", {
-                        date: formatDate(app.createdAt, i18n.language),
-                      })}
-                    </span>
-                    <span>
-                      {t("applications.updatedAt", {
-                        date: formatDate(app.latestStatusAt, i18n.language),
-                      })}
-                    </span>
-                  </div>
-                  {app.message ? (
-                    <p className="application-message">{app.message}</p>
-                  ) : null}
+                {app.jobAvailable ? (
+                  <p>{app.companyName}</p>
+                ) : (
+                  <p>{t("applications.unavailableHint")}</p>
+                )}
+                <div className="application-row__meta">
+                  <span>
+                    <CalendarDays size={15} aria-hidden="true" />
+                    {t("applications.submittedAt", {
+                      date: formatDate(app.createdAt, i18n.language),
+                    })}
+                  </span>
+                  <span>
+                    {t("applications.updatedAt", {
+                      date: formatDate(app.latestStatusAt, i18n.language),
+                    })}
+                  </span>
                 </div>
-                <div className="application-row__actions">
-                  {app.jobAvailable ? (
-                    <Link
-                      className="ui-button ui-button--quiet ui-button--sm"
-                      to={`/jobs/${app.jobId}`}
-                    >
-                      {t("applications.viewJob")}
-                      <ChevronRight size={15} />
-                    </Link>
-                  ) : null}
-                  {app.status !== "rejected" && app.status !== "withdrawn" ? (
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      isLoading={withdraw.isPending}
-                      onClick={() =>
-                        window.confirm(t("applications.withdrawConfirm")) &&
-                        withdraw.mutate(app.id)
-                      }
-                    >
-                      {t("applications.withdraw")}
-                    </Button>
-                  ) : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : null}
-        {apps.data?.length && visibleApplications?.length === 0 ? (
-          <p className="section-empty application-filter-empty">
-            {t("applications.filterEmpty")}
-          </p>
-        ) : null}
+                {app.message ? (
+                  <p className="application-message">{app.message}</p>
+                ) : null}
+              </div>
+              <div className="application-row__actions">
+                {app.jobAvailable ? (
+                  <Link
+                    className="ui-icon-button ui-icon-button--quiet"
+                    aria-label={t("applications.viewJob")}
+                    title={t("applications.viewJob")}
+                    to={`/jobs/${app.jobId}`}
+                  >
+                    <ChevronRight size={19} />
+                  </Link>
+                ) : null}
+                {app.status !== "rejected" && app.status !== "withdrawn" ? (
+                  <Button
+                    size="sm"
+                    variant="quiet"
+                    leadingIcon={<X size={16} />}
+                    isLoading={
+                      withdraw.isPending && withdraw.variables === app.id
+                    }
+                    disabled={withdraw.isPending}
+                    onClick={() =>
+                      window.confirm(t("applications.withdrawConfirm")) &&
+                      withdraw.mutate(app.id)
+                    }
+                  >
+                    {t("applications.withdraw")}
+                  </Button>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+      {apps.data?.length && visibleApplications?.length === 0 ? (
+        <p className="section-empty application-filter-empty">
+          {query
+            ? t("candidateLists.noResults")
+            : t("applications.filterEmpty")}
+        </p>
+      ) : null}
     </CandidateJobsLayout>
   );
 }

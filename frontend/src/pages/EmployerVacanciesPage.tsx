@@ -1,49 +1,230 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, FilePlus2, Pencil, Play, Pause, XCircle, Trash2, Users } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { displayJobLocation } from "../lib/jobLocation";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { PublicationStatus } from "../api/models/job";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
-import { EmployerWorkspaceNav } from "../components/employer/EmployerWorkspaceNav";
-import { Button } from "../components/ui/Button";
-import { EmptyState, ErrorState, JobListSkeleton } from "../components/ui/Feedback";
+import { EmployerJobTable } from "../components/employer/EmployerJobTable";
+import { jobUpdatedTime, publicationStatuses } from "../lib/employerVacancies";
+import { EmployerWorkspaceLayout } from "../components/employer/EmployerWorkspaceLayout";
+import { IconButton } from "../components/ui/Button";
+import {
+  EmptyState,
+  ErrorState,
+  JobListSkeleton,
+} from "../components/ui/Feedback";
 import { useToast } from "../components/ui/useToast";
-import { SiteShell } from "../layouts/SiteShell";
-import { formatSalary } from "../lib/formatSalary";
 
 export function EmployerVacanciesPage() {
   const { t, i18n } = useTranslation();
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const jobs = useQuery({ queryKey: ["employer", "jobs"], queryFn: () => repositories.employerJobs.list() });
-  const refresh = async () => { await queryClient.invalidateQueries({ queryKey: ["employer", "jobs"] }); await queryClient.invalidateQueries({ queryKey: ["jobs"] }); };
-  const transition = useMutation({ mutationFn: ({ id, status }: { id: string; status: PublicationStatus }) => repositories.employerJobs.transition(id, status, session!.csrfToken), onSuccess: async () => { await refresh(); toast.showToast({ title: t("employer.statusUpdated") }); } });
-  const remove = useMutation({ mutationFn: (id: string) => repositories.employerJobs.delete(id, session!.csrfToken), onSuccess: async () => { await refresh(); toast.showToast({ title: t("employer.vacancyDeleted") }); } });
+  const [params, setParams] = useSearchParams();
+  const query = params.get("q") || "";
+  const rawStatus = params.get("status");
+  const status =
+    publicationStatuses.find((value) => value === rawStatus) || "all";
+  const sort = params.get("sort") === "oldest" ? "oldest" : "newest";
+  const jobs = useQuery({
+    queryKey: ["employer", "jobs", "list", session!.user.id],
+    queryFn: () => repositories.employerJobs.list(),
+  });
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["employer", "jobs"] }),
+      queryClient.invalidateQueries({ queryKey: ["jobs"] }),
+      queryClient.invalidateQueries({ queryKey: ["employer-company"] }),
+      queryClient.invalidateQueries({ queryKey: ["companies"] }),
+    ]);
+  const transition = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: PublicationStatus }) =>
+      repositories.employerJobs.transition(id, status, session!.csrfToken),
+    onSuccess: async () => {
+      await refresh();
+      toast.showToast({ title: t("employer.statusUpdated") });
+    },
+    onError: () =>
+      toast.showToast({ title: t("employer.statusError"), tone: "error" }),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) =>
+      repositories.employerJobs.delete(id, session!.csrfToken),
+    onSuccess: async () => {
+      await refresh();
+      toast.showToast({ title: t("employer.vacancyDeleted") });
+    },
+    onError: () =>
+      toast.showToast({ title: t("employer.deleteError"), tone: "error" }),
+  });
+  const updateFilter = (key: string, value: string) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value && value !== "all" && !(key === "sort" && value === "newest"))
+          next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filtered = (jobs.data || [])
+    .filter(
+      (job) =>
+        (status === "all" || job.publicationStatus === status) &&
+        (!normalizedQuery ||
+          `${job.title} ${displayJobLocation(job, i18n.language)} ${job.location} ${job.category || ""}`
+            .toLocaleLowerCase()
+            .includes(normalizedQuery)),
+    )
+    .sort(
+      (a, b) =>
+        (jobUpdatedTime(b) - jobUpdatedTime(a)) * (sort === "oldest" ? -1 : 1),
+    );
+  const busy = transition.isPending || remove.isPending;
 
-  const doDelete = (id: string) => { if (window.confirm(t("employer.deleteConfirm"))) remove.mutate(id); };
-  return <SiteShell><main className="employer-page page-container">
-    <EmployerWorkspaceNav />
-    <header className="employer-list-header"><div><p className="auth-eyebrow">{t("auth.employerEyebrow")}</p><h1>{t("employer.myVacancies")}</h1><p>{t("employer.myVacanciesDescription")}</p></div><Link className="ui-button ui-button--primary ui-button--md" to="/employer/vacancies/new"><FilePlus2 size={17} aria-hidden="true" /><span>{t("employer.createVacancy")}</span></Link></header>
-    {jobs.isPending ? <JobListSkeleton label={t("employer.loadingVacancies")} /> : null}
-    {jobs.isError ? <ErrorState title={t("employer.loadErrorTitle")} description={t("employer.loadErrorDescription")} actionLabel={t("common.retry")} onAction={() => void jobs.refetch()} /> : null}
-    {jobs.data?.length === 0 ? <EmptyState title={t("employer.emptyTitle")} description={t("employer.emptyDescription")} secondary={<Link className="text-link" to="/employer/vacancies/new">{t("employer.createVacancy")}</Link>} /> : null}
-    {jobs.data?.length ? <div className="employer-job-list">{jobs.data.map((job) => <article className="employer-job-row" key={job.id}>
-      <div className="employer-job-row__main"><div className="employer-job-row__title"><h2>{job.title}</h2><span className={`status-badge status-badge--${job.publicationStatus}`}>{t(`employer.statuses.${job.publicationStatus}`)}</span></div><p>{displayJobLocation(job, i18n.language)} · {t(`employer.workModes.${job.workMode}`)}</p><small>{t("employer.updatedAt", { date: formatDate(job.updatedAt || job.postedAt, i18n.language) })}</small></div>
-      <div className="employer-job-row__salary">{job.salary ? formatSalary(job.salary, i18n.language, t(`employer.salaryPeriods.${job.salary.period}`)) : t("common.notProvided")}</div>
-      <div className="employer-job-row__actions">
-        {job.publicationStatus === "published" ? <Link className="ui-button ui-button--quiet ui-button--sm" to={`/jobs/${job.id}`}><ExternalLink size={15} aria-hidden="true" /><span>{t("employer.view")}</span></Link> : null}
-        <Link className="ui-button ui-button--quiet ui-button--sm" to={`/employer/vacancies/${job.id}/applicants`}><Users size={15} aria-hidden="true" /><span>{t("employer.applicants")}</span></Link>
-        {job.publicationStatus !== "closed" ? <Link className="ui-button ui-button--quiet ui-button--sm" to={`/employer/vacancies/${job.id}/edit`}><Pencil size={15} aria-hidden="true" /><span>{t("employer.edit")}</span></Link> : null}
-        {job.publicationStatus === "draft" || job.publicationStatus === "paused" ? <Button size="sm" variant="secondary" leadingIcon={<Play size={15} />} disabled={transition.isPending} onClick={() => transition.mutate({ id: job.id, status: "published" })}>{t("employer.publish")}</Button> : null}
-        {job.publicationStatus === "published" ? <Button size="sm" variant="secondary" leadingIcon={<Pause size={15} />} disabled={transition.isPending} onClick={() => transition.mutate({ id: job.id, status: "paused" })}>{t("employer.pause")}</Button> : null}
-        {job.publicationStatus !== "closed" ? <Button size="sm" variant="danger" leadingIcon={<XCircle size={15} />} disabled={transition.isPending} onClick={() => transition.mutate({ id: job.id, status: "closed" })}>{t("employer.close")}</Button> : null}
-        {job.publicationStatus === "draft" || job.publicationStatus === "closed" ? <Button size="sm" variant="danger" leadingIcon={<Trash2 size={15} />} disabled={remove.isPending} onClick={() => doDelete(job.id)}>{t("employer.delete")}</Button> : null}
-      </div>
-    </article>)}</div> : null}
-  </main></SiteShell>;
+  return (
+    <EmployerWorkspaceLayout>
+      <section aria-labelledby="employer-vacancies-title">
+        <header className="workbench-page-header">
+          <div>
+            <h1 id="employer-vacancies-title">{t("employer.myVacancies")}</h1>
+            <p>{session!.company?.name}</p>
+          </div>
+          <Link
+            className="ui-button ui-button--primary ui-button--md"
+            to="/employer/vacancies/new"
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>{t("employer.createVacancy")}</span>
+          </Link>
+        </header>
+        <nav
+          className="vacancy-filters"
+          aria-label={t("employer.statusFilter")}
+        >
+          {(["all", ...publicationStatuses] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={status === value}
+              onClick={() => updateFilter("status", value)}
+            >
+              <span>
+                {t(
+                  value === "all"
+                    ? "employer.all"
+                    : `employer.metrics.${value}`,
+                )}
+              </span>
+              <small>
+                {jobs.isSuccess
+                  ? value === "all"
+                    ? jobs.data.length
+                    : jobs.data.filter((job) => job.publicationStatus === value)
+                        .length
+                  : "—"}
+              </small>
+            </button>
+          ))}
+        </nav>
+        <div className="vacancy-toolbar">
+          <label className="vacancy-search">
+            <span className="visually-hidden">{t("employer.searchLabel")}</span>
+            <Search size={18} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              placeholder={t("employer.searchPlaceholder")}
+              onChange={(event) => updateFilter("q", event.target.value)}
+            />
+          </label>
+          <label className="vacancy-sort">
+            <span className="visually-hidden">{t("jobs.sortLabel")}</span>
+            <select
+              value={sort}
+              onChange={(event) => updateFilter("sort", event.target.value)}
+            >
+              <option value="newest">{t("jobs.newest")}</option>
+              <option value="oldest">{t("jobs.oldest")}</option>
+            </select>
+          </label>
+          {query || status !== "all" ? (
+            <IconButton
+              label={t("employer.resetFilters")}
+              icon={<X size={18} />}
+              onClick={() => setParams({}, { replace: true })}
+            />
+          ) : null}
+        </div>
+        {jobs.isPending ? (
+          <JobListSkeleton label={t("employer.loadingVacancies")} />
+        ) : null}
+        {jobs.isError ? (
+          <ErrorState
+            title={t("employer.loadErrorTitle")}
+            description={t("employer.loadErrorDescription")}
+            actionLabel={t("common.retry")}
+            onAction={() => void jobs.refetch()}
+          />
+        ) : null}
+        {jobs.isSuccess && !jobs.data.length ? (
+          <EmptyState
+            title={t("employer.emptyTitle")}
+            description={t("employer.emptyDescription")}
+            secondary={
+              <Link className="text-link" to="/employer/vacancies/new">
+                {t("employer.createVacancy")}
+              </Link>
+            }
+          />
+        ) : null}
+        {jobs.isSuccess && jobs.data.length > 0 && !filtered.length ? (
+          <EmptyState
+            title={t("employer.filterEmptyTitle")}
+            description={t("employer.filterEmptyDescription")}
+            actionLabel={t("employer.resetFilters")}
+            onAction={() => setParams({}, { replace: true })}
+          />
+        ) : null}
+        {jobs.isSuccess && filtered.length ? (
+          <>
+            <p className="vacancy-result-count" role="status">
+              {t("employer.shownVacancies", {
+                count: filtered.length,
+                total: jobs.data.length,
+              })}
+            </p>
+            <EmployerJobTable
+              jobs={filtered}
+              management
+              busy={busy}
+              pendingId={
+                transition.isPending
+                  ? transition.variables?.id
+                  : remove.isPending
+                    ? remove.variables
+                    : undefined
+              }
+              onTransition={(id, nextStatus) => {
+                if (
+                  !busy &&
+                  (nextStatus !== "closed" ||
+                    window.confirm(t("employer.closeConfirm")))
+                )
+                  transition.mutate({ id, status: nextStatus });
+              }}
+              onDelete={(id) => {
+                if (!busy && window.confirm(t("employer.deleteConfirm")))
+                  remove.mutate(id);
+              }}
+            />
+          </>
+        ) : null}
+      </section>
+    </EmployerWorkspaceLayout>
+  );
 }
-
-function formatDate(value: string, language: string) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(date); }

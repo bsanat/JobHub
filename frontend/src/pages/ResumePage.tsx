@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Trash2, Upload } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
 import { CandidateWorkspaceLayout } from "../components/candidate/CandidateWorkspaceLayout";
 import { Button } from "../components/ui/Button";
-import { EmptyState, ErrorState, Skeleton } from "../components/ui/Feedback";
+import { ErrorState, Skeleton } from "../components/ui/Feedback";
 import { useToast } from "../components/ui/useToast";
 import { JobPreferencesSection } from "./JobPreferencesPage";
 
@@ -20,13 +20,16 @@ export function ResumePage() {
   const toast = useToast();
   const location = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const profile = useQuery({
     queryKey: ["candidate-profile"],
     queryFn: () => repositories.candidate.getProfile(),
   });
   useEffect(() => {
     if (profile.data && location.hash === "#preferences") {
-      requestAnimationFrame(() => document.getElementById("preferences")?.scrollIntoView());
+      requestAnimationFrame(() =>
+        document.getElementById("preferences")?.scrollIntoView(),
+      );
     }
   }, [location.hash, profile.data]);
   const upload = useMutation({
@@ -51,19 +54,23 @@ export function ResumePage() {
 
   const chooseFile = (files: FileList | null) => {
     const file = files?.[0];
-    if (!file) return;
+    if (fileRef.current) fileRef.current.value = "";
+    if (!file || upload.isPending || remove.isPending) return;
     if (file.type !== "application/pdf" || file.size > maxResumeBytes) {
       toast.showToast({
         tone: "error",
-        title: file.size > maxResumeBytes
-          ? t("resume.tooLarge", { limit: maxResumeMiB })
-          : t("resume.pdfOnly"),
+        title:
+          file.size > maxResumeBytes
+            ? t("resume.tooLarge", { limit: maxResumeMiB })
+            : t("resume.pdfOnly"),
       });
       return;
     }
     upload.mutate(file);
   };
   const download = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
     try {
       const blob = await repositories.candidate.downloadOwnResume();
       const url = URL.createObjectURL(blob);
@@ -74,16 +81,18 @@ export function ResumePage() {
       URL.revokeObjectURL(url);
     } catch {
       toast.showToast({ tone: "error", title: t("resume.downloadError") });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   return (
     <CandidateWorkspaceLayout>
       <section className="workspace-page" aria-labelledby="resume-page-title">
-        <header className="workspace-page__header">
-          <p className="auth-eyebrow">{t("workspace.title")}</p>
-          <h1 id="resume-page-title">{t("workspace.nav.resume")}</h1>
-          <p>{t("workspace.resumeDescription")}</p>
+        <header className="workbench-page-header">
+          <div>
+            <h1 id="resume-page-title">{t("workspace.nav.resume")}</h1>
+          </div>
         </header>
         {profile.isPending ? (
           <Skeleton className="detail-skeleton__body" />
@@ -98,71 +107,89 @@ export function ResumePage() {
         ) : null}
         {profile.data ? (
           <>
-          <section id="resume" className="profile-section" aria-labelledby="resume-section-title">
-            <header><h2 id="resume-section-title">{t("profile.sections.resume")}</h2></header>
-            <div className="profile-section__body">
-              <input
-                ref={fileRef}
-                className="visually-hidden"
-                type="file"
-                accept="application/pdf,.pdf"
-                onChange={(event) => chooseFile(event.target.files)}
-              />
-              {profile.data.resume ? (
-                <div className="resume-row">
-                  <FileText size={26} aria-hidden="true" />
-                  <div>
-                    <strong>{profile.data.resume.originalFilename}</strong>
-                    <span>
-                      {formatBytes(profile.data.resume.sizeBytes)} ·{" "}
-                      {formatDate(
-                        profile.data.resume.uploadedAt,
-                        i18n.language,
-                      )}{" "}
-                      · {t(`resume.statuses.${profile.data.resume.status}`)}
+            <section
+              id="resume"
+              className="profile-section"
+              aria-labelledby="resume-section-title"
+            >
+              <header>
+                <h2 id="resume-section-title">
+                  {t("candidateLists.resumeFile")}
+                </h2>
+              </header>
+              <div className="profile-section__body">
+                <input
+                  ref={fileRef}
+                  className="visually-hidden"
+                  type="file"
+                  aria-label={t("resume.upload")}
+                  accept="application/pdf,.pdf"
+                  onChange={(event) => chooseFile(event.target.files)}
+                />
+                {profile.data.resume ? (
+                  <div className="resume-row">
+                    <span className="candidate-row-mark" aria-hidden="true">
+                      <FileText size={22} />
                     </span>
+                    <div>
+                      <strong>{profile.data.resume.originalFilename}</strong>
+                      <span>
+                        {formatBytes(profile.data.resume.sizeBytes)} ·{" "}
+                        {formatDate(
+                          profile.data.resume.uploadedAt,
+                          i18n.language,
+                        )}{" "}
+                        · {t(`resume.statuses.${profile.data.resume.status}`)}
+                      </span>
+                    </div>
+                    <div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        leadingIcon={<Download size={15} />}
+                        isLoading={isDownloading}
+                        disabled={remove.isPending || upload.isPending}
+                        onClick={() => void download()}
+                      >
+                        {t("resume.download")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        leadingIcon={<Upload size={15} />}
+                        isLoading={upload.isPending}
+                        disabled={remove.isPending || isDownloading}
+                        onClick={() => fileRef.current?.click()}
+                      >
+                        {t("resume.replace")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="quiet"
+                        size="sm"
+                        leadingIcon={<Trash2 size={15} />}
+                        isLoading={remove.isPending}
+                        disabled={upload.isPending || isDownloading}
+                        onClick={() =>
+                          window.confirm(t("resume.deleteConfirm")) &&
+                          remove.mutate()
+                        }
+                      >
+                        {t("resume.delete")}
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<Download size={15} />}
-                      onClick={() => void download()}
-                    >
-                      {t("resume.download")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<Upload size={15} />}
-                      isLoading={upload.isPending}
-                      onClick={() => fileRef.current?.click()}
-                    >
-                      {t("resume.replace")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      leadingIcon={<Trash2 size={15} />}
-                      isLoading={remove.isPending}
-                      onClick={() =>
-                        window.confirm(t("resume.deleteConfirm")) &&
-                        remove.mutate()
-                      }
-                    >
-                      {t("resume.delete")}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <EmptyState
-                  illustration="/illustrations/empty-resume.png"
-                  title={t("resume.emptyTitle")}
-                  description={t("resume.emptyDescription")}
-                  secondary={
+                ) : (
+                  <div className="resume-upload">
+                    <span className="candidate-row-mark" aria-hidden="true">
+                      <FileText size={22} />
+                    </span>
+                    <div>
+                      <strong>{t("resume.emptyTitle")}</strong>
+                      <p>{t("resume.emptyDescription")}</p>
+                    </div>
                     <Button
                       type="button"
                       leadingIcon={<Upload size={17} />}
@@ -171,12 +198,11 @@ export function ResumePage() {
                     >
                       {t("resume.upload")}
                     </Button>
-                  }
-                />
-              )}
-            </div>
-          </section>
-          <JobPreferencesSection profile={profile.data} />
+                  </div>
+                )}
+              </div>
+            </section>
+            <JobPreferencesSection profile={profile.data} />
           </>
         ) : null}
       </section>

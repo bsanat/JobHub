@@ -44,7 +44,7 @@ export function RegisterPage() {
     }
     try {
       await auth.register({ fullName: values.fullName, email: values.email, password: values.password, role, companyName: values.companyName });
-      navigate(role === "employer" ? "/employer" : safeReturnTo(params.get("returnTo")), { replace: true });
+      navigate(role === "employer" ? "/employer" : safeReturnTo(params.get("returnTo"), "/profile"), { replace: true });
     } catch (error) {
       const code = authErrorCode(error);
       setServerError(code === "EMAIL_ALREADY_EXISTS" ? t("auth.errors.emailExists") : t("auth.errors.generic"));
@@ -73,7 +73,7 @@ export function RegisterPage() {
             {serverError && serverError !== t("auth.validation.companyRequired") ? <p className="auth-error" role="alert">{serverError}</p> : null}
             <Button type="submit" isLoading={formState.isSubmitting}>{t("auth.registerSubmit")}</Button>
           </form>
-          <p className="auth-switch">{t("auth.hasAccount")} <Link to={`/login?returnTo=${encodeURIComponent(safeReturnTo(params.get("returnTo")))}`}>{t("auth.loginLink")}</Link></p>
+          <p className="auth-switch">{t("auth.hasAccount")} <Link to={params.has("returnTo") ? `/login?returnTo=${encodeURIComponent(safeReturnTo(params.get("returnTo")))}` : "/login"}>{t("auth.loginLink")}</Link></p>
         </section>
       </main>
     </SiteShell>

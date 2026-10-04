@@ -1,21 +1,21 @@
 import { useTranslation } from "react-i18next";
-import type { AuthUser } from "../../api/models/auth";
+import type { ReactNode } from "react";
 import type { CandidateProfile } from "../../api/models/candidate";
+import { cityName } from "../../lib/cities";
 
 interface CandidateIdentityHeaderProps {
-  eyebrow: string;
   profile: CandidateProfile;
-  user: AuthUser;
   titleId?: string;
+  actions?: ReactNode;
 }
 
 export function CandidateIdentityHeader({
-  eyebrow,
   profile,
-  user,
   titleId,
+  actions,
 }: CandidateIdentityHeaderProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const city = cityName(profile.cityId, i18n.language) || profile.city;
   const position =
     profile.desiredPosition ||
     profile.currentPosition ||
@@ -27,38 +27,30 @@ export function CandidateIdentityHeader({
         {initials(profile.fullName)}
       </div>
       <div className="candidate-identity-header__copy">
-        <p className="auth-eyebrow">{eyebrow}</p>
         <h1 id={titleId}>{profile.fullName}</h1>
         <p className="candidate-identity-header__position">{position}</p>
-        <dl className="candidate-account-meta">
-          <div>
-            <dt>{t("auth.email")}</dt>
-            <dd>{user.email}</dd>
-          </div>
-          <div>
-            <dt>{t("auth.role")}</dt>
-            <dd>{t(`auth.roles.${user.role}`)}</dd>
-          </div>
-          <div>
-            <dt>{t("auth.accountStatus")}</dt>
-            <dd>
-              <span className={`account-status account-status--${user.status}`}>
-                {t(`auth.statuses.${user.status}`)}
-              </span>
-            </dd>
-          </div>
-        </dl>
+        <div className="candidate-identity-header__meta">
+          {city ? <span>{city}</span> : null}
+          <span
+            className={`search-status search-status--${profile.searchStatus}`}
+          >
+            {t(`profile.searchStatuses.${profile.searchStatus}`)}
+          </span>
+        </div>
       </div>
-      <div
-        className="profile-completion"
-        aria-label={t("profile.completionLabel", {
-          value: profile.completion.percentage,
-        })}
-      >
-        <strong>{profile.completion.percentage}%</strong>
-        <span>{t("profile.complete")}</span>
-        <div aria-hidden="true">
-          <span style={{ width: `${profile.completion.percentage}%` }} />
+      <div className="candidate-identity-header__tools">
+        {actions}
+        <div
+          className="profile-completion"
+          aria-label={t("profile.completionLabel", {
+            value: profile.completion.percentage,
+          })}
+        >
+          <strong>{profile.completion.percentage}%</strong>
+          <span>{t("profile.complete")}</span>
+          <div aria-hidden="true">
+            <span style={{ width: `${profile.completion.percentage}%` }} />
+          </div>
         </div>
       </div>
     </header>
