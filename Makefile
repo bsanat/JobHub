@@ -1,7 +1,10 @@
-.PHONY: dev local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo
+.PHONY: dev backend-dev local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo
 
 dev:
 	./scripts/dev-local.sh
+
+backend-dev:
+	./scripts/dev-local.sh backend
 
 local-up:
 	docker compose --profile local up --build

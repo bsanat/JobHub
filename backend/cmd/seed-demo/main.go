@@ -53,6 +53,9 @@ func main() {
 }
 
 func run(ctx context.Context) error {
+	if err := validateDemoData(); err != nil {
+		return err
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return err
