@@ -12,6 +12,9 @@
   и `candidates/postgres_marketplace.go` внутри `backend/internal/`.
 - `frontend/src/pages/OnboardingPage.tsx` — опрос `/onboarding` после регистрации;
   `frontend/src/app/OnboardingGate.tsx` восстанавливает незавершённый опрос.
+- `frontend/src/pages/LoginPage.tsx`, `frontend/src/pages/RegisterPage.tsx` and
+  `frontend/src/pages/AuthCallbackPage.tsx` — email/password auth плюс Google
+  OAuth callback через Supabase; API мост — `/api/v1/auth/oauth/google`.
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
@@ -30,6 +33,8 @@
 - `backend/cmd/api/` запускает API.
 - `backend/internal/auth/onboarding.go` — ответы аккаунта и защита версий;
   `backend/internal/handlers/onboarding.go` — GET/PUT `/api/v1/auth/onboarding`.
+- `backend/internal/auth/oauth.go` and `backend/internal/handlers/auth.go` —
+  проверка Google OAuth token через Supabase Auth и создание JobHub session.
 - `backend/cmd/telegram-publisher/` публикует подходящие вакансии в Telegram.
 - `backend/internal/handlers/` обрабатывает HTTP-маршруты и запросы.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,

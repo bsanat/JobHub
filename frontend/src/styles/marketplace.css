@@ -360,6 +360,50 @@
 .auth-panel h1,
 .shell-page h1 { margin-bottom: var(--space-6); font-size: clamp(var(--text-28), 4vw, var(--text-40)); }
 .auth-form { display: grid; gap: var(--space-4); }
+.auth-google-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-weight: 800;
+  cursor: pointer;
+}
+.auth-google-button:hover { border-color: var(--color-primary); }
+.auth-google-button span {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #1a73e8;
+  border: 1px solid var(--color-border);
+  font-weight: 900;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-14);
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--color-border);
+}
+.auth-oauth-note { margin: calc(-1 * var(--space-2)) 0 var(--space-4); color: var(--color-text-muted); font-size: var(--text-14); }
 .password-field { position: relative; }
 .password-field .ui-icon-button { position: absolute; right: var(--space-2); bottom: 0.34rem; }
 .password-field .ui-input { padding-right: 3.25rem; }

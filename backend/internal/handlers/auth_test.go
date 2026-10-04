@@ -28,6 +28,9 @@ func (s *authStub) Register(context.Context, auth.RegisterInput) (auth.Session, 
 func (s *authStub) Login(context.Context, auth.LoginInput) (auth.Session, string, error) {
 	return s.session, s.token, s.err
 }
+func (s *authStub) LoginWithOAuth(context.Context, auth.OAuthLoginInput) (auth.Session, string, error) {
+	return s.session, s.token, s.err
+}
 func (s *authStub) Authenticate(context.Context, string) (auth.Session, error) {
 	return s.session, s.err
 }
@@ -160,6 +163,27 @@ func TestAuthLoginInvalidCredentialsGeneric(t *testing.T) {
 	router.ServeHTTP(res, req)
 	if res.Code != http.StatusUnauthorized || !strings.Contains(res.Body.String(), "INVALID_CREDENTIALS") || strings.Contains(res.Body.String(), "not found") {
 		t.Fatalf("unexpected response: %d %s", res.Code, res.Body.String())
+	}
+}
+
+func TestAuthGoogleOAuthSetsSessionCookie(t *testing.T) {
+	now := time.Date(2026, 10, 5, 12, 0, 0, 0, time.UTC)
+	stub := &authStub{token: "oauth-token", session: auth.Session{
+		User:      auth.User{ID: "user-id", FullName: "Aigerim", Email: "a@example.com", Role: auth.RoleJobSeeker, Status: auth.StatusActive},
+		CSRFToken: "csrf", ExpiresAt: now.Add(time.Hour),
+	}}
+	router := NewRouter(checker{}, slog.New(slog.NewTextHandler(io.Discard, nil)), "http://localhost:5173", stub, "development")
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/oauth/google", strings.NewReader(`{"access_token":"supabase-token"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Origin", "http://localhost:5173")
+	router.ServeHTTP(res, req)
+	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"csrf_token":"csrf"`) {
+		t.Fatalf("unexpected response: %d %s", res.Code, res.Body.String())
+	}
+	cookie := res.Result().Cookies()[0]
+	if cookie.Name != auth.SessionCookieName || !cookie.HttpOnly || cookie.Value != "oauth-token" {
+		t.Fatalf("unexpected cookie: %#v", cookie)
 	}
 }
 

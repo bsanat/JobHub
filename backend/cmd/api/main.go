@@ -50,6 +50,13 @@ func run(logger *slog.Logger) error {
 	}
 	jobStore := jobs.NewPostgresStore(pool, cfg.Environment == "production")
 	authService := auth.NewService(pool)
+	if os.Getenv("SUPABASE_URL") != "" && os.Getenv("SUPABASE_SECRET_KEY") != "" {
+		oauthVerifier, err := auth.NewSupabaseOAuthVerifier(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SECRET_KEY"), nil)
+		if err != nil {
+			return err
+		}
+		authService.SetOAuthVerifier(oauthVerifier)
+	}
 	var resumeFiles candidates.FileStore
 	if os.Getenv("SUPABASE_URL") != "" || os.Getenv("SUPABASE_SECRET_KEY") != "" {
 		resumeFiles, err = candidates.NewSupabaseFileStore(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SECRET_KEY"), "resumes", nil)

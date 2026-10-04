@@ -8,6 +8,7 @@ const JobsPage = lazy(() => import("./pages/JobsPage").then((module) => ({ defau
 const JobDetailPage = lazy(() => import("./pages/JobDetailPage").then((module) => ({ default: module.JobDetailPage })));
 const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })));
 const RegisterPage = lazy(() => import("./pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage").then((module) => ({ default: module.AuthCallbackPage })));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage").then((module) => ({ default: module.OnboardingPage })));
 const AccountPage = lazy(() => import("./pages/AccountPage").then((module) => ({ default: module.AccountPage })));
 const EmployerPage = lazy(() => import("./pages/EmployerPage").then((module) => ({ default: module.EmployerPage })));
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/companies/:companyId" element={<CompanyProfilePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
           <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
           <Route path="/workspace" element={<ProtectedRoute role="job_seeker"><Navigate to="/profile" replace /></ProtectedRoute>} />

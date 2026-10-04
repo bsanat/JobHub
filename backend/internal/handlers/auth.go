@@ -35,6 +35,10 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
+type oauthGoogleRequest struct {
+	AccessToken string `json:"access_token"`
+}
+
 type sessionResponse struct {
 	User               auth.User     `json:"user"`
 	Company            *auth.Company `json:"company,omitempty"`
@@ -48,6 +52,7 @@ func RegisterAuthRoutes(router *gin.Engine, service auth.Service, logger *slog.L
 	group := router.Group("/api/v1/auth")
 	group.POST("/register", h.requireTrustedOrigin(), h.register)
 	group.POST("/login", h.requireTrustedOrigin(), h.login)
+	group.POST("/oauth/google", h.requireTrustedOrigin(), h.oauthGoogle)
 	group.GET("/me", h.me)
 	group.POST("/logout", h.requireTrustedOrigin(), h.requireCSRF(), h.logout)
 	if onboarding, ok := service.(auth.OnboardingService); ok {
@@ -78,6 +83,21 @@ func (h authHandler) login(c *gin.Context) {
 		return
 	}
 	session, token, err := h.service.Login(c.Request.Context(), auth.LoginInput{Email: req.Email, Password: req.Password})
+	if err != nil {
+		h.writeAuthError(c, err)
+		return
+	}
+	h.setSessionCookie(c, token, session.ExpiresAt)
+	h.setCSRFCookie(c, session.CSRFToken, session.ExpiresAt)
+	c.JSON(http.StatusOK, mapSessionResponse(session))
+}
+
+func (h authHandler) oauthGoogle(c *gin.Context) {
+	var req oauthGoogleRequest
+	if !decodeJSON(c, &req) {
+		return
+	}
+	session, token, err := h.service.LoginWithOAuth(c.Request.Context(), auth.OAuthLoginInput{AccessToken: req.AccessToken})
 	if err != nil {
 		h.writeAuthError(c, err)
 		return
@@ -147,6 +167,8 @@ func (h authHandler) writeAuthError(c *gin.Context, err error) {
 		c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"code": "FORBIDDEN", "message": "Action is not allowed"}})
 	case errors.Is(err, auth.ErrSuspended):
 		c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"code": "ACCOUNT_SUSPENDED", "message": "Account is suspended"}})
+	case errors.Is(err, auth.ErrOAuthUnavailable):
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"code": "OAUTH_UNAVAILABLE", "message": "Google authentication is temporarily unavailable"}})
 	default:
 		if strings.Contains(err.Error(), "required") || strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "password") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"code": "VALIDATION_ERROR", "message": err.Error()}})

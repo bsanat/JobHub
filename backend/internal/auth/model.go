@@ -62,6 +62,10 @@ type LoginInput struct {
 	Password string
 }
 
+type OAuthLoginInput struct {
+	AccessToken string
+}
+
 type AdminInput struct {
 	FullName string
 	Email    string
@@ -71,6 +75,7 @@ type AdminInput struct {
 type Service interface {
 	Register(context.Context, RegisterInput) (Session, string, error)
 	Login(context.Context, LoginInput) (Session, string, error)
+	LoginWithOAuth(context.Context, OAuthLoginInput) (Session, string, error)
 	Authenticate(context.Context, string) (Session, error)
 	ValidateCSRF(context.Context, string, string) error
 	Logout(context.Context, string) error

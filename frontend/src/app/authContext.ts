@@ -7,6 +7,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   register(input: RegisterRequest): Promise<AuthSession>;
   login(input: LoginRequest): Promise<AuthSession>;
+  loginWithGoogleToken(accessToken: string): Promise<AuthSession>;
   logout(): Promise<void>;
   hasRole(role: UserRole): boolean;
 }

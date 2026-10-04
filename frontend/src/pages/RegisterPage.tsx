@@ -11,6 +11,7 @@ import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
+import { googleAuthConfigured, googleRedirectTo, supabase } from "../lib/supabase";
 import { authErrorCode } from "./authUtils";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
@@ -53,6 +54,20 @@ export function RegisterPage() {
     }
   });
 
+  const startGoogleRegistration = async () => {
+    setServerError("");
+    if (!googleAuthConfigured || !supabase) {
+      setServerError(t("auth.errors.googleNotConfigured"));
+      return;
+    }
+    const returnTo = safeReturnTo(role === "employer" ? "/employer" : params.get("returnTo"));
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: googleRedirectTo(returnTo) },
+    });
+    if (error) setServerError(t("auth.errors.google"));
+  };
+
   return (
     <SiteShell>
       <main className="auth-page page-container">
@@ -63,6 +78,12 @@ export function RegisterPage() {
             <button type="button" className={role === "job_seeker" ? "active" : ""} onClick={() => setRole("job_seeker")}><UserRound size={20} /><span>{t("auth.roles.job_seeker")}</span></button>
             <button type="button" className={role === "employer" ? "active" : ""} onClick={() => setRole("employer")}><BriefcaseBusiness size={20} /><span>{t("auth.roles.employer")}</span></button>
           </div>
+          <button type="button" className="auth-google-button" onClick={startGoogleRegistration}>
+            <span aria-hidden="true">G</span>
+            {t("auth.googleRegister")}
+          </button>
+          <p className="auth-oauth-note">{t("auth.googleRegisterNote")}</p>
+          <div className="auth-divider"><span>{t("auth.orEmail")}</span></div>
           <form className="auth-form" onSubmit={onSubmit} noValidate>
             <Input label={t("auth.fullName")} autoComplete="name" error={formState.errors.fullName ? t("auth.validation.fullName") : undefined} {...register("fullName")} />
             <Input label={role === "employer" ? t("auth.workEmail") : t("auth.email")} type="email" autoComplete="email" error={formState.errors.email ? t("auth.validation.email") : undefined} {...register("email")} />

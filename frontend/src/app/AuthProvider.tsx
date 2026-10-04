@@ -25,6 +25,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       queryClient.setQueryData<AuthSession | null>(["auth", "me"], session);
     },
   });
+  const googleLoginMutation = useMutation({
+    mutationFn: (accessToken: string) => repositories.auth.loginWithGoogleToken(accessToken),
+    onSuccess: (session) => {
+      queryClient.removeQueries({ queryKey: ["auth", "onboarding"] });
+      queryClient.setQueryData<AuthSession | null>(["auth", "me"], session);
+    },
+  });
 
   const logout = async () => {
     const session = queryClient.getQueryData<AuthSession>(["auth", "me"]);
@@ -42,6 +49,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isAuthenticated: Boolean(session),
         register: registerMutation.mutateAsync,
         login: loginMutation.mutateAsync,
+        loginWithGoogleToken: googleLoginMutation.mutateAsync,
         logout,
         hasRole: (role) => session?.user.role === role,
       }}

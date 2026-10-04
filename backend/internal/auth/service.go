@@ -26,10 +26,15 @@ type AuthService struct {
 	queries    *dbgen.Queries
 	sessionTTL time.Duration
 	now        func() time.Time
+	oauth      OAuthVerifier
 }
 
 func NewService(pool *pgxpool.Pool) *AuthService {
 	return &AuthService{pool: pool, queries: dbgen.New(pool), sessionTTL: 7 * 24 * time.Hour, now: time.Now}
+}
+
+func (s *AuthService) SetOAuthVerifier(verifier OAuthVerifier) {
+	s.oauth = verifier
 }
 
 func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Session, string, error) {
@@ -126,6 +131,105 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (Session, str
 		return Session{}, "", err
 	}
 	session.OnboardingRequired = state.Required
+	return session, token, nil
+}
+
+func (s *AuthService) LoginWithOAuth(ctx context.Context, input OAuthLoginInput) (Session, string, error) {
+	if s.oauth == nil {
+		return Session{}, "", ErrOAuthUnavailable
+	}
+	identity, err := s.oauth.VerifyGoogle(ctx, input.AccessToken)
+	if err != nil {
+		return Session{}, "", err
+	}
+	normalizedEmail, err := NormalizeEmail(identity.Email)
+	if err != nil {
+		return Session{}, "", ErrInvalidCredentials
+	}
+	user, err := s.queries.GetUserByNormalizedEmail(ctx, normalizedEmail)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return s.registerOAuthUser(ctx, identity, normalizedEmail)
+	}
+	if err != nil {
+		return Session{}, "", fmt.Errorf("get user: %w", err)
+	}
+	if user.Status != StatusActive {
+		return Session{}, "", ErrSuspended
+	}
+	var company *Company
+	if user.Role == RoleEmployer {
+		if c, err := s.queries.GetCompanyForUser(ctx, user.ID); err == nil {
+			company = &Company{ID: formatUUID(c.ID), Name: c.Name}
+		}
+	}
+	state, err := s.GetOnboarding(ctx, formatUUID(user.ID))
+	if err != nil {
+		return Session{}, "", fmt.Errorf("read onboarding: %w", err)
+	}
+	session, token, err := s.createSession(ctx, s.queries, user, company)
+	if err != nil {
+		return Session{}, "", err
+	}
+	session.OnboardingRequired = state.Required
+	return session, token, nil
+}
+
+func (s *AuthService) registerOAuthUser(ctx context.Context, identity OAuthIdentity, normalizedEmail string) (Session, string, error) {
+	fullName := strings.TrimSpace(identity.FullName)
+	if fullName == "" {
+		fullName = normalizedEmail
+	}
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return Session{}, "", err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	q := dbgen.New(tx)
+	user, err := q.CreateUser(ctx, dbgen.CreateUserParams{
+		FullName: fullName, Email: strings.TrimSpace(identity.Email),
+		NormalizedEmail: normalizedEmail, PasswordHash: "oauth:google", Role: RoleJobSeeker,
+	})
+	if isUniqueViolation(err) {
+		existing, getErr := s.queries.GetUserByNormalizedEmail(ctx, normalizedEmail)
+		if getErr != nil {
+			return Session{}, "", ErrDuplicateEmail
+		}
+		if existing.Status != StatusActive {
+			return Session{}, "", ErrSuspended
+		}
+		session, token, sessionErr := s.createSession(ctx, s.queries, existing, nil)
+		if sessionErr != nil {
+			return Session{}, "", sessionErr
+		}
+		state, stateErr := s.GetOnboarding(ctx, formatUUID(existing.ID))
+		if stateErr != nil {
+			return Session{}, "", fmt.Errorf("read onboarding: %w", stateErr)
+		}
+		session.OnboardingRequired = state.Required
+		return session, token, nil
+	}
+	if err != nil {
+		return Session{}, "", fmt.Errorf("create oauth user: %w", err)
+	}
+	onboardingRequired := false
+	hasOnboarding, err := onboardingTableExists(ctx, tx)
+	if err != nil {
+		return Session{}, "", fmt.Errorf("check onboarding: %w", err)
+	}
+	if hasOnboarding {
+		if _, err := tx.Exec(ctx, `INSERT INTO jobhub.account_onboarding (user_id) VALUES ($1)`, user.ID); err != nil {
+			return Session{}, "", fmt.Errorf("create onboarding: %w", err)
+		}
+		onboardingRequired = true
+	}
+	session, token, err := s.createSession(ctx, q, user, nil)
+	if err != nil {
+		return Session{}, "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Session{}, "", fmt.Errorf("commit oauth registration: %w", err)
+	}
+	session.OnboardingRequired = onboardingRequired
 	return session, token, nil
 }
 

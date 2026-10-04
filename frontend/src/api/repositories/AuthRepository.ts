@@ -9,6 +9,7 @@ import type {
 export interface AuthRepository {
   register(input: RegisterRequest): Promise<AuthSession>;
   login(input: LoginRequest): Promise<AuthSession>;
+  loginWithGoogleToken(accessToken: string): Promise<AuthSession>;
   me(): Promise<AuthSession>;
   logout(csrfToken: string): Promise<void>;
   onboarding(): Promise<OnboardingState>;

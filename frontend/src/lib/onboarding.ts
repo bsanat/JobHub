@@ -20,7 +20,8 @@ export function onboardingDestination(value: string | null, role: UserRole) {
   }
   if (
     url.origin !== window.location.origin ||
-    /^\/(onboarding|login|register)(\/|$)/.test(url.pathname)
+    /^\/(onboarding|login|register)(\/|$)/.test(url.pathname) ||
+    url.pathname === "/auth/callback"
   )
     return fallback;
   return url.pathname + url.search + url.hash;
