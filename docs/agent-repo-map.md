@@ -20,6 +20,7 @@ it; the source code is authoritative.
 - `backend/internal/handlers/` owns HTTP routes and request/response handling.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,
   `backend/internal/companies/` and `backend/internal/auth/` own domain logic.
+- `backend/internal/candidates/supabase_storage.go` stores private resumes in Supabase Storage for serverless deployments.
 - `backend/internal/telegrampublisher/` owns Telegram publication formatting,
   duplicate tracking and retry orchestration.
 - `backend/sql/queries/` contains sqlc query sources.

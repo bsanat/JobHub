@@ -51,7 +51,12 @@ func run(logger *slog.Logger) error {
 	jobStore := jobs.NewPostgresStore(pool, cfg.Environment == "production")
 	authService := auth.NewService(pool)
 	var resumeFiles candidates.FileStore
-	if os.Getenv("VERCEL") == "1" {
+	if os.Getenv("SUPABASE_URL") != "" || os.Getenv("SUPABASE_SECRET_KEY") != "" {
+		resumeFiles, err = candidates.NewSupabaseFileStore(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SECRET_KEY"), "resumes", nil)
+		if err != nil {
+			return err
+		}
+	} else if os.Getenv("VERCEL") == "1" {
 		resumeFiles = candidates.UnavailableFileStore{}
 	} else {
 		resumeFiles, err = candidates.NewLocalFileStore(cfg.ResumeStorageDir)

@@ -237,7 +237,7 @@ go run ./cmd/create-admin --full-name 'Admin Name' --email admin@example.com
 4. На опубликованной вакансии JobHub отправьте отклик и проверьте его в `/applications`.
 5. Войдите как работодатель и откройте кандидатов через `/employer/vacancies/:jobId/applicants`.
 
-Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`; директорию нужно подключить к постоянному приватному диску в production.
+Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`. На Vercel настройте приватный Supabase Storage bucket `resumes`, а также серверные `SUPABASE_URL` и `SUPABASE_SECRET_KEY`; ключ нельзя передавать во frontend. Без этих переменных загрузка резюме на Vercel недоступна.
 
 Telegram publisher можно запускать напрямую с Supabase Postgres без Docker. Настройка, проверка и команда запуска описаны в [docs/telegram-vacancy-publisher.md](docs/telegram-vacancy-publisher.md).
 
@@ -262,6 +262,8 @@ Telegram publisher можно запускать напрямую с Supabase Po
 | `TELEGRAM_PUBLISH_TEST_SOURCES` | Явный staging-only режим для тестовой публикации импортированных вакансий без подтверждённых production-прав |
 | `JOBHUB_PUBLIC_BASE_URL` | Публичный HTTPS URL frontend для ссылок `/jobs/:id` в Telegram |
 | `RESUME_STORAGE_DIR` | Приватная директория для PDF-резюме |
+| `SUPABASE_URL` | URL проекта Supabase для серверного Storage |
+| `SUPABASE_SECRET_KEY` | Секретный ключ Supabase только для backend; доступ к приватному bucket `resumes` |
 
 Никогда не коммитьте `.env`, API-ключи, пароли от базы, Supabase keys или connection strings с реальными credentials.
 
