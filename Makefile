@@ -1,4 +1,4 @@
-.PHONY: dev backend-dev local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo
+.PHONY: dev backend-dev local-up local-down migrate-local migrate-staging migrate-version import-jooble seed-demo telegram-publisher-dev
 
 dev:
 	./scripts/dev-local.sh
@@ -26,3 +26,8 @@ import-jooble:
 
 seed-demo:
 	@set -a; . ./.env; set +a; cd backend && go run ./cmd/seed-demo
+
+telegram-publisher-dev:
+	@set -a; . ./.env; set +a; \
+	if [ -z "$${TELEGRAM_DEV_DATABASE_URL:-}" ]; then echo "Set TELEGRAM_DEV_DATABASE_URL to a local development database" >&2; exit 1; fi; \
+	cd backend && APP_ENV=development DATABASE_URL="$${TELEGRAM_DEV_DATABASE_URL}" DATABASE_MIGRATION_URL="$${TELEGRAM_DEV_DATABASE_URL}" go run ./cmd/telegram-publisher --dry-run --once

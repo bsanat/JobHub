@@ -77,6 +77,30 @@ type APIError struct {
 
 func (e *APIError) Error() string { return e.Category }
 
+func (e *APIError) DeliveryKnownFailed() bool {
+	switch e.Category {
+	case "TELEGRAM_INVALID_MESSAGE", "TELEGRAM_REQUEST_FAILED", "TELEGRAM_AUTH_FAILED", "TELEGRAM_FORBIDDEN", "TELEGRAM_REJECTED", "TELEGRAM_RATE_LIMITED":
+		return true
+	default:
+		return false
+	}
+}
+
+func (e *APIError) StopBatch() bool {
+	return e.Category == "TELEGRAM_RATE_LIMITED" || e.Category == "TELEGRAM_AUTH_FAILED" || e.Category == "TELEGRAM_FORBIDDEN"
+}
+
+func (e *APIError) RetryDelay() time.Duration {
+	if e.Category == "TELEGRAM_RATE_LIMITED" {
+		return e.RetryAfter
+	}
+	return 0
+}
+
+func (e *APIError) CountFailureAttempt() bool {
+	return e.Category != "TELEGRAM_RATE_LIMITED" && e.Category != "TELEGRAM_AUTH_FAILED" && e.Category != "TELEGRAM_FORBIDDEN"
+}
+
 type Client struct {
 	token string
 	http  *http.Client
@@ -137,6 +161,34 @@ func (c *Client) GetChannel(ctx context.Context, username string) (Chat, error) 
 	return chat, nil
 }
 
+func (c *Client) VerifyChannel(ctx context.Context, channelID int64, username string) error {
+	chat, err := c.GetChannel(ctx, username)
+	if err != nil {
+		return err
+	}
+	if chat.ID != channelID {
+		return &APIError{Category: "TELEGRAM_CHANNEL_ID_MISMATCH"}
+	}
+	bot, err := c.GetMe(ctx)
+	if err != nil {
+		return err
+	}
+	var member struct {
+		Status          string `json:"status"`
+		CanPostMessages bool   `json:"can_post_messages"`
+	}
+	if err := c.call(ctx, "getChatMember", struct {
+		ChatID int64 `json:"chat_id"`
+		UserID int64 `json:"user_id"`
+	}{channelID, bot.ID}, &member); err != nil {
+		return err
+	}
+	if member.Status != "creator" && (member.Status != "administrator" || !member.CanPostMessages) {
+		return &APIError{Category: "TELEGRAM_CHANNEL_POST_FORBIDDEN"}
+	}
+	return nil
+}
+
 func (c *Client) GetUpdates(ctx context.Context, offset int64) ([]Update, error) {
 	return c.getUpdates(ctx, offset, 30)
 }
@@ -174,8 +226,21 @@ func (u Update) DirectMessage() (DirectMessage, bool) {
 }
 
 func (c *Client) SendMessage(ctx context.Context, chatID int64, text string) error {
+	_, err := c.SendMessageAndReturnID(ctx, chatID, text)
+	return err
+}
+
+func (c *Client) SendMessageAndReturnID(ctx context.Context, chatID int64, text string) (int64, error) {
+	return c.sendMessage(ctx, chatID, text, false)
+}
+
+func (c *Client) SendHTMLMessageAndReturnID(ctx context.Context, chatID int64, text string) (int64, error) {
+	return c.sendMessage(ctx, chatID, text, true)
+}
+
+func (c *Client) sendMessage(ctx context.Context, chatID int64, text string, formatted bool) (int64, error) {
 	if chatID == 0 || strings.TrimSpace(text) == "" || len([]rune(text)) > 4096 {
-		return &APIError{Category: "TELEGRAM_INVALID_MESSAGE"}
+		return 0, &APIError{Category: "TELEGRAM_INVALID_MESSAGE"}
 	}
 	var sent struct {
 		MessageID int64 `json:"message_id"`
@@ -183,14 +248,15 @@ func (c *Client) SendMessage(ctx context.Context, chatID int64, text string) err
 	if err := c.call(ctx, "sendMessage", struct {
 		ChatID         int64  `json:"chat_id"`
 		Text           string `json:"text"`
+		ParseMode      string `json:"parse_mode,omitempty"`
 		DisablePreview bool   `json:"disable_web_page_preview"`
-	}{chatID, text, true}, &sent); err != nil {
-		return err
+	}{ChatID: chatID, Text: text, ParseMode: map[bool]string{true: "HTML", false: ""}[formatted], DisablePreview: true}, &sent); err != nil {
+		return 0, err
 	}
 	if sent.MessageID == 0 {
-		return &APIError{Category: "TELEGRAM_INVALID_RESPONSE"}
+		return 0, &APIError{Category: "TELEGRAM_INVALID_RESPONSE"}
 	}
-	return nil
+	return sent.MessageID, nil
 }
 
 func (c *Client) call(ctx context.Context, method string, payload any, target any) error {
@@ -231,8 +297,12 @@ func (c *Client) call(ctx context.Context, method string, payload any, target an
 		category := "TELEGRAM_API_FAILED"
 		if res.StatusCode == http.StatusUnauthorized || envelope.ErrorCode == http.StatusUnauthorized {
 			category = "TELEGRAM_AUTH_FAILED"
+		} else if res.StatusCode == http.StatusForbidden || envelope.ErrorCode == http.StatusForbidden {
+			category = "TELEGRAM_FORBIDDEN"
 		} else if res.StatusCode == http.StatusTooManyRequests || envelope.ErrorCode == http.StatusTooManyRequests {
 			category = "TELEGRAM_RATE_LIMITED"
+		} else if res.StatusCode >= 400 && res.StatusCode < 500 {
+			category = "TELEGRAM_REJECTED"
 		}
 		return &APIError{Category: category, RetryAfter: time.Duration(envelope.Parameters.RetryAfter) * time.Second}
 	}

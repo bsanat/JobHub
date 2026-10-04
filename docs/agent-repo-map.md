@@ -16,9 +16,12 @@ it; the source code is authoritative.
 ## Backend
 
 - `backend/cmd/api/` starts the API service.
+- `backend/cmd/telegram-publisher/` posts eligible public vacancies from permitted sources to Telegram.
 - `backend/internal/handlers/` owns HTTP routes and request/response handling.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,
   `backend/internal/companies/` and `backend/internal/auth/` own domain logic.
+- `backend/internal/telegrampublisher/` owns Telegram publication formatting,
+  duplicate tracking and retry orchestration.
 - `backend/sql/queries/` contains sqlc query sources.
 - `backend/migrations/` contains applied database migrations.
 - `backend/internal/providers/` contains external vacancy provider adapters.

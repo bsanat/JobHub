@@ -239,6 +239,8 @@ go run ./cmd/create-admin --full-name 'Admin Name' --email admin@example.com
 
 Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`; директорию нужно подключить к постоянному приватному диску в production.
 
+Telegram publisher можно запускать напрямую с Supabase Postgres без Docker. Настройка, проверка и команда запуска описаны в [docs/telegram-vacancy-publisher.md](docs/telegram-vacancy-publisher.md).
+
 ## Переменные окружения
 
 | Variable | Для чего |
@@ -252,6 +254,13 @@ go run ./cmd/create-admin --full-name 'Admin Name' --email admin@example.com
 | `JOOBLE_API_KEY` | Server-side ключ Jooble |
 | `JOOBLE_MAX_REQUESTS` | Лимит запросов импорта, максимум 50 |
 | `JOOBLE_SEARCHES` | Поисковые запросы в формате `keywords|location` |
+| `TELEGRAM_BOT_TOKEN` | Server-side токен Telegram bot |
+| `TELEGRAM_PUBLIC_CHANNEL_ID` | Negative numeric ID публичного JobHub channel для publisher |
+| `TELEGRAM_PUBLISHER_ENABLED` | Включает отправку публичных вакансий из разрешённых источников в Telegram |
+| `TELEGRAM_PUBLISHER_DRY_RUN` | Печатает Telegram posts без отправки и без отметки `sent` |
+| `TELEGRAM_PUBLISH_WITHOUT_LINK` | Временная публикация без ссылки на сайт, пока нет публичного HTTPS URL |
+| `TELEGRAM_PUBLISH_TEST_SOURCES` | Явный staging-only режим для тестовой публикации импортированных вакансий без подтверждённых production-прав |
+| `JOBHUB_PUBLIC_BASE_URL` | Публичный HTTPS URL frontend для ссылок `/jobs/:id` в Telegram |
 | `RESUME_STORAGE_DIR` | Приватная директория для PDF-резюме |
 
 Никогда не коммитьте `.env`, API-ключи, пароли от базы, Supabase keys или connection strings с реальными credentials.

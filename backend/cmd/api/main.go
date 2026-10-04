@@ -45,6 +45,9 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
+	if err := startTelegramPublisher(ctx, pool, logger); err != nil {
+		return err
+	}
 	jobStore := jobs.NewPostgresStore(pool, cfg.Environment == "production")
 	authService := auth.NewService(pool)
 	resumeFiles, err := candidates.NewLocalFileStore(cfg.ResumeStorageDir)

@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -80,6 +81,48 @@ func TestGetChannelAndRateLimit(t *testing.T) {
 	})
 }
 
+func TestVerifyChannelRequiresMatchingIDAndPostPermission(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		channelID int64
+		canPost   bool
+		wantError string
+	}{
+		{name: "allowed", channelID: -10042, canPost: true},
+		{name: "wrong id", channelID: -10099, canPost: true, wantError: "TELEGRAM_CHANNEL_ID_MISMATCH"},
+		{name: "missing post permission", channelID: -10042, canPost: false, wantError: "TELEGRAM_CHANNEL_POST_FORBIDDEN"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/getChat"):
+					_, _ = io.WriteString(w, `{"ok":true,"result":{"id":-10042,"type":"channel","username":"jobhub_test"}}`)
+				case strings.HasSuffix(r.URL.Path, "/getMe"):
+					_, _ = io.WriteString(w, `{"ok":true,"result":{"id":42,"username":"jhubkz_bot"}}`)
+				case strings.HasSuffix(r.URL.Path, "/getChatMember"):
+					body, _ := io.ReadAll(r.Body)
+					if !strings.Contains(string(body), `"chat_id":-10042`) || !strings.Contains(string(body), `"user_id":42`) {
+						t.Fatalf("wrong membership lookup: %s", body)
+					}
+					if test.canPost {
+						_, _ = io.WriteString(w, `{"ok":true,"result":{"status":"administrator","can_post_messages":true}}`)
+					} else {
+						_, _ = io.WriteString(w, `{"ok":true,"result":{"status":"administrator","can_post_messages":false}}`)
+					}
+				default:
+					t.Fatalf("unexpected Telegram method: %s", r.URL.Path)
+				}
+			}))
+			defer server.Close()
+			client, _ := newTestClient("test-token", server.URL, server.Client())
+			err := client.VerifyChannel(context.Background(), test.channelID, "jobhub_test")
+			if test.wantError == "" && err != nil || test.wantError != "" && (err == nil || err.Error() != test.wantError) {
+				t.Fatalf("unexpected channel verification: %v", err)
+			}
+		})
+	}
+}
+
 func TestLatestPendingUsesNonblockingNegativeOffset(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
@@ -94,6 +137,46 @@ func TestLatestPendingUsesNonblockingNegativeOffset(t *testing.T) {
 	updates, err := client.LatestPending(context.Background())
 	if err != nil || len(updates) != 0 {
 		t.Fatalf("baseline failed: %#v %v", updates, err)
+	}
+}
+
+func TestSendMessageReturnsMessageID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/sendMessage") {
+			t.Fatalf("unexpected path %q", r.URL.Path)
+		}
+		body, _ := io.ReadAll(r.Body)
+		value := string(body)
+		if !strings.Contains(value, `"chat_id":-10042`) || !strings.Contains(value, `"text":"Backend Engineer"`) || !strings.Contains(value, `"disable_web_page_preview":true`) {
+			t.Fatalf("unexpected payload: %s", value)
+		}
+		_, _ = io.WriteString(w, `{"ok":true,"result":{"message_id":77}}`)
+	}))
+	defer server.Close()
+	client, _ := newTestClient("test-token", server.URL, server.Client())
+	messageID, err := client.SendMessageAndReturnID(context.Background(), -10042, "Backend Engineer")
+	if err != nil || messageID != 77 {
+		t.Fatalf("send failed: %d %v", messageID, err)
+	}
+}
+
+func TestSendHTMLMessageSetsParseMode(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		var payload struct {
+			Text      string `json:"text"`
+			ParseMode string `json:"parse_mode"`
+		}
+		if err := json.Unmarshal(body, &payload); err != nil || payload.ParseMode != "HTML" || payload.Text != "<b>Backend</b>" {
+			t.Fatalf("unexpected formatted payload: %s", body)
+		}
+		_, _ = io.WriteString(w, `{"ok":true,"result":{"message_id":78}}`)
+	}))
+	defer server.Close()
+	client, _ := newTestClient("test-token", server.URL, server.Client())
+	messageID, err := client.SendHTMLMessageAndReturnID(context.Background(), -10042, "<b>Backend</b>")
+	if err != nil || messageID != 78 {
+		t.Fatalf("formatted send failed: %d %v", messageID, err)
 	}
 }
 

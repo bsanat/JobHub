@@ -148,6 +148,7 @@ seed_demo_data
 
 export APP_ENV=development
 export DATABASE_URL=$database_url
+export TELEGRAM_PUBLISHER_ENABLED=false
 export FRONTEND_ORIGIN=http://localhost:5173
 export VITE_API_URL=http://localhost:8080/api/v1
 export PGX_QUERY_EXEC_MODE=cache_statement
