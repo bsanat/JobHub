@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"jobhub-ai/backend/internal/locations"
 )
 
@@ -51,6 +52,10 @@ type OnboardingService interface {
 
 const onboardingColumns = `persona, persona_other, goal, city_id, profession, referral, referral_other, step, version, completed_at`
 
+type onboardingQuerier interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
 func scanOnboarding(row pgx.Row) (Onboarding, error) {
 	state := Onboarding{Step: 1}
 	err := row.Scan(&state.Persona, &state.PersonaOther, &state.Goal, &state.CityID, &state.Profession, &state.Referral, &state.ReferralOther, &state.Step, &state.Version, &state.CompletedAt)
@@ -61,6 +66,9 @@ func scanOnboarding(row pgx.Row) (Onboarding, error) {
 func (s *AuthService) GetOnboarding(ctx context.Context, userID string) (Onboarding, error) {
 	state, err := scanOnboarding(s.pool.QueryRow(ctx, `SELECT `+onboardingColumns+` FROM jobhub.account_onboarding WHERE user_id = $1`, userID))
 	if errors.Is(err, pgx.ErrNoRows) {
+		return Onboarding{Step: 1}, nil
+	}
+	if isUndefinedTable(err) {
 		return Onboarding{Step: 1}, nil
 	}
 	return state, err
@@ -82,6 +90,19 @@ func (s *AuthService) SaveOnboarding(ctx context.Context, userID string, input O
 		return Onboarding{}, ErrOnboardingConflict
 	}
 	return state, err
+}
+
+func onboardingTableExists(ctx context.Context, q onboardingQuerier) (bool, error) {
+	var exists bool
+	if err := q.QueryRow(ctx, `SELECT to_regclass('jobhub.account_onboarding') IS NOT NULL`).Scan(&exists); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func isUndefinedTable(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "42P01"
 }
 
 func validateOnboarding(input OnboardingInput) (OnboardingInput, error) {

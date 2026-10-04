@@ -4,6 +4,9 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func TestOnboardingValidation(t *testing.T) {
@@ -57,5 +60,14 @@ func TestOnboardingNormalizesUnusedCustomAnswers(t *testing.T) {
 	got, err := validateOnboarding(OnboardingInput{Persona: "graduate", PersonaOther: "old answer", Referral: "telegram", ReferralOther: "old source", Step: 1})
 	if err != nil || got.PersonaOther != "" || got.ReferralOther != "" {
 		t.Fatalf("unused custom answers were retained: %#v %v", got, err)
+	}
+}
+
+func TestOnboardingMissingTableIsLegacyState(t *testing.T) {
+	if !isUndefinedTable(&pgconn.PgError{Code: "42P01"}) {
+		t.Fatal("undefined onboarding table should be treated as legacy onboarding state")
+	}
+	if isUndefinedTable(pgx.ErrNoRows) {
+		t.Fatal("no rows is not an undefined table error")
 	}
 }

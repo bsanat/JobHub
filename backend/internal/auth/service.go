@@ -71,8 +71,16 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Sessio
 		}
 		company = &Company{ID: formatUUID(created.ID), Name: created.Name}
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO jobhub.account_onboarding (user_id) VALUES ($1)`, user.ID); err != nil {
-		return Session{}, "", fmt.Errorf("create onboarding: %w", err)
+	onboardingRequired := false
+	hasOnboarding, err := onboardingTableExists(ctx, tx)
+	if err != nil {
+		return Session{}, "", fmt.Errorf("check onboarding: %w", err)
+	}
+	if hasOnboarding {
+		if _, err := tx.Exec(ctx, `INSERT INTO jobhub.account_onboarding (user_id) VALUES ($1)`, user.ID); err != nil {
+			return Session{}, "", fmt.Errorf("create onboarding: %w", err)
+		}
+		onboardingRequired = true
 	}
 	session, token, err := s.createSession(ctx, q, user, company)
 	if err != nil {
@@ -81,7 +89,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Sessio
 	if err := tx.Commit(ctx); err != nil {
 		return Session{}, "", fmt.Errorf("commit registration: %w", err)
 	}
-	session.OnboardingRequired = true
+	session.OnboardingRequired = onboardingRequired
 	return session, token, nil
 }
 
