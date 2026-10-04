@@ -12,6 +12,8 @@ import { useToast } from "../components/ui/useToast";
 import { JobPreferencesSection } from "./JobPreferencesPage";
 
 export function ResumePage() {
+  const maxResumeMiB = import.meta.env.PROD ? 4 : 10;
+  const maxResumeBytes = maxResumeMiB * 1024 * 1024;
   const { t, i18n } = useTranslation();
   const { session } = useAuth();
   const client = useQueryClient();
@@ -50,12 +52,12 @@ export function ResumePage() {
   const chooseFile = (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
+    if (file.type !== "application/pdf" || file.size > maxResumeBytes) {
       toast.showToast({
         tone: "error",
-        title: t(
-          file.size > 10 * 1024 * 1024 ? "resume.tooLarge" : "resume.pdfOnly",
-        ),
+        title: file.size > maxResumeBytes
+          ? t("resume.tooLarge", { limit: maxResumeMiB })
+          : t("resume.pdfOnly"),
       });
       return;
     }

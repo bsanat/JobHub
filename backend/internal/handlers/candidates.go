@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -109,7 +110,13 @@ func updateProfile(service *candidates.Service, logger *slog.Logger) gin.Handler
 
 func uploadResume(service *candidates.Service, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, candidates.MaxResumeBytes+(1<<20))
+		maxFileBytes := candidates.MaxResumeBytes
+		bodyOverhead := int64(1 << 20)
+		if os.Getenv("VERCEL") == "1" {
+			maxFileBytes = 4 << 20
+			bodyOverhead = 256 << 10
+		}
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileBytes+bodyOverhead)
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			var maxErr *http.MaxBytesError
@@ -121,6 +128,10 @@ func uploadResume(service *candidates.Service, logger *slog.Logger) gin.HandlerF
 			return
 		}
 		defer file.Close()
+		if header.Size > maxFileBytes {
+			writeCandidateError(c, logger, candidates.ErrResumeTooLarge)
+			return
+		}
 		resume, err := service.UploadResume(c.Request.Context(), currentUser(c).ID, header.Filename, header.Header.Get("Content-Type"), file)
 		if err != nil {
 			writeCandidateError(c, logger, err)

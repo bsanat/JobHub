@@ -237,7 +237,7 @@ go run ./cmd/create-admin --full-name 'Admin Name' --email admin@example.com
 4. На опубликованной вакансии JobHub отправьте отклик и проверьте его в `/applications`.
 5. Войдите как работодатель и откройте кандидатов через `/employer/vacancies/:jobId/applicants`.
 
-Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`. На Vercel настройте приватный Supabase Storage bucket `resumes`, а также серверные `SUPABASE_URL` и `SUPABASE_SECRET_KEY`; ключ нельзя передавать во frontend. Без этих переменных загрузка резюме на Vercel недоступна.
+Для Docker резюме сохраняются в приватном volume `resume_data`. При ручном запуске путь задает `RESUME_STORAGE_DIR`. На Vercel настройте приватный Supabase Storage bucket `resumes`, а также серверные `SUPABASE_URL` и `SUPABASE_SECRET_KEY`; ключ нельзя передавать во frontend. Без этих переменных загрузка резюме на Vercel недоступна. Из-за лимита запроса Vercel допустимый PDF на production — до 4 МиБ (локально — 10 МиБ).
 
 Telegram publisher можно запускать напрямую с Supabase Postgres без Docker. Настройка, проверка и команда запуска описаны в [docs/telegram-vacancy-publisher.md](docs/telegram-vacancy-publisher.md).
 
