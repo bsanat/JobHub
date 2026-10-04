@@ -7,6 +7,9 @@ description: "Основные страницы React-приложения, ма
 
 React routes are defined in `frontend/src/App.tsx`. Protected pages use `ProtectedRoute` with optional role checks.
 
+For full per-page documentation, including login, register, main page and all
+confirmed user-facing routes, see [Каталог страниц сайта](/docs/frontend-page-catalog).
+
 ## Страницы
 
 | URL | Component | Кто использует | Данные и API |
@@ -66,4 +69,3 @@ Some actions are frontend-only: opening filters, changing form fields, switching
 ## Storybook
 
 Storybook is not configured in the repository. There is already a lightweight developer route `/dev/ui` through `ComponentShowcasePage`. For the current project documentation goal, Mintlify plus `/dev/ui` is enough. Add Storybook later only if UI component states need independent visual review outside the app.
-
