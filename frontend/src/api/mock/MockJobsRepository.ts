@@ -26,10 +26,11 @@ export class MockJobsRepository implements JobsRepository {
       const matchesCity = !params.city || job.cityId === params.city;
       const matchesMode = !params.workModes?.length || Boolean(job.workMode && params.workModes.includes(job.workMode));
       const matchesSalary = params.salaryMin == null || Boolean(job.salary && job.salary.period === "month" && job.salary.currency === params.currency && (job.salary.max ?? job.salary.min) >= params.salaryMin);
+      const matchesSalaryMax = params.salaryMax == null || Boolean(job.salary && job.salary.period === "month" && job.salary.currency === params.currency && job.salary.min <= params.salaryMax);
       const matchesExperience = !params.experience || job.experienceLevel === params.experience;
       const matchesEmployment = !params.employment || job.employmentType === params.employment;
       const cutoff = params.datePosted ? Date.now() - ({ "24h": 1, "3d": 3, "7d": 7, "30d": 30 }[params.datePosted] * 86400000) : 0;
-      return matchesQuery && matchesCity && matchesMode && matchesSalary && matchesExperience && matchesEmployment && (!cutoff || new Date(job.postedAt).getTime() >= cutoff);
+      return matchesQuery && matchesCity && matchesMode && matchesSalary && matchesSalaryMax && matchesExperience && matchesEmployment && (!cutoff || new Date(job.postedAt).getTime() >= cutoff);
     });
 
     filtered.sort((a, b) => {

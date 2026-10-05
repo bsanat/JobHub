@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -252,18 +253,27 @@ func searchParams(c *gin.Context, sort string, page, pageSize int) (jobs.SearchP
 	var salaryMin *float64
 	if raw := strings.TrimSpace(c.Query("salary_min")); raw != "" {
 		value, err := strconv.ParseFloat(raw, 64)
-		if err != nil || value < 0 {
+		if err != nil || value < 0 || math.IsNaN(value) || math.IsInf(value, 0) {
 			validationError(c, "salary_min")
 			return jobs.SearchParams{}, false
 		}
 		salaryMin = &value
 	}
+	var salaryMax *float64
+	if raw := strings.TrimSpace(c.Query("salary_max")); raw != "" {
+		value, err := strconv.ParseFloat(raw, 64)
+		if err != nil || value < 0 || math.IsNaN(value) || math.IsInf(value, 0) || (salaryMin != nil && value < *salaryMin) {
+			validationError(c, "salary_max")
+			return jobs.SearchParams{}, false
+		}
+		salaryMax = &value
+	}
 	currency := strings.ToUpper(strings.TrimSpace(c.Query("currency")))
-	if salaryMin != nil && currency != "KZT" && currency != "USD" && currency != "EUR" {
+	if (salaryMin != nil || salaryMax != nil) && currency != "KZT" && currency != "USD" && currency != "EUR" {
 		validationError(c, "currency")
 		return jobs.SearchParams{}, false
 	}
-	if salaryMin == nil && currency != "" {
+	if salaryMin == nil && salaryMax == nil && currency != "" {
 		validationError(c, "currency")
 		return jobs.SearchParams{}, false
 	}
@@ -278,7 +288,7 @@ func searchParams(c *gin.Context, sort string, page, pageSize int) (jobs.SearchP
 		postedAfter = &value
 	}
 	return jobs.SearchParams{Query: query, City: city, PreferredCity: preferredCity,
-		WorkModes: workModes, SalaryMin: salaryMin, Currency: currency, ExperienceLevel: experience,
+		WorkModes: workModes, SalaryMin: salaryMin, SalaryMax: salaryMax, Currency: currency, ExperienceLevel: experience,
 		EmploymentType: employment, PostedAfter: postedAfter, Sort: sort, Page: page, PageSize: pageSize}, true
 }
 

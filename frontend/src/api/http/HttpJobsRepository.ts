@@ -13,6 +13,7 @@ export class HttpJobsRepository implements JobsRepository {
         preferred_city: params.preferredCity,
         work_mode: params.workModes?.join(","),
         salary_min: params.salaryMin,
+        salary_max: params.salaryMax,
         currency: params.currency,
         experience: params.experience,
         employment: params.employment,

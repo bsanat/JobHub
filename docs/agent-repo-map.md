@@ -19,6 +19,8 @@
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
 - `frontend/src/components/` — общие и функциональные компоненты.
+- `frontend/src/components/jobs/SalaryFilter.tsx` — диапазон зарплаты в каталоге;
+  параметры URL — `frontend/src/lib/jobSearchParams.ts`, SQL — `backend/sql/queries/jobs.sql`.
 - `frontend/src/components/employer/EmployerWorkspaceLayout.tsx` and
   `frontend/src/components/candidate/CandidateWorkspaceLayout.tsx` — навигация
   кабинетов; их стили находятся в `frontend/src/styles/workspace.css`.

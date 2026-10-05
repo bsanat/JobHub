@@ -25,7 +25,7 @@ export function JobsPage() {
   const setSearch = (next: JobSearchParams) => setUrlParams(serializeJobSearchParams(next));
   const updateKeyword = (values: JobSearchValues) => setSearch({ ...search, query: values.query || undefined, page: 1 });
   const clear = () => setUrlParams(new URLSearchParams());
-  const hasFilters = Boolean(search.query || search.city || search.workModes?.length || search.salaryMin != null || search.experience || search.employment || search.datePosted);
+  const hasFilters = Boolean(search.query || search.city || search.workModes?.length || search.salaryMin != null || search.salaryMax != null || search.experience || search.employment || search.datePosted);
   const chips = makeChips(search, t, i18n.resolvedLanguage ?? i18n.language);
   return (
     <SiteShell>
@@ -34,11 +34,11 @@ export function JobsPage() {
           <div><h1>{t("jobs.title")}</h1><p>{t("jobs.description")}</p></div>
           <Button className="mobile-filter-button" variant="secondary" leadingIcon={<Filter size={18} />} onClick={() => setFiltersOpen(true)}>{t("jobs.filters")}</Button>
         </header>
-        <JobSearchForm variant="compact" showCity={false} initialValues={{ query: search.query }} onSubmit={updateKeyword} />
         {chips.length ? <div className="active-filters" aria-label={t("jobs.activeFilters")}>{chips.map((chip) => <button key={chip.key} type="button" onClick={() => setSearch({ ...search, ...chip.clear, page: 1 })}>{chip.label}<X size={14} aria-hidden="true" /></button>)}<button className="active-filters__reset" type="button" onClick={clear}>{t("jobs.clearAll")}</button></div> : null}
         <div className="jobs-workspace">
           <aside className="filter-rail" aria-labelledby="filter-title">
             <div className="filter-rail__heading"><h2 id="filter-title">{t("jobs.filters")}</h2>{hasFilters ? <button type="button" onClick={clear}>{t("jobs.clearAll")}</button> : null}</div>
+            <JobSearchForm variant="stacked" showCity={false} initialValues={{ query: search.query }} onSubmit={updateKeyword} />
             <JobFilters search={search} onChange={setSearch} onReset={clear} />
           </aside>
           <section className="results-panel" aria-labelledby="results-title">
@@ -64,7 +64,11 @@ function makeChips(search: JobSearchParams, t: (key: string, options?: Record<st
   if (search.query) chips.push({ key: "q", label: search.query, clear: { query: undefined } });
   if (search.city) chips.push({ key: "city", label: cityName(search.city, language), clear: { city: undefined } });
   for (const mode of search.workModes ?? []) chips.push({ key: `mode-${mode}`, label: t(`employer.workModes.${mode}`), clear: { workModes: search.workModes?.filter((item) => item !== mode) } });
-  if (search.salaryMin != null && search.currency) chips.push({ key: "salary", label: `${new Intl.NumberFormat(language).format(search.salaryMin)}+ ${search.currency}`, clear: { salaryMin: undefined, currency: undefined } });
+  if ((search.salaryMin != null || search.salaryMax != null) && search.currency) {
+    const format = new Intl.NumberFormat(language);
+    const range = search.salaryMax != null ? `${format.format(search.salaryMin ?? 0)} – ${format.format(search.salaryMax)}` : `${format.format(search.salaryMin ?? 0)}+`;
+    chips.push({ key: "salary", label: `${range} ${search.currency}`, clear: { salaryMin: undefined, salaryMax: undefined, currency: undefined } });
+  }
   if (search.experience) chips.push({ key: "experience", label: t(`employer.experienceLevels.${search.experience}`), clear: { experience: undefined } });
   if (search.employment) chips.push({ key: "employment", label: t(`employer.employmentTypes.${search.employment}`), clear: { employment: undefined } });
   if (search.datePosted) chips.push({ key: "date", label: t(`jobs.dateOptions.${search.datePosted}`), clear: { datePosted: undefined } });

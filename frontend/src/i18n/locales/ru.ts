@@ -77,6 +77,13 @@ export const ru = {
       copyright: "© {{year}} JobHub Казахстан. Все права защищены.",
       privacy: "Политика конфиденциальности",
       terms: "Условия использования",
+      calloutTitle: "Следующая возможность уже здесь",
+      calloutDescription: "Смотрите новые вакансии по всему Казахстану.",
+      browseJobs: "Смотреть вакансии",
+      description: "Начните следующий шаг в карьере уверенно.",
+      market: "По всему Казахстану",
+      explore: "Поиск",
+      information: "Информация",
     },
     legal: {
       back: "На главную",
@@ -180,7 +187,7 @@ export const ru = {
       preferences: {
         title: "Найдите свой формат",
         description: "Исследуйте направления, в которых сейчас есть открытые вакансии.",
-        items: { sales: "Продажи", engineering: "Инженерия", finance: "Финансы", it: "IT", aviation: "Авиация" },
+        items: { sales: "Продажи", engineering: "Инженерия", finance: "Финансы", it: "IT", aviation: "Авиация", customerService: "Поддержка клиентов", hr: "Управление персоналом", marketing: "Маркетинг" },
       },
       collections: {
         title: "Подборки вакансий",
@@ -220,6 +227,8 @@ export const ru = {
       filters: "Фильтры",
       workMode: "Формат работы",
       minimumSalary: "Минимальная зарплата в месяц",
+      salaryRange: "Зарплата в месяц",
+      applyRange: "Применить",
       applySalary: "Применить зарплату",
       anyOption: "Любой",
       datePosted: "Дата публикации",

@@ -106,6 +106,7 @@ export interface JobSearchParams {
   workModes?: WorkMode[];
   salaryMin?: number;
   currency?: "KZT" | "USD" | "EUR";
+  salaryMax?: number;
   experience?: ExperienceLevel;
   employment?: EmploymentType;
   datePosted?: "24h" | "3d" | "7d" | "30d";

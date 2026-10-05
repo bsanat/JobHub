@@ -132,6 +132,7 @@ WHERE s.enabled
   AND (sqlc.narg(city)::text IS NULL OR j.canonical_city_id = sqlc.narg(city))
   AND (COALESCE(cardinality(sqlc.arg(work_modes)::text[]), 0) = 0 OR j.work_mode = ANY(sqlc.arg(work_modes)::text[]))
   AND (sqlc.narg(salary_min)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= sqlc.narg(salary_min)))
+  AND (sqlc.narg(salary_max)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= sqlc.narg(salary_max)))
   AND (sqlc.narg(experience_level)::text IS NULL OR j.experience_level = sqlc.narg(experience_level))
   AND (sqlc.narg(employment_type)::text IS NULL OR j.employment_type = sqlc.narg(employment_type))
   AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= sqlc.narg(posted_after));
@@ -171,6 +172,7 @@ WHERE s.enabled
   AND (sqlc.narg(city)::text IS NULL OR j.canonical_city_id = sqlc.narg(city))
   AND (COALESCE(cardinality(sqlc.arg(work_modes)::text[]), 0) = 0 OR j.work_mode = ANY(sqlc.arg(work_modes)::text[]))
   AND (sqlc.narg(salary_min)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= sqlc.narg(salary_min)))
+  AND (sqlc.narg(salary_max)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= sqlc.narg(salary_max)))
   AND (sqlc.narg(experience_level)::text IS NULL OR j.experience_level = sqlc.narg(experience_level))
   AND (sqlc.narg(employment_type)::text IS NULL OR j.employment_type = sqlc.narg(employment_type))
   AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= sqlc.narg(posted_after))

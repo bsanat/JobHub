@@ -118,6 +118,10 @@ func TestPostgresSearchFiltersStayConsistent(t *testing.T) {
 	assert("remote and city", SearchParams{City: "almaty", WorkModes: []string{"remote"}}, 1)
 	minimum := 500000.0
 	assert("salary and currency", SearchParams{City: "almaty", SalaryMin: &minimum, Currency: "KZT"}, 1)
+	maximum := 800000.0
+	assert("upper salary includes boundary", SearchParams{SalaryMax: &maximum, Currency: "KZT"}, 2)
+	assert("salary range", SearchParams{SalaryMin: &minimum, SalaryMax: &maximum, Currency: "KZT"}, 1)
+	assert("salary range currency", SearchParams{SalaryMin: &minimum, SalaryMax: &maximum, Currency: "USD"}, 0)
 	assert("experience", SearchParams{ExperienceLevel: "senior"}, 1)
 	assert("employment", SearchParams{EmploymentType: "contract"}, 1)
 	postedAfter := now.Add(-7 * 24 * time.Hour)

@@ -119,11 +119,13 @@ func (s *PostgresStore) Search(ctx context.Context, params SearchParams) (Search
 	query := nullableText(strings.TrimSpace(params.Query))
 	filters := dbgen.CountPublicJobsParams{RequireProductionPermissions: s.requireProductionPermissions, Query: query,
 		City: nullableText(params.City), WorkModes: params.WorkModes, SalaryMin: nullableNumeric(params.SalaryMin),
-		Currency: nullableText(params.Currency), ExperienceLevel: nullableText(params.ExperienceLevel),
+		SalaryMax: nullableNumeric(params.SalaryMax),
+		Currency:  nullableText(params.Currency), ExperienceLevel: nullableText(params.ExperienceLevel),
 		EmploymentType: nullableText(params.EmploymentType), PostedAfter: nullableTime(params.PostedAfter)}
 	listParams := dbgen.ListPublicJobsParams{
 		Query: filters.Query, City: filters.City, WorkModes: filters.WorkModes, SalaryMin: filters.SalaryMin,
-		Currency: filters.Currency, ExperienceLevel: filters.ExperienceLevel, EmploymentType: filters.EmploymentType,
+		SalaryMax: filters.SalaryMax,
+		Currency:  filters.Currency, ExperienceLevel: filters.ExperienceLevel, EmploymentType: filters.EmploymentType,
 		PostedAfter: filters.PostedAfter, PreferredCity: nullableText(params.PreferredCity), RequireProductionPermissions: s.requireProductionPermissions,
 		Sort: params.Sort, PageOffset: int32((params.Page - 1) * params.PageSize), PageSize: int32(params.PageSize),
 	}

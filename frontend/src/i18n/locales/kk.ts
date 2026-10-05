@@ -77,6 +77,13 @@ export const kk = {
       copyright: "© {{year}} JobHub Қазақстан. Барлық құқық қорғалған.",
       privacy: "Құпиялық саясаты",
       terms: "Пайдалану шарттары",
+      calloutTitle: "Келесі мүмкіндігіңіз осында",
+      calloutDescription: "Қазақстан бойынша жаңа вакансияларды қараңыз.",
+      browseJobs: "Вакансияларды қарау",
+      description: "Мансап жолыңызды сенімді қадаммен бастаңыз.",
+      market: "Қазақстан бойынша",
+      explore: "Іздеу",
+      information: "Ақпарат",
     },
     legal: {
       back: "Басты бетке",
@@ -180,7 +187,7 @@ export const kk = {
       preferences: {
         title: "Өз бағытыңызды табыңыз",
         description: "Қазір ашық вакансиялары бар кәсіби бағыттарды зерттеңіз.",
-        items: { sales: "Сату", engineering: "Инженерия", finance: "Қаржы", it: "IT", aviation: "Авиация" },
+        items: { sales: "Сату", engineering: "Инженерия", finance: "Қаржы", it: "IT", aviation: "Авиация", customerService: "Клиенттерді қолдау", hr: "Адам ресурстары", marketing: "Маркетинг" },
       },
       collections: {
         title: "Вакансия топтамалары",
@@ -220,6 +227,8 @@ export const kk = {
       filters: "Сүзгілер",
       workMode: "Жұмыс форматы",
       minimumSalary: "Айлық ең төменгі жалақы",
+      salaryRange: "Айлық жалақы",
+      applyRange: "Қолдану",
       applySalary: "Жалақыны қолдану",
       anyOption: "Кез келгені",
       datePosted: "Жарияланған күні",

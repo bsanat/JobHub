@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Heart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { JobSummary } from "../../api/models/job";
@@ -11,9 +11,11 @@ import { useToast } from "../ui/useToast";
 export function JobSaveButton({
   job,
   compact = false,
+  icon = "bookmark",
 }: {
   job: JobSummary;
   compact?: boolean;
+  icon?: "bookmark" | "heart";
 }) {
   const { t } = useTranslation();
   const auth = useAuth();
@@ -21,6 +23,7 @@ export function JobSaveButton({
   const location = useLocation();
   const client = useQueryClient();
   const toast = useToast();
+  const Icon = icon === "heart" ? Heart : Bookmark;
   const candidate = auth.session?.user.role === "job_seeker";
   const saved = useQuery({
     queryKey: ["saved-jobs"],
@@ -80,10 +83,11 @@ export function JobSaveButton({
       className={`job-save-button ${isSaved ? "is-saved" : ""} ${compact ? "is-compact" : ""}`}
       aria-pressed={isSaved}
       aria-label={t(isSaved ? "saved.unsave" : "saved.save")}
+      title={t(isSaved ? "saved.unsave" : "saved.save")}
       onClick={activate}
       disabled={mutation.isPending}
     >
-      <Bookmark
+      <Icon
         size={18}
         fill={isSaved ? "currentColor" : "none"}
         aria-hidden="true"

@@ -1,8 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowRight, Banknote, BarChart3, BriefcaseBusiness,
-  Code2, MapPin, Plane, Wrench,
+  ArrowRight, BriefcaseBusiness,
+  MapPin,
 } from "lucide-react";
+import {
+  AviationIcon,
+  CustomerServiceIcon,
+  EngineeringIcon,
+  FinanceIcon,
+  HumanResourcesIcon,
+  ITIcon,
+  MarketingIcon,
+  SalesIcon,
+} from "../components/icons/CategoryIcons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -107,23 +117,23 @@ export function HomePage() {
         </section>
       ) : null}
 
-      {preferences.length ? (
-        <section className="home-preferences" aria-labelledby="preferences-title">
+      <section className="home-preferences" aria-labelledby="preferences-title">
           <div className="page-container">
             <div className="home-preferences__intro"><h2 id="preferences-title">{t("home.preferences.title")}</h2><p>{t("home.preferences.description")}</p></div>
             <div className="home-preference-grid">
-              {preferences.map(({ key, count, href }) => (
+              {preferences.map(({ key, count, href, icon: Icon }) => (
                 <Link key={key} to={href} className="home-preference-card">
-                  <img className="home-preference-card__photo" src={`/images/professions/${key}.jpg`} width="640" height="320" alt="" loading="lazy" decoding="async" />
-                  <strong>{t(`home.preferences.items.${key}`)}</strong>
-                  <small>{t("home.jobsCount", { count })}</small>
-                  <ArrowRight size={18} aria-hidden="true" />
+                  <span className="home-preference-card__icon"><Icon size={36} aria-hidden="true" /></span>
+                  <span className="home-preference-card__label">
+                    <strong>{t(`home.preferences.items.${key}`)}</strong>
+                    <small>{t("home.jobsCount", { count })}</small>
+                  </span>
+                  <ArrowRight className="home-preference-card__arrow" size={18} aria-hidden="true" />
                 </Link>
               ))}
             </div>
           </div>
         </section>
-      ) : null}
 
       <section className="home-faq" aria-labelledby="faq-title">
         <span className="home-faq__shape" aria-hidden="true" />
@@ -190,13 +200,16 @@ function topCompanies(jobs: JobSummary[]) {
 
 function preferenceLinks(jobs: JobSummary[]): LandingLink[] {
   const definitions = [
-    { key: "sales", query: "продаж", icon: BarChart3, matches: /(продаж|sales)/i },
-    { key: "engineering", query: "инженер", icon: Wrench, matches: /(инженер|engineer|engineering)/i },
-    { key: "finance", query: "financial", icon: Banknote, matches: /(финанс|financ)/i },
-    { key: "it", query: "разработ", icon: Code2, matches: /(разработ|developer|backend|\bqa\b|information technology)/i },
-    { key: "aviation", query: "Air Astana", icon: Plane, matches: /(air astana|pilot|cabin crew|aviation)/i },
+    { key: "sales",       query: "продаж",    icon: SalesIcon,       matches: /(продаж|sales)/i },
+    { key: "engineering", query: "инженер",   icon: EngineeringIcon, matches: /(инженер|engineer|engineering)/i },
+    { key: "finance",     query: "financial", icon: FinanceIcon,     matches: /(финанс|financ)/i },
+    { key: "it",          query: "разработ",  icon: ITIcon,          matches: /(разработ|developer|backend|\bqa\b|information technology)/i },
+    { key: "aviation",    query: "Air Astana",icon: AviationIcon,    matches: /(air astana|pilot|cabin crew|aviation)/i },
+    { key: "customerService", query: "обслужив", icon: CustomerServiceIcon, matches: /(обслужив|support|customer|клиент|service|call.?center)/i },
+    { key: "hr",          query: "HR",        icon: HumanResourcesIcon, matches: /(human resource|\bhr\b|персонал|человеческ|рекру|талант)/i },
+    { key: "marketing",   query: "маркет",    icon: MarketingIcon,   matches: /(маркет|marketing|market research|brand|smm)/i },
   ];
-  return definitions.map((item) => ({ key: item.key, icon: item.icon, href: jobsHref({ query: item.query }), count: jobs.filter((job) => item.matches.test(`${job.title} ${job.category ?? ""} ${job.company.name}`)).length })).filter((item) => item.count > 0);
+  return definitions.map((item) => ({ key: item.key, icon: item.icon, href: jobsHref({ query: item.query }), count: jobs.filter((job) => item.matches.test(`${job.title} ${job.category ?? ""} ${job.company.name}`)).length }));
 }
 
 function jobsHref(params: JobSearchParams) {

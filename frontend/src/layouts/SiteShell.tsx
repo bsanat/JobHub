@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { ArrowUpRight, BriefcaseBusiness, Building2, FileText, MapPin } from "lucide-react";
 import { useEffect, type PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -73,8 +73,8 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
                   void i18n.changeLanguage(event.target.value)
                 }
               >
-                <option value="kk">KK</option>
-                <option value="ru">RU</option>
+                <option value="kk">Қазақша</option>
+                <option value="ru">Русский</option>
               </select>
             </label>
             {auth.session ? (
@@ -106,28 +106,41 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
       </header>
       <main id="main-content">{children}</main>
       <footer className={`site-footer site-footer--${variant}`}>
+        <div className="site-footer__callout">
+          <div className="page-container site-footer__callout-inner">
+            <div className="site-footer__callout-copy">
+              <span className="site-footer__callout-icon"><BriefcaseBusiness size={22} aria-hidden="true" /></span>
+              <div>
+                <strong>{t("footer.calloutTitle")}</strong>
+                <p>{t("footer.calloutDescription")}</p>
+              </div>
+            </div>
+            <Link className="site-footer__callout-action" to="/jobs">
+              {t("footer.browseJobs")}<ArrowUpRight size={18} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
         <div className="page-container site-footer__inner">
-          <Link
-            className="brand brand--small"
-            to="/"
-            aria-label={t("nav.homeLabel")}
-          >
-            <img
-              className="brand__logo"
-              src="/brand/jobhub-logo.png"
-              width="600"
-              height="187"
-              alt=""
-            />
-          </Link>
-          <nav aria-label={t("footer.label")}>
-            <Link to="/jobs">{t("nav.jobs")}</Link>
-            <Link to="/companies">{t("nav.companies")}</Link>
-            <span>{t("nav.location")}</span>
-            <Link to="/privacy">{t("footer.privacy")}</Link>
-            <Link to="/terms">{t("footer.terms")}</Link>
-          </nav>
-          <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
+          <div className="site-footer__brand-block">
+            <Link className="brand brand--small" to="/" aria-label={t("nav.homeLabel")}>
+              <img className="brand__logo" src="/brand/jobhub-logo.png" width="600" height="187" alt="" />
+            </Link>
+            <p>{t("footer.description")}</p>
+            <span className="site-footer__location"><MapPin size={16} aria-hidden="true" />{t("footer.market")}</span>
+          </div>
+          <div className="site-footer__links" aria-label={t("footer.label")}>
+            <nav className="site-footer__group" aria-label={t("footer.explore")}>
+              <h2>{t("footer.explore")}</h2>
+              <Link to="/jobs"><BriefcaseBusiness size={17} aria-hidden="true" />{t("nav.jobs")}</Link>
+              <Link to="/companies"><Building2 size={17} aria-hidden="true" />{t("nav.companies")}</Link>
+            </nav>
+            <nav className="site-footer__group" aria-label={t("footer.information")}>
+              <h2>{t("footer.information")}</h2>
+              <Link to="/privacy"><FileText size={17} aria-hidden="true" />{t("footer.privacy")}</Link>
+              <Link to="/terms"><FileText size={17} aria-hidden="true" />{t("footer.terms")}</Link>
+            </nav>
+          </div>
+          <div className="site-footer__bottom"><p>{t("footer.copyright", { year: new Date().getFullYear() })}</p></div>
         </div>
       </footer>
     </div>

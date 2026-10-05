@@ -26,6 +26,8 @@ export function parseJobSearchParams(params: URLSearchParams): JobSearchParams {
   const employment = params.get("employment");
   const datePosted = params.get("date_posted");
   const salaryMin = nonnegativeNumber(params.get("salary_min"));
+  const rawSalaryMax = nonnegativeNumber(params.get("salary_max"));
+  const salaryMax = rawSalaryMax != null && (salaryMin == null || rawSalaryMax >= salaryMin) ? rawSalaryMax : undefined;
   const currency = params.get("currency")?.toUpperCase();
   const sort: JobSort = rawSort === "oldest" ? "oldest" : "newest";
   return {
@@ -33,7 +35,8 @@ export function parseJobSearchParams(params: URLSearchParams): JobSearchParams {
     city: isCityId(rawCity) ? rawCity : undefined,
     workModes: [...new Set(rawWorkModes)],
     salaryMin,
-    currency: salaryMin != null && (currency === "KZT" || currency === "USD" || currency === "EUR") ? currency : undefined,
+    salaryMax,
+    currency: (salaryMin != null || salaryMax != null) && (currency === "KZT" || currency === "USD" || currency === "EUR") ? currency : undefined,
     experience: experiences.includes(experience as ExperienceLevel) ? experience as ExperienceLevel : undefined,
     employment: employments.includes(employment as EmploymentType) ? employment as EmploymentType : undefined,
     datePosted: dates.includes(datePosted as (typeof dates)[number]) ? datePosted as JobSearchParams["datePosted"] : undefined,
@@ -50,6 +53,10 @@ export function serializeJobSearchParams(search: JobSearchParams): URLSearchPara
   if (modes.length) params.set("work_mode", modes.join(","));
   if (search.salaryMin != null && search.salaryMin >= 0 && search.currency) {
     params.set("salary_min", String(search.salaryMin));
+    params.set("currency", search.currency);
+  }
+  if (search.salaryMax != null && search.salaryMax >= (search.salaryMin ?? 0) && search.currency) {
+    params.set("salary_max", String(search.salaryMax));
     params.set("currency", search.currency);
   }
   if (search.experience) params.set("experience", search.experience);

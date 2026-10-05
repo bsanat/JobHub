@@ -103,6 +103,7 @@ type SearchParams struct {
 	PreferredCity   string
 	WorkModes       []string
 	SalaryMin       *float64
+	SalaryMax       *float64
 	Currency        string
 	ExperienceLevel string
 	EmploymentType  string

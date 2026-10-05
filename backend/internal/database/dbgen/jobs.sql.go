@@ -67,9 +67,10 @@ WHERE s.enabled
   AND ($3::text IS NULL OR j.canonical_city_id = $3)
   AND (COALESCE(cardinality($4::text[]), 0) = 0 OR j.work_mode = ANY($4::text[]))
   AND ($5::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $5))
-  AND ($7::text IS NULL OR j.experience_level = $7)
-  AND ($8::text IS NULL OR j.employment_type = $8)
-  AND ($9::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $9)
+  AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
+  AND ($8::text IS NULL OR j.experience_level = $8)
+  AND ($9::text IS NULL OR j.employment_type = $9)
+  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $10)
 `
 
 type CountPublicJobsParams struct {
@@ -79,6 +80,7 @@ type CountPublicJobsParams struct {
 	WorkModes                    []string
 	SalaryMin                    pgtype.Numeric
 	Currency                     pgtype.Text
+	SalaryMax                    pgtype.Numeric
 	ExperienceLevel              pgtype.Text
 	EmploymentType               pgtype.Text
 	PostedAfter                  pgtype.Timestamptz
@@ -92,6 +94,7 @@ func (q *Queries) CountPublicJobs(ctx context.Context, arg CountPublicJobsParams
 		arg.WorkModes,
 		arg.SalaryMin,
 		arg.Currency,
+		arg.SalaryMax,
 		arg.ExperienceLevel,
 		arg.EmploymentType,
 		arg.PostedAfter,
@@ -590,15 +593,16 @@ WHERE s.enabled
   AND ($3::text IS NULL OR j.canonical_city_id = $3)
   AND (COALESCE(cardinality($4::text[]), 0) = 0 OR j.work_mode = ANY($4::text[]))
   AND ($5::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $5))
-  AND ($7::text IS NULL OR j.experience_level = $7)
-  AND ($8::text IS NULL OR j.employment_type = $8)
-  AND ($9::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $9)
+  AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
+  AND ($8::text IS NULL OR j.experience_level = $8)
+  AND ($9::text IS NULL OR j.employment_type = $9)
+  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $10)
 ORDER BY
-    CASE WHEN $10::text IS NOT NULL AND j.canonical_city_id = $10 THEN 0 ELSE 1 END,
-    CASE WHEN $11::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,
-    CASE WHEN $11::text <> 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END DESC,
+    CASE WHEN $11::text IS NOT NULL AND j.canonical_city_id = $11 THEN 0 ELSE 1 END,
+    CASE WHEN $12::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,
+    CASE WHEN $12::text <> 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END DESC,
     j.id DESC
-LIMIT $13 OFFSET $12
+LIMIT $14 OFFSET $13
 `
 
 type ListPublicJobsParams struct {
@@ -608,6 +612,7 @@ type ListPublicJobsParams struct {
 	WorkModes                    []string
 	SalaryMin                    pgtype.Numeric
 	Currency                     pgtype.Text
+	SalaryMax                    pgtype.Numeric
 	ExperienceLevel              pgtype.Text
 	EmploymentType               pgtype.Text
 	PostedAfter                  pgtype.Timestamptz
@@ -651,6 +656,7 @@ func (q *Queries) ListPublicJobs(ctx context.Context, arg ListPublicJobsParams) 
 		arg.WorkModes,
 		arg.SalaryMin,
 		arg.Currency,
+		arg.SalaryMax,
 		arg.ExperienceLevel,
 		arg.EmploymentType,
 		arg.PostedAfter,
