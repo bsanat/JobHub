@@ -15,6 +15,13 @@ export function AuthCallbackPage() {
   const [params] = useSearchParams();
   const [error, setError] = useState("");
   const handledRef = useRef(false);
+  const returnTo = safeReturnTo(params.get("returnTo"));
+
+  useEffect(() => {
+    if (!auth.session || !handledRef.current) return;
+    const destination = onboardingDestination(returnTo, auth.session.user.role);
+    navigate(auth.session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
+  }, [auth.session, navigate, returnTo]);
 
   useEffect(() => {
     let active = true;
@@ -41,8 +48,8 @@ export function AuthCallbackPage() {
       try {
         const session = await auth.loginWithGoogleToken(data.session.access_token);
         await supabase.auth.signOut();
-        const destination = onboardingDestination(safeReturnTo(params.get("returnTo")), session.user.role);
-        if (active) navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
+        const destination = onboardingDestination(returnTo, session.user.role);
+        navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
       } catch {
         if (active) setError(t("auth.errors.google"));
       }
@@ -51,7 +58,7 @@ export function AuthCallbackPage() {
     return () => {
       active = false;
     };
-  }, [auth, navigate, params, t]);
+  }, [auth, navigate, params, returnTo, t]);
 
   return (
     <SiteShell>
