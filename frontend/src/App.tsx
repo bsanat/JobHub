@@ -25,6 +25,7 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => 
 const CompaniesPage = lazy(() => import("./pages/CompaniesPage").then((module) => ({ default: module.CompaniesPage })));
 const CompanyProfilePage = lazy(() => import("./pages/CompanyProfilePage").then((module) => ({ default: module.CompanyProfilePage })));
 const EmployerCompanyPage = lazy(() => import("./pages/EmployerCompanyPage").then((module) => ({ default: module.EmployerCompanyPage })));
+const LegalPage = lazy(() => import("./pages/LegalPage").then((module) => ({ default: module.LegalPage })));
 
 const ComponentShowcasePage = lazy(() =>
   import("./pages/ComponentShowcasePage").then((module) => ({
@@ -43,6 +44,8 @@ export default function App() {
           <Route path="/jobs/:jobId" element={<JobDetailPage />} />
           <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/companies/:companyId" element={<CompanyProfilePage />} />
+          <Route path="/privacy" element={<LegalPage document="privacy" />} />
+          <Route path="/terms" element={<LegalPage document="terms" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />

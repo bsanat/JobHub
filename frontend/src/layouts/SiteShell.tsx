@@ -124,6 +124,8 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
             <Link to="/jobs">{t("nav.jobs")}</Link>
             <Link to="/companies">{t("nav.companies")}</Link>
             <span>{t("nav.location")}</span>
+            <Link to="/privacy">{t("footer.privacy")}</Link>
+            <Link to="/terms">{t("footer.terms")}</Link>
           </nav>
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
         </div>
