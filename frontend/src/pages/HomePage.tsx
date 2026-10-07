@@ -3,17 +3,6 @@ import {
   ArrowRight, BriefcaseBusiness,
   MapPin,
 } from "lucide-react";
-import {
-  AviationIcon,
-  CustomerServiceIcon,
-  EngineeringIcon,
-  FinanceIcon,
-  HumanResourcesIcon,
-  ITIcon,
-  MarketingIcon,
-  SalesIcon,
-} from "../components/icons/CategoryIcons";
-import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import type { JobSearchParams, JobSummary } from "../api/models/job";
@@ -32,7 +21,7 @@ interface LandingLink {
   key: string;
   count: number;
   href: string;
-  icon: ComponentType<{ size?: number; "aria-hidden"?: "true" }>;
+  icon: string;
 }
 
 export function HomePage() {
@@ -121,9 +110,9 @@ export function HomePage() {
           <div className="page-container">
             <div className="home-preferences__intro"><h2 id="preferences-title">{t("home.preferences.title")}</h2><p>{t("home.preferences.description")}</p></div>
             <div className="home-preference-grid">
-              {preferences.map(({ key, count, href, icon: Icon }) => (
+              {preferences.map(({ key, count, href, icon }) => (
                 <Link key={key} to={href} className="home-preference-card">
-                  <span className="home-preference-card__icon"><Icon size={36} aria-hidden="true" /></span>
+                  <span className="home-preference-card__icon"><img src={icon} width="48" height="48" alt="" loading="lazy" decoding="async" /></span>
                   <span className="home-preference-card__label">
                     <strong>{t(`home.preferences.items.${key}`)}</strong>
                     <small>{t("home.jobsCount", { count })}</small>
@@ -200,14 +189,14 @@ function topCompanies(jobs: JobSummary[]) {
 
 function preferenceLinks(jobs: JobSummary[]): LandingLink[] {
   const definitions = [
-    { key: "sales",       query: "продаж",    icon: SalesIcon,       matches: /(продаж|sales)/i },
-    { key: "engineering", query: "инженер",   icon: EngineeringIcon, matches: /(инженер|engineer|engineering)/i },
-    { key: "finance",     query: "financial", icon: FinanceIcon,     matches: /(финанс|financ)/i },
-    { key: "it",          query: "разработ",  icon: ITIcon,          matches: /(разработ|developer|backend|\bqa\b|information technology)/i },
-    { key: "aviation",    query: "Air Astana",icon: AviationIcon,    matches: /(air astana|pilot|cabin crew|aviation)/i },
-    { key: "customerService", query: "обслужив", icon: CustomerServiceIcon, matches: /(обслужив|support|customer|клиент|service|call.?center)/i },
-    { key: "hr",          query: "HR",        icon: HumanResourcesIcon, matches: /(human resource|\bhr\b|персонал|человеческ|рекру|талант)/i },
-    { key: "marketing",   query: "маркет",    icon: MarketingIcon,   matches: /(маркет|marketing|market research|brand|smm)/i },
+    { key: "sales",       query: "продаж",    icon: "/images/categories/01-sales.png",       matches: /(продаж|sales)/i },
+    { key: "engineering", query: "инженер",   icon: "/images/categories/02-engineering.png", matches: /(инженер|engineer|engineering)/i },
+    { key: "finance",     query: "financial", icon: "/images/categories/03-finance.png",     matches: /(финанс|financ)/i },
+    { key: "it",          query: "разработ",  icon: "/images/categories/04-it.png",          matches: /(разработ|developer|backend|\bqa\b|information technology)/i },
+    { key: "aviation",    query: "Air Astana",icon: "/images/categories/05-aviation.png",    matches: /(air astana|pilot|cabin crew|aviation)/i },
+    { key: "customerService", query: "обслужив", icon: "/images/categories/06-support.png", matches: /(обслужив|support|customer|клиент|service|call.?center)/i },
+    { key: "hr",          query: "HR",        icon: "/images/categories/07-hr.png",          matches: /(human resource|\bhr\b|персонал|человеческ|рекру|талант)/i },
+    { key: "marketing",   query: "маркет",    icon: "/images/categories/08-marketing.png",   matches: /(маркет|marketing|market research|brand|smm)/i },
   ];
   return definitions.map((item) => ({ key: item.key, icon: item.icon, href: jobsHref({ query: item.query }), count: jobs.filter((job) => item.matches.test(`${job.title} ${job.category ?? ""} ${job.company.name}`)).length }));
 }
