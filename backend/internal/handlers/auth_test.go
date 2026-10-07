@@ -15,14 +15,16 @@ import (
 )
 
 type authStub struct {
-	session   auth.Session
-	token     string
-	err       error
-	csrfErr   error
-	loggedOut bool
+	session       auth.Session
+	token         string
+	err           error
+	csrfErr       error
+	loggedOut     bool
+	registerInput auth.RegisterInput
 }
 
-func (s *authStub) Register(context.Context, auth.RegisterInput) (auth.Session, string, error) {
+func (s *authStub) Register(_ context.Context, input auth.RegisterInput) (auth.Session, string, error) {
+	s.registerInput = input
 	return s.session, s.token, s.err
 }
 func (s *authStub) Login(context.Context, auth.LoginInput) (auth.Session, string, error) {
@@ -51,7 +53,7 @@ func TestAuthRegisterSetsHttpOnlyCookie(t *testing.T) {
 	}}
 	router := NewRouter(checker{}, slog.New(slog.NewTextHandler(io.Discard, nil)), "http://localhost:5173", stub, "development")
 	res := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(`{"full_name":"Aigerim","email":"a@example.com","password":"verysecure1","role":"job_seeker"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(`{"full_name":"Aigerim","email":"a@example.com","password":"verysecure1","role":"job_seeker","email_verification_token":"verified-token"}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Origin", "http://localhost:5173")
 	router.ServeHTTP(res, req)
@@ -61,6 +63,9 @@ func TestAuthRegisterSetsHttpOnlyCookie(t *testing.T) {
 	cookie := res.Result().Cookies()[0]
 	if cookie.Name != auth.SessionCookieName || !cookie.HttpOnly || cookie.Value != "opaque-token" {
 		t.Fatalf("unexpected cookie: %#v", cookie)
+	}
+	if stub.registerInput.EmailVerificationToken != "verified-token" {
+		t.Fatalf("verification token was not passed to auth service")
 	}
 }
 

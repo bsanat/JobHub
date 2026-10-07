@@ -18,6 +18,7 @@ export class HttpAuthRepository implements AuthRepository {
       password: input.password,
       role: input.role,
       company_name: input.companyName,
+      email_verification_token: input.emailVerificationToken,
     });
     return mapAuthSession(data);
   }

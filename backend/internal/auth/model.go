@@ -20,11 +20,13 @@ const (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrDuplicateEmail     = errors.New("duplicate email")
-	ErrInvalidSession     = errors.New("invalid session")
-	ErrSuspended          = errors.New("user suspended")
-	ErrForbidden          = errors.New("forbidden")
+	ErrInvalidCredentials           = errors.New("invalid credentials")
+	ErrDuplicateEmail               = errors.New("duplicate email")
+	ErrInvalidSession               = errors.New("invalid session")
+	ErrSuspended                    = errors.New("user suspended")
+	ErrForbidden                    = errors.New("forbidden")
+	ErrEmailVerificationInvalid     = errors.New("email verification invalid")
+	ErrEmailVerificationUnavailable = errors.New("email verification unavailable")
 )
 
 type User struct {
@@ -50,11 +52,12 @@ type Session struct {
 }
 
 type RegisterInput struct {
-	FullName    string
-	Email       string
-	Password    string
-	Role        string
-	CompanyName string
+	FullName               string
+	Email                  string
+	Password               string
+	Role                   string
+	CompanyName            string
+	EmailVerificationToken string
 }
 
 type LoginInput struct {

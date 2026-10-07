@@ -29,10 +29,11 @@ func TestOnboardingIntegration(t *testing.T) {
 	}
 	defer pool.Close()
 	service := NewService(pool)
+	service.SetEmailVerifier(testEmailVerifier{})
 	for _, role := range []string{RoleJobSeeker, RoleEmployer} {
 		t.Run(role, func(t *testing.T) {
 			email := fmt.Sprintf("onboarding-%s-%d@example.com", role, time.Now().UnixNano())
-			session, token, err := service.Register(ctx, RegisterInput{FullName: "Onboarding Fixture", Email: email, Password: "isolated-test-password", Role: role, CompanyName: fmt.Sprintf("Fixture Company %d", time.Now().UnixNano())})
+			session, token, err := service.Register(ctx, RegisterInput{FullName: "Onboarding Fixture", Email: email, Password: "isolated-test-password", Role: role, CompanyName: fmt.Sprintf("Fixture Company %d", time.Now().UnixNano()), EmailVerificationToken: email})
 			if err != nil {
 				t.Fatal(err)
 			}

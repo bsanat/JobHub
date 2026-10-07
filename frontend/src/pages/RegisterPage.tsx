@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BriefcaseBusiness, Eye, EyeOff, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -12,7 +12,7 @@ import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
-import { googleAuthConfigured, googleRedirectTo, supabase } from "../lib/supabase";
+import { googleAuthConfigured, googleRedirectTo, supabase, supabaseAuthConfigured } from "../lib/supabase";
 import { authErrorCode } from "./authUtils";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
@@ -25,6 +25,7 @@ const schema = z.object({
 }).refine((values) => values.password === values.confirmPassword, { path: ["confirmPassword"] });
 
 type RegisterValues = z.infer<typeof schema>;
+const verificationCodePattern = /^\d{6}$/;
 
 export function RegisterPage() {
   const { t } = useTranslation();
@@ -34,6 +35,11 @@ export function RegisterPage() {
   const [role, setRole] = useState<Extract<UserRole, "job_seeker" | "employer">>("job_seeker");
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [pendingRegistration, setPendingRegistration] = useState<RegisterValues | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [verificationNotice, setVerificationNotice] = useState("");
   const { register, handleSubmit, formState } = useForm<RegisterValues>({
     resolver: zodResolver(schema),
     defaultValues: { fullName: "", email: "", password: "", confirmPassword: "", companyName: "" },
@@ -45,15 +51,80 @@ export function RegisterPage() {
       setServerError(t("auth.validation.companyRequired"));
       return;
     }
+    if (!supabaseAuthConfigured || !supabase) {
+      setServerError(t("auth.errors.emailVerificationUnavailable"));
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+      email: values.email,
+      options: {
+        shouldCreateUser: true,
+        data: { full_name: values.fullName },
+      },
+    });
+    if (error) {
+      setServerError(t("auth.errors.codeSend"));
+      return;
+    }
+    setPendingRegistration(values);
+    setVerificationCode("");
+    setVerificationNotice("");
+  });
+
+  const finishRegistration = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setServerError("");
+    setVerificationNotice("");
+    if (!pendingRegistration || !supabase || !verificationCodePattern.test(verificationCode)) {
+      setServerError(t("auth.validation.verificationCode"));
+      return;
+    }
+    setIsVerifying(true);
     try {
-      const session = await auth.register({ fullName: values.fullName, email: values.email, password: values.password, role, companyName: values.companyName });
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: pendingRegistration.email,
+        token: verificationCode,
+        type: "email",
+      });
+      if (error || !data.session?.access_token) {
+        setServerError(t("auth.errors.codeInvalid"));
+        return;
+      }
+      const session = await auth.register({
+        fullName: pendingRegistration.fullName,
+        email: pendingRegistration.email,
+        password: pendingRegistration.password,
+        role,
+        companyName: pendingRegistration.companyName,
+        emailVerificationToken: data.session.access_token,
+      });
       const destination = onboardingDestination(role === "employer" ? "/employer" : params.get("returnTo"), role);
       navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
     } catch (error) {
       const code = authErrorCode(error);
-      setServerError(code === "EMAIL_ALREADY_EXISTS" ? t("auth.errors.emailExists") : t("auth.errors.generic"));
+      if (code === "EMAIL_ALREADY_EXISTS") setServerError(t("auth.errors.emailExists"));
+      else if (code === "EMAIL_VERIFICATION_INVALID") setServerError(t("auth.errors.codeInvalid"));
+      else if (code === "EMAIL_VERIFICATION_UNAVAILABLE") setServerError(t("auth.errors.emailVerificationUnavailable"));
+      else setServerError(t("auth.errors.generic"));
+    } finally {
+      setIsVerifying(false);
+      await supabase.auth.signOut({ scope: "local" });
     }
-  });
+  };
+
+  const resendCode = async () => {
+    if (!pendingRegistration || !supabase) return;
+    setServerError("");
+    setVerificationNotice("");
+    setIsResending(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: pendingRegistration.email,
+      options: { shouldCreateUser: true, data: { full_name: pendingRegistration.fullName } },
+    });
+    setIsResending(false);
+    if (error) setServerError(t("auth.errors.codeSend"));
+    else setVerificationNotice(t("auth.codeResent"));
+  };
 
   const startGoogleRegistration = async () => {
     setServerError("");
@@ -75,6 +146,27 @@ export function RegisterPage() {
         <section className="auth-panel auth-panel--wide" aria-labelledby="register-title">
           <p className="auth-eyebrow">{t("auth.registerEyebrow")}</p>
           <h1 id="register-title">{t("auth.registerTitle")}</h1>
+          {pendingRegistration ? (
+            <form className="auth-form" onSubmit={finishRegistration} noValidate>
+              <p className="auth-verification-copy">{t("auth.verificationDescription", { email: pendingRegistration.email })}</p>
+              <Input
+                label={t("auth.verificationCode")}
+                value={verificationCode}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                error={serverError === t("auth.validation.verificationCode") ? serverError : undefined}
+              />
+              {serverError && serverError !== t("auth.validation.verificationCode") ? <p className="auth-error" role="alert">{serverError}</p> : null}
+              {verificationNotice ? <p className="auth-success" role="status">{verificationNotice}</p> : null}
+              <Button type="submit" isLoading={isVerifying}>{t("auth.verifyAndRegister")}</Button>
+              <div className="auth-verification-actions">
+                <Button type="button" variant="secondary" isLoading={isResending} onClick={resendCode}>{t("auth.resendCode")}</Button>
+                <Button type="button" variant="quiet" onClick={() => { setPendingRegistration(null); setVerificationCode(""); setServerError(""); setVerificationNotice(""); }}>{t("auth.changeEmail")}</Button>
+              </div>
+            </form>
+          ) : <>
           <div className="role-picker" role="radiogroup" aria-label={t("auth.chooseRole")}>
             <button type="button" className={role === "job_seeker" ? "active" : ""} onClick={() => setRole("job_seeker")}><UserRound size={20} /><span>{t("auth.roles.job_seeker")}</span></button>
             <button type="button" className={role === "employer" ? "active" : ""} onClick={() => setRole("employer")}><BriefcaseBusiness size={20} /><span>{t("auth.roles.employer")}</span></button>
@@ -98,6 +190,7 @@ export function RegisterPage() {
             <Button type="submit" isLoading={formState.isSubmitting}>{t("auth.registerSubmit")}</Button>
           </form>
           <p className="auth-switch">{t("auth.hasAccount")} <Link to={params.has("returnTo") ? `/login?returnTo=${encodeURIComponent(safeReturnTo(params.get("returnTo")))}` : "/login"}>{t("auth.loginLink")}</Link></p>
+          </>}
         </section>
       </main>
     </SiteShell>

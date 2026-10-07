@@ -13,8 +13,9 @@
 - `frontend/src/pages/OnboardingPage.tsx` — опрос `/onboarding` после регистрации;
   `frontend/src/app/OnboardingGate.tsx` восстанавливает незавершённый опрос.
 - `frontend/src/pages/LoginPage.tsx`, `frontend/src/pages/RegisterPage.tsx` and
-  `frontend/src/pages/AuthCallbackPage.tsx` — email/password auth плюс Google
-  OAuth callback через Supabase; API мост — `/api/v1/auth/oauth/google`.
+  `frontend/src/pages/AuthCallbackPage.tsx` — email/password auth, обязательный
+  Supabase email OTP при регистрации и Google OAuth callback; API проверяет
+  Supabase access token до создания локального аккаунта.
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.

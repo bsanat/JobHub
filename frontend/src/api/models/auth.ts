@@ -63,6 +63,7 @@ export interface RegisterRequest {
   password: string;
   role: "job_seeker" | "employer";
   companyName?: string;
+  emailVerificationToken: string;
 }
 
 export interface LoginRequest {

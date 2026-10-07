@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { env } from "./env";
 
-export const googleAuthConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
+export const supabaseAuthConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
+export const googleAuthConfigured = supabaseAuthConfigured;
 
-export const supabase = googleAuthConfigured
+export const supabase = supabaseAuthConfigured
   ? createClient(env.supabaseUrl!, env.supabaseAnonKey!, {
       auth: {
         persistSession: true,

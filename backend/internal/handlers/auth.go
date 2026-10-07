@@ -23,11 +23,12 @@ type authHandler struct {
 }
 
 type registerRequest struct {
-	FullName    string `json:"full_name"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	Role        string `json:"role"`
-	CompanyName string `json:"company_name"`
+	FullName               string `json:"full_name"`
+	Email                  string `json:"email"`
+	Password               string `json:"password"`
+	Role                   string `json:"role"`
+	CompanyName            string `json:"company_name"`
+	EmailVerificationToken string `json:"email_verification_token"`
 }
 
 type loginRequest struct {
@@ -67,6 +68,7 @@ func (h authHandler) register(c *gin.Context) {
 	}
 	session, token, err := h.service.Register(c.Request.Context(), auth.RegisterInput{
 		FullName: req.FullName, Email: req.Email, Password: req.Password, Role: req.Role, CompanyName: req.CompanyName,
+		EmailVerificationToken: req.EmailVerificationToken,
 	})
 	if err != nil {
 		h.writeAuthError(c, err)
@@ -169,6 +171,10 @@ func (h authHandler) writeAuthError(c *gin.Context, err error) {
 		c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"code": "ACCOUNT_SUSPENDED", "message": "Account is suspended"}})
 	case errors.Is(err, auth.ErrOAuthUnavailable):
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"code": "OAUTH_UNAVAILABLE", "message": "Google authentication is temporarily unavailable"}})
+	case errors.Is(err, auth.ErrEmailVerificationInvalid):
+		c.JSON(http.StatusUnauthorized, gin.H{"error": gin.H{"code": "EMAIL_VERIFICATION_INVALID", "message": "Email verification is invalid or expired"}})
+	case errors.Is(err, auth.ErrEmailVerificationUnavailable):
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"code": "EMAIL_VERIFICATION_UNAVAILABLE", "message": "Email verification is temporarily unavailable"}})
 	default:
 		if strings.Contains(err.Error(), "required") || strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "password") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"code": "VALIDATION_ERROR", "message": err.Error()}})

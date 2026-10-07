@@ -23,12 +23,13 @@ func TestAuthServiceIntegration(t *testing.T) {
 	}
 	defer pool.Close()
 	service := NewService(pool)
+	service.SetEmailVerifier(testEmailVerifier{})
 	suffix := strings.ReplaceAll(time.Now().UTC().Format("150405.000000000"), ".", "")
 	email := "employer-" + suffix + "@example.com"
 	companyName := "Integration LLP " + suffix
 
 	session, token, err := service.Register(ctx, RegisterInput{
-		FullName: "Employer Owner", Email: email, Password: "verysecure1", Role: RoleEmployer, CompanyName: companyName,
+		FullName: "Employer Owner", Email: email, Password: "verysecure1", Role: RoleEmployer, CompanyName: companyName, EmailVerificationToken: email,
 	})
 	if err != nil {
 		t.Fatalf("register employer: %v", err)
@@ -49,7 +50,7 @@ func TestAuthServiceIntegration(t *testing.T) {
 	if membershipCount != 1 {
 		t.Fatalf("expected one membership, got %d", membershipCount)
 	}
-	if _, _, err := service.Register(ctx, RegisterInput{FullName: "Duplicate", Email: email, Password: "verysecure1", Role: RoleJobSeeker}); err != ErrDuplicateEmail {
+	if _, _, err := service.Register(ctx, RegisterInput{FullName: "Duplicate", Email: email, Password: "verysecure1", Role: RoleJobSeeker, EmailVerificationToken: email}); err != ErrDuplicateEmail {
 		t.Fatalf("expected duplicate email, got %v", err)
 	}
 	if _, _, err := service.Login(ctx, LoginInput{Email: email, Password: "wrong"}); err != ErrInvalidCredentials {

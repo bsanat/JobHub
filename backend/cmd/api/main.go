@@ -56,6 +56,7 @@ func run(logger *slog.Logger) error {
 			return err
 		}
 		authService.SetOAuthVerifier(oauthVerifier)
+		authService.SetEmailVerifier(oauthVerifier)
 	}
 	var resumeFiles candidates.FileStore
 	if os.Getenv("SUPABASE_URL") != "" || os.Getenv("SUPABASE_SECRET_KEY") != "" {

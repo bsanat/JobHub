@@ -27,6 +27,7 @@ type AuthService struct {
 	sessionTTL time.Duration
 	now        func() time.Time
 	oauth      OAuthVerifier
+	email      EmailVerifier
 }
 
 func NewService(pool *pgxpool.Pool) *AuthService {
@@ -37,6 +38,10 @@ func (s *AuthService) SetOAuthVerifier(verifier OAuthVerifier) {
 	s.oauth = verifier
 }
 
+func (s *AuthService) SetEmailVerifier(verifier EmailVerifier) {
+	s.email = verifier
+}
+
 func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Session, string, error) {
 	if err := validateRegistration(input); err != nil {
 		return Session{}, "", err
@@ -44,6 +49,17 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (Sessio
 	normalizedEmail, err := NormalizeEmail(input.Email)
 	if err != nil {
 		return Session{}, "", err
+	}
+	if s.email == nil {
+		return Session{}, "", ErrEmailVerificationUnavailable
+	}
+	identity, err := s.email.VerifyEmail(ctx, input.EmailVerificationToken)
+	if err != nil {
+		return Session{}, "", err
+	}
+	verifiedEmail, err := NormalizeEmail(identity.Email)
+	if err != nil || verifiedEmail != normalizedEmail {
+		return Session{}, "", ErrEmailVerificationInvalid
 	}
 	passwordHash, err := hashPassword(input.Password)
 	if err != nil {

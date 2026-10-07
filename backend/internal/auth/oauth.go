@@ -22,6 +22,10 @@ type OAuthVerifier interface {
 	VerifyGoogle(context.Context, string) (OAuthIdentity, error)
 }
 
+type EmailVerifier interface {
+	VerifyEmail(context.Context, string) (OAuthIdentity, error)
+}
+
 type SupabaseOAuthVerifier struct {
 	projectURL string
 	apiKey     string
@@ -45,45 +49,74 @@ func NewSupabaseOAuthVerifier(projectURL, apiKey string, client *http.Client) (*
 }
 
 func (v *SupabaseOAuthVerifier) VerifyGoogle(ctx context.Context, accessToken string) (OAuthIdentity, error) {
-	accessToken = strings.TrimSpace(accessToken)
-	if accessToken == "" {
-		return OAuthIdentity{}, ErrInvalidCredentials
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.projectURL+"/auth/v1/user", nil)
+	payload, err := v.fetchUser(ctx, accessToken, "verify google token")
 	if err != nil {
 		return OAuthIdentity{}, err
-	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("apikey", v.apiKey)
-	res, err := v.client.Do(req)
-	if err != nil {
-		return OAuthIdentity{}, fmt.Errorf("%w: verify google token", ErrOAuthUnavailable)
-	}
-	defer res.Body.Close()
-	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
-		return OAuthIdentity{}, ErrInvalidCredentials
-	}
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return OAuthIdentity{}, fmt.Errorf("%w: supabase auth returned HTTP %d", ErrOAuthUnavailable, res.StatusCode)
-	}
-	var payload struct {
-		Email        string         `json:"email"`
-		AppMetadata  map[string]any `json:"app_metadata"`
-		UserMetadata struct {
-			FullName string `json:"full_name"`
-			Name     string `json:"name"`
-		} `json:"user_metadata"`
-	}
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return OAuthIdentity{}, fmt.Errorf("%w: decode supabase user", ErrOAuthUnavailable)
 	}
 	provider, _ := payload.AppMetadata["provider"].(string)
 	if provider != "" && provider != "google" {
 		return OAuthIdentity{}, ErrInvalidCredentials
 	}
-	name := strings.TrimSpace(payload.UserMetadata.FullName)
-	if name == "" {
-		name = strings.TrimSpace(payload.UserMetadata.Name)
+	return payload.identity(), nil
+}
+
+func (v *SupabaseOAuthVerifier) VerifyEmail(ctx context.Context, accessToken string) (OAuthIdentity, error) {
+	payload, err := v.fetchUser(ctx, accessToken, "verify email token")
+	if errors.Is(err, ErrInvalidCredentials) {
+		return OAuthIdentity{}, ErrEmailVerificationInvalid
 	}
-	return OAuthIdentity{Email: payload.Email, FullName: name}, nil
+	if err != nil {
+		return OAuthIdentity{}, fmt.Errorf("%w: %v", ErrEmailVerificationUnavailable, err)
+	}
+	if payload.Email == "" || payload.EmailConfirmedAt == "" {
+		return OAuthIdentity{}, ErrEmailVerificationInvalid
+	}
+	return payload.identity(), nil
+}
+
+type supabaseUserPayload struct {
+	Email            string         `json:"email"`
+	EmailConfirmedAt string         `json:"email_confirmed_at"`
+	AppMetadata      map[string]any `json:"app_metadata"`
+	UserMetadata     struct {
+		FullName string `json:"full_name"`
+		Name     string `json:"name"`
+	} `json:"user_metadata"`
+}
+
+func (p supabaseUserPayload) identity() OAuthIdentity {
+	name := strings.TrimSpace(p.UserMetadata.FullName)
+	if name == "" {
+		name = strings.TrimSpace(p.UserMetadata.Name)
+	}
+	return OAuthIdentity{Email: p.Email, FullName: name}
+}
+
+func (v *SupabaseOAuthVerifier) fetchUser(ctx context.Context, accessToken, operation string) (supabaseUserPayload, error) {
+	accessToken = strings.TrimSpace(accessToken)
+	if accessToken == "" {
+		return supabaseUserPayload{}, ErrInvalidCredentials
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.projectURL+"/auth/v1/user", nil)
+	if err != nil {
+		return supabaseUserPayload{}, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("apikey", v.apiKey)
+	res, err := v.client.Do(req)
+	if err != nil {
+		return supabaseUserPayload{}, fmt.Errorf("%w: %s", ErrOAuthUnavailable, operation)
+	}
+	defer res.Body.Close()
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		return supabaseUserPayload{}, ErrInvalidCredentials
+	}
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		return supabaseUserPayload{}, fmt.Errorf("%w: supabase auth returned HTTP %d", ErrOAuthUnavailable, res.StatusCode)
+	}
+	var payload supabaseUserPayload
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		return supabaseUserPayload{}, fmt.Errorf("%w: decode supabase user", ErrOAuthUnavailable)
+	}
+	return payload, nil
 }

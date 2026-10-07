@@ -1,4 +1,4 @@
-import { ArrowUpRight, BriefcaseBusiness, Building2, FileText, MapPin } from "lucide-react";
+import { BriefcaseBusiness, Building2, FileText, MapPin } from "lucide-react";
 import { useEffect, type PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -106,20 +106,6 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
       </header>
       <main id="main-content">{children}</main>
       <footer className={`site-footer site-footer--${variant}`}>
-        <div className="site-footer__callout">
-          <div className="page-container site-footer__callout-inner">
-            <div className="site-footer__callout-copy">
-              <span className="site-footer__callout-icon"><BriefcaseBusiness size={22} aria-hidden="true" /></span>
-              <div>
-                <strong>{t("footer.calloutTitle")}</strong>
-                <p>{t("footer.calloutDescription")}</p>
-              </div>
-            </div>
-            <Link className="site-footer__callout-action" to="/jobs">
-              {t("footer.browseJobs")}<ArrowUpRight size={18} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
         <div className="page-container site-footer__inner">
           <div className="site-footer__brand-block">
             <Link className="brand brand--small" to="/" aria-label={t("nav.homeLabel")}>
