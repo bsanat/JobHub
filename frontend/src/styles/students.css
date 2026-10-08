@@ -1,0 +1,26 @@
+.students-page { padding-block: var(--space-10) var(--space-16); }
+.students-page__intro { display: flex; align-items: end; justify-content: space-between; gap: var(--space-6); margin-bottom: var(--space-10); }
+.students-page__intro h1 { margin: 0 0 var(--space-2); font-size: clamp(2rem, 3vw, 2.75rem); line-height: 1.15; }
+.students-page__intro p { max-width: 38rem; margin: 0; color: var(--color-text-secondary); font-size: var(--text-18); }
+.students-page__intro .city-select { width: min(100%, 14rem); flex-shrink: 0; }
+.students-page__sections { display: grid; gap: var(--space-10); }
+.students-section__heading { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.students-section__icon { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-primary); }
+.students-section__heading h2 { margin: 0; font-size: var(--text-24); }
+.students-section__heading p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); }
+.students-section__heading > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; color: var(--color-primary); font-weight: 750; text-decoration: none; }
+.students-section__heading > a:hover { text-decoration: underline; }
+.students-section__heading > a:focus-visible, .students-section__empty a:focus-visible, .students-section__empty button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.students-section__empty { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-6); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-secondary); }
+.students-section__empty p { flex: 1; margin: 0; }
+.students-section__empty a, .students-section__empty button { border: 0; background: transparent; color: var(--color-primary); font: inherit; font-weight: 750; text-decoration: none; cursor: pointer; }
+@media (max-width: 48rem) {
+  .students-page__intro { align-items: stretch; flex-direction: column; }
+  .students-page__intro .city-select { width: 100%; }
+  .students-section__heading { grid-template-columns: auto minmax(0, 1fr); }
+  .students-section__heading > a { grid-column: 2; justify-self: start; }
+}
+@media (max-width: 32rem) {
+  .students-section__empty { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+  .students-section__empty a, .students-section__empty button { grid-column: 2; justify-self: start; }
+}

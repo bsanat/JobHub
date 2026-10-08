@@ -61,6 +61,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
           <nav className="site-nav" aria-label={t("nav.primaryLabel")}>
             <NavLink to="/jobs">{t("nav.jobs")}</NavLink>
             <NavLink to="/companies">{t("nav.companies")}</NavLink>
+            <NavLink to="/students">{t("nav.students")}</NavLink>
             {auth.session?.user.role === "admin" ? (
               <NavLink to="/admin">{t("nav.admin")}</NavLink>
             ) : null}
@@ -108,6 +109,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
               <h2>{t("footer.explore")}</h2>
               <Link to="/jobs"><BriefcaseBusiness size={17} aria-hidden="true" />{t("nav.jobs")}</Link>
               <Link to="/companies"><Building2 size={17} aria-hidden="true" />{t("nav.companies")}</Link>
+              <Link to="/students"><BriefcaseBusiness size={17} aria-hidden="true" />{t("nav.students")}</Link>
             </nav>
             <nav className="site-footer__group" aria-label={t("footer.information")}>
               <h2>{t("footer.information")}</h2>

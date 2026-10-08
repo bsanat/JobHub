@@ -4,6 +4,7 @@ import { JobHubLoader } from "./components/ui/JobHubLoader";
 import { OnboardingGate } from "./app/OnboardingGate";
 
 const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+const StudentsPage = lazy(() => import("./pages/StudentsPage").then((module) => ({ default: module.StudentsPage })));
 const JobsPage = lazy(() => import("./pages/JobsPage").then((module) => ({ default: module.JobsPage })));
 const JobDetailPage = lazy(() => import("./pages/JobDetailPage").then((module) => ({ default: module.JobDetailPage })));
 const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })));
@@ -41,6 +42,7 @@ export default function App() {
         <OnboardingGate><Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/students" element={<StudentsPage />} />
           <Route path="/jobs/:jobId" element={<JobDetailPage />} />
           <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/companies/:companyId" element={<CompanyProfilePage />} />

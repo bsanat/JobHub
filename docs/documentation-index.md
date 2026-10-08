@@ -16,6 +16,12 @@
   исследование источников.
 - `docs/ats-vacancy-sources.md`, `docs/greenhouse-poc.md` и
   `docs/telegram-vacancy-collector.md` — исследование конкретных провайдеров.
+- `docs/public-job-imports.md` — разовый импорт Arbeitnow, Greenhouse и Lever, права и команды.
+
+## Бренд
+
+- `docs/brand-usage-guide.html` — редактируемая визуальная версия правил;
+  `output/pdf/jobhub-brand-usage-guide.pdf` — переносимая версия для партнёров.
 
 ## Интеграции и подтверждение источников
 

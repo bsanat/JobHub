@@ -19,6 +19,8 @@
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
+- `frontend/src/pages/StudentsPage.tsx` — публичная страница `/students` с вакансиями по фильтрам стажировки, без опыта и частичной занятости.
+- `backend/cmd/import-public-jobs/` и `backend/internal/providers/publicapi/` — отключённый по умолчанию разовый импорт Arbeitnow/Lever; Greenhouse использует существующий адаптер. Настройка и ограничения — `docs/public-job-imports.md`.
 - `frontend/src/components/` — общие и функциональные компоненты.
 - `frontend/src/components/jobs/SalaryFilter.tsx` — диапазон зарплаты в каталоге;
   параметры URL — `frontend/src/lib/jobSearchParams.ts`, SQL — `backend/sql/queries/jobs.sql`.
@@ -58,5 +60,7 @@
 - `docs/` — архитектура, источники и рабочие инструкции.
 - `Makefile` — запуск, миграции, импорт и демоданные.
 - `.github/workflows/telegram-publisher.yml` — резервный запуск publisher вне Vercel.
+- `.github/workflows/public-job-imports.yml` — выключенный по умолчанию
+  расписанный запуск API-импортера.
 - `scripts/supabase-telegram-publisher.sql` and
   `docs/telegram-publisher-webhook.md` описывают Production webhook и cron.
