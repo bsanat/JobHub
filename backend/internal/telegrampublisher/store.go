@@ -70,7 +70,7 @@ func (s *PostgresStore) queryVacancies(ctx context.Context, query string, channe
 	for rows.Next() {
 		var item Vacancy
 		var salaryRaw, salaryMin, salaryMax, salaryCurrency, salaryPeriod sql.NullString
-		if err := rows.Scan(&item.ID, &item.Source, &item.SourceName, &item.Attribution, &item.Title, &item.Description, &item.CompanyName, &item.Location, &item.WorkMode, &item.ExperienceLevel, &item.EmploymentType, &salaryRaw, &salaryMin, &salaryMax, &salaryCurrency, &salaryPeriod, &item.SalaryVisible); err != nil {
+		if err := rows.Scan(&item.ID, &item.Source, &item.SourceName, &item.Attribution, &item.OriginalURL, &item.Title, &item.Description, &item.CompanyName, &item.Location, &item.WorkMode, &item.ExperienceLevel, &item.EmploymentType, &salaryRaw, &salaryMin, &salaryMax, &salaryCurrency, &salaryPeriod, &item.SalaryVisible); err != nil {
 			return nil, fmt.Errorf("scan telegram publication vacancy: %w", err)
 		}
 		item.SalaryRaw = nullString(salaryRaw)
@@ -98,6 +98,7 @@ const vacancySelectColumns = `
     j.source,
     s.display_name,
     COALESCE(s.attribution_text, ''),
+    COALESCE(j.source_url, ''),
     j.title,
     COALESCE(j.description, '') AS description,
     COALESCE(c.name, j.company_name_raw, '') AS company_name,

@@ -50,11 +50,30 @@ func FormatVacancy(v Vacancy, publicBaseURL string) string {
 		if value := shortText(attribution, 180); value != "" {
 			lines = append(lines, html.EscapeString(value))
 		}
+		if strings.TrimSpace(publicBaseURL) != "" {
+			if original := safeOriginalURL(v.OriginalURL); original != "" {
+				lines = append(lines, "<a href=\""+html.EscapeString(original)+"\">Түпнұсқа вакансия / Оригинал вакансии</a>")
+			}
+			if v.Source == "arbeitnow:global" {
+				lines = append(lines, "<a href=\"https://www.arbeitnow.com\">Arbeitnow.com</a>")
+			}
+		}
+		if v.WorkMode == "remote" {
+			lines = append(lines, "Ел мен өтінім талаптарын түпнұсқадан тексеріңіз / Проверьте страну и условия отклика в оригинале.")
+		}
 	}
 	if strings.TrimSpace(publicBaseURL) != "" {
 		lines = append(lines, "", "🔗 <a href=\""+html.EscapeString(vacancyURL(publicBaseURL, v.ID))+"\">Вакансияны ашу / Открыть вакансию</a>")
 	}
 	return strings.Join(lines, "\n")
+}
+
+func safeOriginalURL(raw string) string {
+	parsed, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || parsed.Scheme != "https" || parsed.Hostname() == "" || parsed.User != nil {
+		return ""
+	}
+	return parsed.String()
 }
 
 func shortText(raw string, limit int) string {

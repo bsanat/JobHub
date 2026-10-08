@@ -24,7 +24,7 @@ func (s *memoryStore) BeginIngestionRun(context.Context, string, int) (string, e
 func (s *memoryStore) FailIngestionRun(context.Context, string, jobs.ImportStats, string, string) error {
 	return nil
 }
-func (s *memoryStore) CompleteIngestionRun(_ context.Context, _ string, source string, imported []jobs.ImportedJob, _ time.Time, _ time.Time, stats jobs.ImportStats) (jobs.ImportStats, error) {
+func (s *memoryStore) CompleteIngestionRun(_ context.Context, _ string, source string, imported []jobs.ImportedJob, _ time.Time, _ time.Time, stats jobs.ImportStats, _ bool) (jobs.ImportStats, error) {
 	for _, item := range imported {
 		key := source + "/" + item.ExternalID
 		if _, exists := s.items[key]; exists {

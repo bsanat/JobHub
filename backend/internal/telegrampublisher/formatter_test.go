@@ -51,3 +51,15 @@ func TestFormatExternalVacancyCreditsSourceWithoutLink(t *testing.T) {
 		t.Fatalf("linkless external message contains a URL: %s", msg)
 	}
 }
+
+func TestFormatPublicImportLinksOriginalAndPreservesRemoteCaution(t *testing.T) {
+	msg := FormatVacancy(Vacancy{ID: "job-id", Source: "arbeitnow:global", SourceName: "Arbeitnow", OriginalURL: "https://www.arbeitnow.com/jobs/role?a=1&b=2", Title: "Remote Engineer", WorkMode: "remote"}, "https://jobhub.kz")
+	for _, want := range []string{"Дереккөз / Источник: Arbeitnow", `href="https://www.arbeitnow.com/jobs/role?a=1&amp;b=2"`, `href="https://www.arbeitnow.com"`, "Проверьте страну и условия отклика"} {
+		if !strings.Contains(msg, want) {
+			t.Fatalf("public import message missing %q: %s", want, msg)
+		}
+	}
+	if strings.Contains(FormatVacancy(Vacancy{Source: "lever:board", OriginalURL: "javascript:alert(1)", Title: "Engineer"}, "https://jobhub.kz"), "javascript:") {
+		t.Fatal("unsafe original URL was linked")
+	}
+}

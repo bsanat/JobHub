@@ -22,6 +22,7 @@ type Vacancy struct {
 	Source          string
 	SourceName      string
 	Attribution     string
+	OriginalURL     string
 	Title           string
 	Description     string
 	CompanyName     string

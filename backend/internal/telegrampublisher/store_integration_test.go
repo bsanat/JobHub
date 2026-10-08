@@ -28,7 +28,7 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	}
 	t.Cleanup(pool.Close)
 	fixtureIDs := createPublisherFixtures(t, ctx, pool)
-	approvedExternalID := createExternalPublisherFixtures(t, ctx, pool)
+	approvedExternalIDs := createExternalPublisherFixtures(t, ctx, pool)
 	channelID := -time.Now().UnixNano()
 	defer func() {
 		_, _ = pool.Exec(context.Background(), "DELETE FROM jobhub.telegram_publications WHERE channel_id = $1", channelID)
@@ -45,14 +45,18 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	}
 	var testUnapproved, testDemo bool
 	testApprovedCopies := 0
+	testPublicProviders := map[string]bool{}
 	for _, job := range testClaims {
 		testUnapproved = testUnapproved || job.Title == "Unapproved External Engineer"
 		testDemo = testDemo || job.Title == "Demo External Engineer"
 		if job.Title == "Approved External Engineer" {
 			testApprovedCopies++
 		}
+		if job.Title == "Arbeitnow External Engineer" || job.Title == "Greenhouse External Engineer" || job.Title == "Lever External Engineer" {
+			testPublicProviders[job.Title] = true
+		}
 	}
-	if !testUnapproved || testDemo || testApprovedCopies != 1 {
+	if !testUnapproved || testDemo || testApprovedCopies != 1 || len(testPublicProviders) != 3 {
 		t.Fatalf("staging test mode eligibility is wrong: unapproved=%t demo=%t approved_copies=%d", testUnapproved, testDemo, testApprovedCopies)
 	}
 	var preview bytes.Buffer
@@ -96,13 +100,13 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(claimed) < 3 {
-		t.Fatalf("expected two native and one approved external fixtures, got %d", len(claimed))
+	if len(claimed) < 6 {
+		t.Fatalf("expected native and approved external/public import fixtures, got %d", len(claimed))
 	}
 	claimedIDs := make(map[string]bool, len(claimed))
 	for _, vacancy := range claimed {
 		claimedIDs[vacancy.ID] = true
-		if vacancy.Source != "jobhub" && vacancy.ID != approvedExternalID {
+		if vacancy.Source != "jobhub" && !approvedExternalIDs[vacancy.ID] {
 			t.Fatalf("unapproved or demo external vacancy was claimed: %s", vacancy.Source)
 		}
 	}
@@ -111,8 +115,10 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 			t.Fatalf("native fixture %s was not claimed", id)
 		}
 	}
-	if !claimedIDs[approvedExternalID] {
-		t.Fatal("approved external fixture was not claimed")
+	for id := range approvedExternalIDs {
+		if !claimedIDs[id] {
+			t.Fatalf("approved external fixture %s was not claimed", id)
+		}
 	}
 	var demoClaimed int
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM jobhub.telegram_publications tp
@@ -206,7 +212,7 @@ func createPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	return jobIDs
 }
 
-func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Pool) string {
+func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Pool) map[string]bool {
 	t.Helper()
 	marker := fmt.Sprintf("publisher-external-%d", time.Now().UnixNano())
 	type fixture struct {
@@ -219,6 +225,9 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		{marker + "-approved", "test", true, "Approved External Engineer"},
 		{marker + "-unapproved", "test", false, "Unapproved External Engineer"},
 		{marker + "-demo", "demo", true, "Demo External Engineer"},
+		{marker + "-arbeitnow", "arbeitnow", true, "Arbeitnow External Engineer"},
+		{marker + "-greenhouse", "greenhouse", true, "Greenhouse External Engineer"},
+		{marker + "-lever", "lever", true, "Lever External Engineer"},
 	}
 	var sourceNames, jobIDs []string
 	t.Cleanup(func() {
@@ -229,7 +238,7 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 			_, _ = pool.Exec(context.Background(), "DELETE FROM jobhub.job_sources WHERE source = $1", source)
 		}
 	})
-	var approvedID string
+	approvedIDs := map[string]bool{}
 	for _, fixture := range fixtures {
 		if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources (source, provider, display_name, enabled, production_permissions_confirmed)
 			VALUES ($1, $2, $3, true, $4)`, fixture.source, fixture.provider, fixture.title, fixture.approved); err != nil {
@@ -247,7 +256,7 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		}
 		jobIDs = append(jobIDs, jobID)
 		if fixture.approved && fixture.provider != "demo" {
-			approvedID = jobID
+			approvedIDs[jobID] = true
 		}
 	}
 	var duplicateID string
@@ -260,5 +269,5 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		t.Fatal(err)
 	}
 	jobIDs = append(jobIDs, duplicateID)
-	return approvedID
+	return approvedIDs
 }
