@@ -1,3 +1,4 @@
+import { LanguageSelect } from "../components/i18n/LanguageSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Bookmark, BriefcaseBusiness, Search } from "lucide-react";
@@ -45,7 +46,6 @@ export function ComponentShowcasePage() {
     document.documentElement.lang = supportedLanguage(i18n.language);
   }, [i18n.language]);
 
-  const language = supportedLanguage(i18n.language);
 
   return (
     <main className="showcase">
@@ -54,13 +54,7 @@ export function ComponentShowcasePage() {
           <a className="showcase-brand" href="/dev/ui" aria-label="JobHub">
             <span><BriefcaseBusiness size={19} aria-hidden="true" /></span>JobHub
           </a>
-          <div className="showcase-language">
-            <label htmlFor="showcase-language">{t("dev.language")}</label>
-            <select id="showcase-language" value={language} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
-              <option value="kk">🇰🇿 Қазақша</option>
-              <option value="ru">🇷🇺 Русский</option>
-            </select>
-          </div>
+          <LanguageSelect />
         </div>
       </header>
 
