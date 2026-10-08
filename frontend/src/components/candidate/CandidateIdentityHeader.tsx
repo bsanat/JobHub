@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import type { CandidateProfile } from "../../api/models/candidate";
+import { UserAvatar } from "./UserAvatar";
 import { cityName } from "../../lib/cities";
 
 interface CandidateIdentityHeaderProps {
@@ -23,9 +24,7 @@ export function CandidateIdentityHeader({
 
   return (
     <header className="candidate-identity-header">
-      <div className="profile-avatar" aria-hidden="true">
-        {initials(profile.fullName)}
-      </div>
+      <UserAvatar fullName={profile.fullName} size="lg" />
       <div className="candidate-identity-header__copy">
         <h1 id={titleId}>{profile.fullName}</h1>
         <p className="candidate-identity-header__position">{position}</p>
@@ -55,13 +54,4 @@ export function CandidateIdentityHeader({
       </div>
     </header>
   );
-}
-
-function initials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase())
-    .join("");
 }

@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react";
 import { Bookmark, FileText, Send, Settings2, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { UserAvatar } from "./UserAvatar";
 import { SiteShell } from "../../layouts/SiteShell";
 import { useAuth } from "../../app/authContext";
 
@@ -30,9 +31,7 @@ export function CandidateWorkspaceLayout({ children }: PropsWithChildren) {
       <div className="workbench workbench--candidate page-container">
         <aside className="workbench__sidebar">
           <div className="workbench__identity">
-            <span className="workbench__avatar" aria-hidden="true">
-              <UserRound size={22} />
-            </span>
+            <UserAvatar fullName={session?.user.fullName ?? ""} />
             <div>
               <strong>{session?.user.fullName}</strong>
               <span>{t("auth.roles.job_seeker")}</span>

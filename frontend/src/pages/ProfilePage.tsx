@@ -24,6 +24,7 @@ import type {
   CandidateProfileInput,
   LanguageProficiency,
 } from "../api/models/candidate";
+import type { AuthSession } from "../api/models/auth";
 import type { EmploymentType, WorkMode } from "../api/models/job";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
@@ -178,6 +179,9 @@ export function ProfilePage() {
       repositories.candidate.updateProfile(input, session!.csrfToken),
     onSuccess: (data) => {
       client.setQueryData(["candidate-profile"], data);
+      client.setQueryData<AuthSession | null>(["auth", "me"], (current) =>
+        current ? { ...current, user: { ...current.user, fullName: data.fullName } } : current,
+      );
       form.reset(toForm(data));
       setIsEditing(false);
       toast.showToast({ title: t("profile.saved") });

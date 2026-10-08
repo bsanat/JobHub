@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/authContext";
 import { LanguageSelect } from "../components/i18n/LanguageSelect";
+import { UserAvatar } from "../components/candidate/UserAvatar";
 import { CitySelect } from "../components/location/CitySelect";
 import { isCityId } from "../lib/cities";
 import { setSearchCityPreference, usePreferredSearchCity } from "../lib/searchCityPreference";
@@ -76,9 +77,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
                     : auth.session.user.role === "employer" ? "/employer" : "/account"
                 }
               >
-                <span aria-hidden="true">
-                  {initials(auth.session.user.fullName)}
-                </span>
+                <UserAvatar fullName={auth.session.user.fullName} size="sm" />
                 <strong>{auth.session.user.fullName}</strong>
               </Link>
             ) : (
@@ -125,13 +124,4 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
 
 function supportedLanguage(language: string): Language {
   return language === "ru" ? "ru" : "kk";
-}
-
-function initials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase())
-    .join("");
 }

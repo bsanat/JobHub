@@ -71,7 +71,10 @@
 
 .site-header__actions { justify-self: end; min-width: 0; gap: var(--space-2); white-space: nowrap; }
 .candidate-menu-link { display: inline-flex; min-width: 0; align-items: center; gap: var(--space-2); color: var(--color-text-primary); text-decoration: none; }
-.candidate-menu-link > span { display: grid; flex: 0 0 2.25rem; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text-secondary); font-size: var(--text-12); font-weight: 800; }
+.user-avatar { display: grid; flex: none; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text-primary); font-family: var(--font-display); font-weight: 800; line-height: 1; }
+.user-avatar--sm { width: 2.25rem; height: 2.25rem; font-size: var(--text-12); }
+.user-avatar--md { width: 2.75rem; height: 2.75rem; font-size: var(--text-14); }
+.user-avatar--lg { width: 4rem; height: 4rem; font-size: var(--text-20); }
 .candidate-menu-link > strong { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Native selects retain keyboard and mobile picker behavior; visible values stay compact. */
 .compact-select { position: relative; display: inline-flex; align-items: center; min-height: 2.75rem; border-radius: var(--radius-sm); }
@@ -597,7 +600,6 @@
 .candidate-account-meta > div { min-width: 0; }
 .candidate-account-meta dt { color: var(--color-text-muted); font-size: var(--text-14); }
 .candidate-account-meta dd { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-weight: 650; overflow-wrap: anywhere; }
-.profile-avatar { display: grid; width: 4.5rem; height: 4.5rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text-secondary); font-size: var(--text-20); font-weight: 850; }
 .profile-completion { min-width: 10rem; text-align: right; }
 .profile-completion strong { display: block; color: var(--color-primary); font-size: var(--text-24); }
 .profile-completion > span { color: var(--color-text-muted); font-size: var(--text-14); }
