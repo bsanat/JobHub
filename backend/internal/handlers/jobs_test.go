@@ -78,6 +78,7 @@ func TestListJobsRejectsUnsupportedSort(t *testing.T) {
 func TestListJobsRejectsInvalidFiltersBeforeQueryingStore(t *testing.T) {
 	tests := []string{
 		"city=unknown",
+		"region=worldwide",
 		"preferred_city=unknown",
 		"work_mode=remote,teleport",
 		"salary_min=-1&currency=KZT",
@@ -112,7 +113,7 @@ func TestListJobsPassesCanonicalCombinedFiltersAndOpaqueQuery(t *testing.T) {
 	reader := &capturingJobReader{}
 	router := NewRouter(checker{}, slog.New(slog.NewTextHandler(io.Discard, nil)), "http://localhost:5173", reader)
 	res := httptest.NewRecorder()
-	path := "/api/v1/jobs?q=%27%3BDELETE+FROM+jobs%3B--&city=almaty&preferred_city=astana&work_mode=remote%2Chybrid&salary_min=500000&salary_max=900000&currency=kzt&experience=middle&employment=full_time&date_posted=7d&sort=oldest&page=2&page_size=25"
+	path := "/api/v1/jobs?q=%27%3BDELETE+FROM+jobs%3B--&region=kazakhstan&city=almaty&preferred_city=astana&work_mode=remote%2Chybrid&salary_min=500000&salary_max=900000&currency=kzt&experience=middle&employment=full_time&date_posted=7d&sort=oldest&page=2&page_size=25"
 	router.ServeHTTP(res, httptest.NewRequest("GET", path, nil))
 	if res.Code != 200 || reader.calls != 1 {
 		t.Fatalf("unexpected response: %d %s", res.Code, res.Body.String())
@@ -121,7 +122,7 @@ func TestListJobsPassesCanonicalCombinedFiltersAndOpaqueQuery(t *testing.T) {
 	if p.SalaryMax == nil || *p.SalaryMax != 900000 {
 		t.Fatalf("upper salary bound was not preserved: %#v", p)
 	}
-	if p.Query != "';DELETE FROM jobs;--" || p.City != "almaty" || p.PreferredCity != "astana" || len(p.WorkModes) != 2 || p.SalaryMin == nil || *p.SalaryMin != 500000 || p.Currency != "KZT" || p.ExperienceLevel != "middle" || p.EmploymentType != "full_time" || p.PostedAfter == nil || p.Sort != "oldest" || p.Page != 2 || p.PageSize != 25 {
+	if p.Query != "';DELETE FROM jobs;--" || p.Region != "kazakhstan" || p.City != "almaty" || p.PreferredCity != "astana" || len(p.WorkModes) != 2 || p.SalaryMin == nil || *p.SalaryMin != 500000 || p.Currency != "KZT" || p.ExperienceLevel != "middle" || p.EmploymentType != "full_time" || p.PostedAfter == nil || p.Sort != "oldest" || p.Page != 2 || p.PageSize != 25 {
 		t.Fatalf("filters were not preserved: %#v", p)
 	}
 }

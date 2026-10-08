@@ -137,6 +137,9 @@ WHERE s.enabled
   AND (NOT sqlc.arg(require_production_permissions)::boolean OR s.production_permissions_confirmed)
   AND jobhub.job_is_public(j)
   AND (sqlc.narg(query)::text IS NULL OR j.title ILIKE '%' || sqlc.narg(query) || '%' OR j.company_name_raw ILIKE '%' || sqlc.narg(query) || '%' OR EXISTS (SELECT 1 FROM unnest(j.skills) skill WHERE skill ILIKE '%' || sqlc.narg(query) || '%'))
+  AND (sqlc.narg(region)::text IS NULL
+    OR (sqlc.narg(region) = 'kazakhstan' AND (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL))
+    OR (sqlc.narg(region) = 'international' AND NOT (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL)))
   AND (sqlc.narg(city)::text IS NULL OR j.canonical_city_id = sqlc.narg(city))
   AND (COALESCE(cardinality(sqlc.arg(work_modes)::text[]), 0) = 0 OR j.work_mode = ANY(sqlc.arg(work_modes)::text[]))
   AND (sqlc.narg(salary_min)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= sqlc.narg(salary_min)))
@@ -177,6 +180,9 @@ WHERE s.enabled
   AND (NOT sqlc.arg(require_production_permissions)::boolean OR s.production_permissions_confirmed)
   AND jobhub.job_is_public(j)
   AND (sqlc.narg(query)::text IS NULL OR j.title ILIKE '%' || sqlc.narg(query) || '%' OR j.company_name_raw ILIKE '%' || sqlc.narg(query) || '%' OR EXISTS (SELECT 1 FROM unnest(j.skills) skill WHERE skill ILIKE '%' || sqlc.narg(query) || '%'))
+  AND (sqlc.narg(region)::text IS NULL
+    OR (sqlc.narg(region) = 'kazakhstan' AND (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL))
+    OR (sqlc.narg(region) = 'international' AND NOT (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL)))
   AND (sqlc.narg(city)::text IS NULL OR j.canonical_city_id = sqlc.narg(city))
   AND (COALESCE(cardinality(sqlc.arg(work_modes)::text[]), 0) = 0 OR j.work_mode = ANY(sqlc.arg(work_modes)::text[]))
   AND (sqlc.narg(salary_min)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= sqlc.narg(salary_min)))

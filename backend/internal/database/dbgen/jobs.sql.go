@@ -64,18 +64,22 @@ WHERE s.enabled
   AND (NOT $1::boolean OR s.production_permissions_confirmed)
   AND jobhub.job_is_public(j)
   AND ($2::text IS NULL OR j.title ILIKE '%' || $2 || '%' OR j.company_name_raw ILIKE '%' || $2 || '%' OR EXISTS (SELECT 1 FROM unnest(j.skills) skill WHERE skill ILIKE '%' || $2 || '%'))
-  AND ($3::text IS NULL OR j.canonical_city_id = $3)
-  AND (COALESCE(cardinality($4::text[]), 0) = 0 OR j.work_mode = ANY($4::text[]))
-  AND ($5::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $5))
-  AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
-  AND ($8::text IS NULL OR j.experience_level = $8)
-  AND ($9::text IS NULL OR j.employment_type = $9)
-  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $10)
+  AND ($3::text IS NULL
+    OR ($3 = 'kazakhstan' AND (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL))
+    OR ($3 = 'international' AND NOT (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL)))
+  AND ($4::text IS NULL OR j.canonical_city_id = $4)
+  AND (COALESCE(cardinality($5::text[]), 0) = 0 OR j.work_mode = ANY($5::text[]))
+  AND ($6::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $7 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $6))
+  AND ($8::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $7 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $8))
+  AND ($9::text IS NULL OR j.experience_level = $9)
+  AND ($10::text IS NULL OR j.employment_type = $10)
+  AND ($11::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $11)
 `
 
 type CountPublicJobsParams struct {
 	RequireProductionPermissions bool
 	Query                        pgtype.Text
+	Region                       pgtype.Text
 	City                         pgtype.Text
 	WorkModes                    []string
 	SalaryMin                    pgtype.Numeric
@@ -90,6 +94,7 @@ func (q *Queries) CountPublicJobs(ctx context.Context, arg CountPublicJobsParams
 	row := q.db.QueryRow(ctx, countPublicJobs,
 		arg.RequireProductionPermissions,
 		arg.Query,
+		arg.Region,
 		arg.City,
 		arg.WorkModes,
 		arg.SalaryMin,
@@ -590,24 +595,28 @@ WHERE s.enabled
   AND (NOT $1::boolean OR s.production_permissions_confirmed)
   AND jobhub.job_is_public(j)
   AND ($2::text IS NULL OR j.title ILIKE '%' || $2 || '%' OR j.company_name_raw ILIKE '%' || $2 || '%' OR EXISTS (SELECT 1 FROM unnest(j.skills) skill WHERE skill ILIKE '%' || $2 || '%'))
-  AND ($3::text IS NULL OR j.canonical_city_id = $3)
-  AND (COALESCE(cardinality($4::text[]), 0) = 0 OR j.work_mode = ANY($4::text[]))
-  AND ($5::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $5))
-  AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
-  AND ($8::text IS NULL OR j.experience_level = $8)
-  AND ($9::text IS NULL OR j.employment_type = $9)
-  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $10)
+  AND ($3::text IS NULL
+    OR ($3 = 'kazakhstan' AND (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL))
+    OR ($3 = 'international' AND NOT (COALESCE(s.market = 'KZ', false) OR j.canonical_city_id IS NOT NULL)))
+  AND ($4::text IS NULL OR j.canonical_city_id = $4)
+  AND (COALESCE(cardinality($5::text[]), 0) = 0 OR j.work_mode = ANY($5::text[]))
+  AND ($6::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $7 AND j.salary_period = 'month' AND COALESCE(j.salary_max, j.salary_min) >= $6))
+  AND ($8::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $7 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $8))
+  AND ($9::text IS NULL OR j.experience_level = $9)
+  AND ($10::text IS NULL OR j.employment_type = $10)
+  AND ($11::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $11)
 ORDER BY
-    CASE WHEN $11::text IS NOT NULL AND j.canonical_city_id = $11 THEN 0 ELSE 1 END,
-    CASE WHEN $12::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,
-    CASE WHEN $12::text <> 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END DESC,
+    CASE WHEN $12::text IS NOT NULL AND j.canonical_city_id = $12 THEN 0 ELSE 1 END,
+    CASE WHEN $13::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,
+    CASE WHEN $13::text <> 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END DESC,
     j.id DESC
-LIMIT $14 OFFSET $13
+LIMIT $15 OFFSET $14
 `
 
 type ListPublicJobsParams struct {
 	RequireProductionPermissions bool
 	Query                        pgtype.Text
+	Region                       pgtype.Text
 	City                         pgtype.Text
 	WorkModes                    []string
 	SalaryMin                    pgtype.Numeric
@@ -652,6 +661,7 @@ func (q *Queries) ListPublicJobs(ctx context.Context, arg ListPublicJobsParams) 
 	rows, err := q.db.Query(ctx, listPublicJobs,
 		arg.RequireProductionPermissions,
 		arg.Query,
+		arg.Region,
 		arg.City,
 		arg.WorkModes,
 		arg.SalaryMin,

@@ -29,7 +29,7 @@ func TestPostgresSearchFiltersStayConsistent(t *testing.T) {
 	marker := fmt.Sprintf("filter-test-%d", time.Now().UnixNano())
 	externalSource := "test:" + marker
 	var userID, companyID string
-	if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources (source,provider,market,display_name,enabled) VALUES ($1,'test','KZ','Filter Test',true)`, externalSource); err != nil {
+	if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources (source,provider,market,display_name,enabled) VALUES ($1,'test','GLOBAL','Filter Test',true)`, externalSource); err != nil {
 		t.Fatal(err)
 	}
 	if err := pool.QueryRow(ctx, `INSERT INTO jobhub.users (full_name,email,normalized_email,password_hash,role,status) VALUES ('Filter Test',$1,$1,'not-used','employer','active') RETURNING id::text`, marker+"@example.test").Scan(&userID); err != nil {
@@ -113,6 +113,9 @@ func TestPostgresSearchFiltersStayConsistent(t *testing.T) {
 	}
 
 	assert("reset-equivalent unfiltered", SearchParams{}, 5)
+	assert("Kazakhstan includes native and located external", SearchParams{Region: "kazakhstan"}, 4)
+	assert("international includes unlocated external", SearchParams{Region: "international"}, 1)
+	assert("region and city stay consistent", SearchParams{Region: "international", City: "almaty"}, 0)
 	assert("city includes native and imported", SearchParams{City: "almaty"}, 3)
 	assert("keyword and city", SearchParams{Query: " Go", City: "almaty"}, 2)
 	assert("remote and city", SearchParams{City: "almaty", WorkModes: []string{"remote"}}, 1)

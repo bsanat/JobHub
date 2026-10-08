@@ -101,6 +101,7 @@ type NativeJobInput struct {
 
 type SearchParams struct {
 	Query           string
+	Region          string
 	City            string
 	PreferredCity   string
 	WorkModes       []string

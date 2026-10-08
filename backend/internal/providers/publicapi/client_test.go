@@ -42,6 +42,13 @@ func TestArbeitnowPaginationNormalizationAndPartialSnapshot(t *testing.T) {
 	}
 }
 
+func TestArbeitnowDescriptionKeepsFormatting(t *testing.T) {
+	job, ok := normalizeArbeitnow(arbeitnowJob{Slug: "formatted", Title: "Engineer", URL: "https://www.arbeitnow.com/jobs/formatted", Description: "<h2>Requirements</h2><ul><li>EU work permit</li><li>German B2</li></ul>"})
+	if !ok || !strings.Contains(job.Description, "## Requirements") || !strings.Contains(job.Description, "- EU work permit") {
+		t.Fatalf("description structure lost: %+v", job)
+	}
+}
+
 func TestLeverPaginationAndMalformedRecord(t *testing.T) {
 	client := &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
 		if r.URL.Query().Get("skip") == "2" {

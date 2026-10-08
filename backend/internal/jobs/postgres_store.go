@@ -122,13 +122,13 @@ func normalizedCompanyName(value string) string {
 
 func (s *PostgresStore) Search(ctx context.Context, params SearchParams) (SearchResult, error) {
 	query := nullableText(strings.TrimSpace(params.Query))
-	filters := dbgen.CountPublicJobsParams{RequireProductionPermissions: s.requireProductionPermissions, Query: query,
+	filters := dbgen.CountPublicJobsParams{RequireProductionPermissions: s.requireProductionPermissions, Query: query, Region: nullableText(params.Region),
 		City: nullableText(params.City), WorkModes: params.WorkModes, SalaryMin: nullableNumeric(params.SalaryMin),
 		SalaryMax: nullableNumeric(params.SalaryMax),
 		Currency:  nullableText(params.Currency), ExperienceLevel: nullableText(params.ExperienceLevel),
 		EmploymentType: nullableText(params.EmploymentType), PostedAfter: nullableTime(params.PostedAfter)}
 	listParams := dbgen.ListPublicJobsParams{
-		Query: filters.Query, City: filters.City, WorkModes: filters.WorkModes, SalaryMin: filters.SalaryMin,
+		Query: filters.Query, Region: filters.Region, City: filters.City, WorkModes: filters.WorkModes, SalaryMin: filters.SalaryMin,
 		SalaryMax: filters.SalaryMax,
 		Currency:  filters.Currency, ExperienceLevel: filters.ExperienceLevel, EmploymentType: filters.EmploymentType,
 		PostedAfter: filters.PostedAfter, PreferredCity: nullableText(params.PreferredCity), RequireProductionPermissions: s.requireProductionPermissions,

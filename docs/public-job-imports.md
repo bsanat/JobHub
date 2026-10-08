@@ -17,11 +17,21 @@ The application never claims these employers registered on JobHub. Import-create
 companies use existing linking logic and are not automatically verified. Public
 external-job responses omit linked company IDs, logos, and verified badges so an
 imported listing does not suggest a JobHub employer account or endorsement.
-Provider descriptions are converted to plain text before storage and rendered as
-text. Remote status is only mapped from an explicit provider field; locations and
+The frontend may show a locally sourced official company logo when the company
+name matches a reviewed asset; this does not indicate employer verification.
+Provider HTML is converted to safe Markdown text (paragraphs, headings and lists)
+before storage and rendered without raw HTML. Existing flat descriptions gain
+structure on their next successful import update. Remote status is only mapped
+from an explicit provider field; locations and
 eligibility restrictions stay in the provider's original description. A remote
 badge is **not** proof that Kazakhstan-based applicants are eligible. Missing
 salary, location, and publication dates remain absent.
+
+The vacancy catalog offers Kazakhstan and international filters. Kazakhstan
+means a source explicitly marked for the KZ market or a recognized Kazakhstan
+city. The international group also contains records with unclassified location;
+it does not mean worldwide work eligibility. Both filters run in the backend,
+so counts and pagination remain consistent.
 
 ## Configuration
 

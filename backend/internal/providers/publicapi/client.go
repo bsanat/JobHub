@@ -218,7 +218,7 @@ func normalizeArbeitnow(v arbeitnowJob) (jobs.ImportedJob, bool) {
 	if v.Remote {
 		mode = "remote"
 	}
-	description := greenhouse.PlainText(v.Description)
+	description := greenhouse.FormattedText(v.Description)
 	kind := "snippet"
 	if description != "" {
 		kind = "full"
@@ -302,11 +302,11 @@ func normalizeLever(source, company string, v leverJob) (jobs.ImportedJob, bool)
 	if description == "" {
 		description = v.Description
 	}
-	parts := []string{greenhouse.PlainText(description)}
+	parts := []string{greenhouse.FormattedText(description)}
 	for _, list := range v.Lists {
-		parts = append(parts, strings.TrimSpace(greenhouse.PlainText(list.Text)+"\n"+greenhouse.PlainText(list.Content)))
+		parts = append(parts, strings.TrimSpace("## "+greenhouse.PlainText(list.Text)+"\n\n"+greenhouse.FormattedText(list.Content)))
 	}
-	parts = append(parts, greenhouse.PlainText(v.AdditionalPlain))
+	parts = append(parts, greenhouse.FormattedText(v.AdditionalPlain))
 	fullDescription := strings.TrimSpace(strings.Join(parts, "\n\n"))
 	kind := "snippet"
 	if fullDescription != "" {

@@ -230,6 +230,11 @@ func searchParams(c *gin.Context, sort string, page, pageSize int) (jobs.SearchP
 		validationError(c, "q")
 		return jobs.SearchParams{}, false
 	}
+	region := strings.TrimSpace(c.Query("region"))
+	if region != "" && !oneOf(region, "kazakhstan", "international") {
+		validationError(c, "region")
+		return jobs.SearchParams{}, false
+	}
 	city := strings.TrimSpace(c.Query("city"))
 	preferredCity := strings.TrimSpace(c.Query("preferred_city"))
 	if (city != "" && !locations.Valid(city)) || (preferredCity != "" && !locations.Valid(preferredCity)) {
@@ -288,7 +293,7 @@ func searchParams(c *gin.Context, sort string, page, pageSize int) (jobs.SearchP
 		value := time.Now().UTC().Add(-time.Duration(days) * 24 * time.Hour)
 		postedAfter = &value
 	}
-	return jobs.SearchParams{Query: query, City: city, PreferredCity: preferredCity,
+	return jobs.SearchParams{Query: query, Region: region, City: city, PreferredCity: preferredCity,
 		WorkModes: workModes, SalaryMin: salaryMin, SalaryMax: salaryMax, Currency: currency, ExperienceLevel: experience,
 		EmploymentType: employment, PostedAfter: postedAfter, Sort: sort, Page: page, PageSize: pageSize}, true
 }
