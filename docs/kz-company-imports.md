@@ -38,9 +38,9 @@ source entry; they are review notes, not legal permission.
 | Kaspi.kz | [Kaspi Job](https://job.kaspi.kz/) | JS; `/api/web/` disallowed by robots | Review |
 | Halyk Bank | [Careers](https://halykbank.kz/about/career/vacancies) | Static HTML; career path disallowed by robots | Blocked |
 | Air Astana | [Careers](https://job.airastana.com/) | Official API | Existing importer active; new pipeline adds unique records |
-| KazMunayGas | [Work portal](https://work.kmg.kz/) | JS / hosted portal | Review |
+| KazMunayGas | [Official career guidance](https://www.kmg.kz/ru/career/) → [Samruk Qyzmet employer page](https://qsamruk.kz/company/kazmunaygas) | Official hosted portal HTML | Supported, disabled by default; six initial public jobs |
 | Kazatomprom | [HR portal](https://hrekap.kazatomprom.kz/) | JS | Review |
-| KEGOC | [Corporate site](https://www.kegoc.kz/) | Samruk Qyzmet portal reported; exact career URL unverified | Review |
+| KEGOC | [Official career link](https://www.kegoc.kz/ru/chairmans-blog/) → [Samruk Qyzmet employer page](https://qsamruk.kz/company/32) | Official hosted portal HTML | Supported, disabled by default; six initial public jobs |
 | Kcell | [Careers](https://jobs.kcell.kz/) | Official API | Existing importer active; new pipeline adds unique records |
 | Beeline Kazakhstan | [People](https://people.beeline.kz/) | JS | Review |
 | Tele2/Altel Kazakhstan | [Careers](https://job.tele2.kz/) | Static HTML, detail contract unverified | Review |
@@ -52,9 +52,9 @@ source entry; they are review notes, not legal permission.
 | Eurasian Bank | [Corporate site](https://eubank.kz/) | Career page unverified | Review |
 | BI Group | [Careers](https://bi.group/ru/career) | JS; robots review returned 403 | Blocked |
 | Bazis-A | [Vacancies](https://bazis.kz/vacancy) | Static HTML; per-job ID/URL unverified | Review |
-| Kazakhtelecom | [Corporate site](https://telecom.kz/) | Career page unverified | Review |
+| Kazakhtelecom | [Samruk Qyzmet employer page](https://qsamruk.kz/company/jsc-kazakhtelecom) | Official hosted portal HTML | Supported, disabled by default; six initial public jobs |
 | Transtelecom | [Careers](https://ttc.kz/ru/About/career/) | Static HTML; per-job URLs unverified | Review |
-| Astana Hub | [Organization-filtered vacancies](https://astanahub.com/en/vacancy/?organization=ast) | Marketplace / JS; employer filter requires verification | Review |
+| Astana Hub | [Official careers](https://astanahub.com/ru/pages/h/careers) → [open employer vacancies](https://astanahub.com/ru/vacancy/?company_id=10658&opened=True) | Official marketplace HTML, employer-filtered | Supported, disabled by default; six initial public jobs |
 | BTS Digital | [Careers](https://btsdigital.kz/kz/career) | Static HTML; no reliable job records | Review |
 | Chocofamily | [Corporate site](https://chocofamily.kz/) | Current vacancies path unavailable | Review |
 | Aviata | [Corporate site](https://aviata.kz/) | Career page unverified | Review |
@@ -100,6 +100,35 @@ to formatted text, and does not invent a publication date. Official detail
 URLs were verified to render the vacancy in a browser. The bank's former
 Jusan identity must be reviewed against any existing JobHub company record
 before Production activation. Its source stays disabled until then.
+
+The [Samruk Qyzmet portal](https://qsamruk.kz/) is an official external
+recruiting channel identified by [KazMunayGas](https://www.kmg.kz/ru/career/)
+and [KEGOC](https://www.kegoc.kz/ru/chairmans-blog/); Kazakhtelecom's
+published employee report also identifies it as a recruiting platform.
+Its [robots.txt](https://qsamruk.kz/robots.txt) allows public pages. The
+portal's [site agreement](https://qsamruk.kz/privacy-policy) addresses user
+data rather than granting a general redistribution license; the operator
+reports permission for these employers, and every imported vacancy retains
+an active link to its original QSamruk detail page. The adapter reads only
+the direct employer's first open-vacancy section, removes duplicate IDs
+listed under multiple categories, and confirms the exact employer on each
+detail page. Subsidiary, closed and location-unknown roles are excluded.
+The 2026-10-09 read-only probes found three KEGOC, four KazMunayGas and 18
+Kazakhtelecom candidates; one additional Kazakhtelecom title contained
+copyright boilerplate and was skipped. These are partial snapshots: absent
+jobs are never automatically deactivated, and the first authorized import
+can display at most six per employer. The source configuration remains off.
+
+The [Astana Hub career page](https://astanahub.com/ru/pages/h/careers)
+links to its vacancy marketplace. Its [robots.txt](https://astanahub.com/robots.txt)
+allows public `/ru/vacancy/` pages but disallows `/api/`, so the adapter uses
+HTML only. The verified `company_id=10658&opened=True` filter showed six open
+fund vacancies on 2026-10-09. Each detail is checked against the fund's
+company profile; member companies' marketplace posts are excluded. The
+original application URL and source-provided publication timestamp are
+preserved. Pagination makes the snapshot partial, so absent jobs are never
+deactivated. The source remains disabled until an authorized Production
+import and activation.
 
 ## Safe operation
 

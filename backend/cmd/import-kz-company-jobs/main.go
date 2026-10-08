@@ -269,7 +269,7 @@ func providerFor(source kzcompanies.Source) (providers.VacancyProvider, error) {
 		return airastana.NewClient(10, 200, nil)
 	case "kcell":
 		return kcell.NewClient(5, 200, nil)
-	case "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic", "alatau":
+	case "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic", "alatau", "qsamruk", "astanahub":
 		budget := 12
 		if source.Adapter == "technodom" {
 			budget = 60
@@ -277,11 +277,15 @@ func providerFor(source kzcompanies.Source) (providers.VacancyProvider, error) {
 			budget = 30
 		} else if source.Adapter == "magnum" {
 			budget = 20
+		} else if source.Adapter == "qsamruk" {
+			budget = 35
+		} else if source.Adapter == "astanahub" {
+			budget = 12
 		}
 		return staticcareers.New(staticcareers.Config{
 			Source: "kzcompany:" + source.ID, Company: source.Company,
-			ListingURL: source.CareersURL, DetailPrefix: source.DetailPrefix, LocationMode: source.Adapter,
-			ForcePartial: source.Adapter == "bcc" || source.Adapter == "sulpak" || source.Adapter == "magnum" || source.Adapter == "qic" || source.Adapter == "alatau",
+			ListingURL: source.CareersURL, DetailPrefix: source.DetailPrefix, EmployerPath: source.EmployerPath, LocationMode: source.Adapter,
+			ForcePartial: source.Adapter == "bcc" || source.Adapter == "sulpak" || source.Adapter == "magnum" || source.Adapter == "qic" || source.Adapter == "alatau" || source.Adapter == "qsamruk" || source.Adapter == "astanahub",
 		}, budget, 200, &http.Client{})
 	default:
 		return nil, errors.New("source has no verified adapter")

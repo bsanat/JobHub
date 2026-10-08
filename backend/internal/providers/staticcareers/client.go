@@ -21,8 +21,8 @@ import (
 )
 
 type Config struct {
-	Source, Company, ListingURL, DetailPrefix, LocationMode string
-	ForcePartial                                            bool
+	Source, Company, ListingURL, DetailPrefix, EmployerPath, LocationMode string
+	ForcePartial                                                          bool
 }
 type Client struct {
 	cfg     Config
@@ -32,7 +32,7 @@ type Client struct {
 }
 
 func New(cfg Config, maxRequests, maxJobs int, client *http.Client) (*Client, error) {
-	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak" && cfg.LocationMode != "magnum" && cfg.LocationMode != "qic" && cfg.LocationMode != "alatau") {
+	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak" && cfg.LocationMode != "magnum" && cfg.LocationMode != "qic" && cfg.LocationMode != "alatau" && cfg.LocationMode != "qsamruk" && cfg.LocationMode != "astanahub") || (cfg.LocationMode == "qsamruk" && cfg.EmployerPath == "") {
 		return nil, providers.Failure("INVALID_BUDGET")
 	}
 	if client == nil {
@@ -58,6 +58,12 @@ func (c *Client) Collect(ctx context.Context) (out providers.Result, err error) 
 	}
 	if c.cfg.LocationMode == "alatau" {
 		return c.collectAlatau(body, out)
+	}
+	if c.cfg.LocationMode == "qsamruk" {
+		return c.collectQSamruk(ctx, body, out)
+	}
+	if c.cfg.LocationMode == "astanahub" {
+		return c.collectAstanaHub(ctx, body, out)
 	}
 	links := detailLinks(body, c.cfg.ListingURL, c.cfg.DetailPrefix, c.cfg.LocationMode)
 	out.Fetched = len(links)
@@ -344,7 +350,7 @@ func formattedContent(root *html.Node) string {
 		if n.Type == html.ElementNode {
 			var prefix string
 			switch n.Data {
-			case "h2", "h3", "h4":
+			case "h1", "h2", "h3", "h4":
 				prefix = "## "
 			case "li":
 				prefix = "- "

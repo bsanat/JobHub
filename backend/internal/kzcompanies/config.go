@@ -20,6 +20,7 @@ type Source struct {
 	Adapter              string `json:"adapter"`
 	APIEndpoint          string `json:"api_endpoint,omitempty"`
 	DetailPrefix         string `json:"detail_prefix,omitempty"`
+	EmployerPath         string `json:"employer_path,omitempty"`
 	Country              string `json:"country"`
 	Status               string `json:"status"`
 	Enabled              bool   `json:"enabled"`
@@ -80,14 +81,20 @@ func (c Config) Validate() error {
 		if s.DetailPrefix != "" && !strings.HasPrefix(s.DetailPrefix, "/") {
 			return errors.New("invalid detail prefix")
 		}
+		if s.EmployerPath != "" && (!strings.HasPrefix(s.EmployerPath, "/company/") || strings.ContainsAny(s.EmployerPath, "?#")) {
+			return errors.New("invalid employer path")
+		}
 		if s.InitialPublicLimit < 0 || s.InitialPublicLimit > 6 || (s.InitialPublicLimit > 0 && s.Status != "supported") {
 			return errors.New("invalid initial public vacancy limit")
 		}
 		switch s.Adapter {
 		case "":
-		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic", "alatau":
+		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic", "alatau", "qsamruk", "astanahub":
 			if (s.Status != "supported" && s.Status != "blocked") || s.CareersURL == "" {
 				return errors.New("unsupported Kazakhstan adapter configuration")
+			}
+			if s.Adapter == "qsamruk" && (s.EmployerPath == "" || s.DetailPrefix != "/vacancy/") {
+				return errors.New("invalid QSamruk employer configuration")
 			}
 		default:
 			return errors.New("unknown Kazakhstan source adapter")

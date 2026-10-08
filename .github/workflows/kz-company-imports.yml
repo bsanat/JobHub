@@ -17,6 +17,10 @@ on:
           - magnum
           - qic
           - jusan
+          - kazmunaygas
+          - kegoc
+          - kazakhtelecom
+          - astana_hub
       mode:
         description: Probe, import, or reconcile an existing official-source duplicate
         required: true
