@@ -21,6 +21,9 @@
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
 - `frontend/src/pages/StudentsPage.tsx` — публичная страница `/students` с вакансиями по фильтрам стажировки, без опыта и частичной занятости.
 - `backend/cmd/import-public-jobs/` и `backend/internal/providers/publicapi/` — отключённый по умолчанию разовый импорт Arbeitnow/Lever; Greenhouse использует существующий адаптер. Настройка и ограничения — `docs/public-job-imports.md`.
+- `backend/cmd/import-kz-company-jobs/`, `backend/internal/kzcompanies/` и
+  `backend/config/kz-company-sources.json` — отключённый импорт официальных
+  карьерных страниц компаний Казахстана; реестр и запуск — `docs/kz-company-imports.md`.
 - `frontend/src/components/` — общие и функциональные компоненты.
 - `frontend/src/components/jobs/SalaryFilter.tsx` — диапазон зарплаты в каталоге;
   параметры URL — `frontend/src/lib/jobSearchParams.ts`, SQL — `backend/sql/queries/jobs.sql`.

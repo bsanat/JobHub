@@ -99,9 +99,11 @@ func (s *PostgresStore) CompleteIngestionRun(ctx context.Context, runID, source 
 		}
 	}
 	if complete {
-		if _, err := tx.Exec(ctx, `UPDATE jobhub.jobs SET source_status='removed', external_archived_at=$2, updated_at=now() WHERE source=$1 AND last_synced_at < $2 AND source_status IN ('unknown','active')`, source, observedAt); err != nil {
+		tag, err := tx.Exec(ctx, `UPDATE jobhub.jobs SET source_status='removed', external_archived_at=$2, updated_at=now() WHERE source=$1 AND last_synced_at < $2 AND source_status IN ('unknown','active')`, source, observedAt)
+		if err != nil {
 			return stats, fmt.Errorf("reconcile imported jobs: %w", err)
 		}
+		stats.DeactivatedCount = int(tag.RowsAffected())
 	}
 	if err := q.CompleteIngestionRun(ctx, dbgen.CompleteIngestionRunParams{
 		RequestCount: int32(stats.RequestCount), FetchedCount: int32(stats.FetchedCount),

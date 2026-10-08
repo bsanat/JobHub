@@ -3,6 +3,7 @@ package jobs
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -66,6 +67,54 @@ func (s *PostgresStore) RegisterPublicImportSource(ctx context.Context, source, 
 	err = s.pool.QueryRow(ctx, `SELECT provider=$2 FROM jobhub.job_sources WHERE source=$1`, source, provider).Scan(&compatible)
 	if err != nil || !compatible {
 		return errors.New("public source provider mismatch")
+	}
+	return nil
+}
+
+// RegisterKZCompanySource keeps company-career imports hidden until a separate
+// approved activation, while setting the existing Kazakhstan market filter.
+func (s *PostgresStore) RegisterKZCompanySource(ctx context.Context, source, displayName string) error {
+	if !strings.HasPrefix(source, "kzcompany:") || strings.TrimPrefix(source, "kzcompany:") == "" || strings.TrimSpace(displayName) == "" {
+		return errors.New("invalid Kazakhstan company source")
+	}
+	_, err := s.pool.Exec(ctx, `INSERT INTO jobhub.job_sources(source,provider,market,display_name,enabled,production_permissions_confirmed,attribution_text)
+VALUES($1,'kzcompany','KZ',$2,false,false,$3)
+ON CONFLICT(source) DO UPDATE SET market='KZ'
+WHERE jobhub.job_sources.provider='kzcompany'`, source, displayName, "Official company careers: "+displayName)
+	if err != nil {
+		return errors.New("Kazakhstan source registration failed")
+	}
+	var compatible bool
+	err = s.pool.QueryRow(ctx, `SELECT provider='kzcompany' AND market='KZ' FROM jobhub.job_sources WHERE source=$1`, source).Scan(&compatible)
+	if err != nil || !compatible {
+		return errors.New("Kazakhstan source provider mismatch")
+	}
+	return nil
+}
+
+// ActivateKZCompanyAfterImport is called only after an explicitly approved
+// --once run. It never activates a source that imported zero real jobs.
+func (s *PostgresStore) ActivateKZCompanyAfterImport(ctx context.Context, source string) error {
+	if !strings.HasPrefix(source, "kzcompany:") || strings.TrimPrefix(source, "kzcompany:") == "" {
+		return errors.New("invalid Kazakhstan company source")
+	}
+	tag, err := s.pool.Exec(ctx, `UPDATE jobhub.job_sources s
+SET enabled=true, production_permissions_confirmed=true, updated_at=now()
+WHERE s.source=$1 AND s.provider='kzcompany' AND s.market='KZ'
+  AND NOT s.enabled AND NOT s.production_permissions_confirmed
+  AND EXISTS (SELECT 1 FROM jobhub.ingestion_runs r WHERE r.source=s.source AND r.status='succeeded' AND r.normalized_count>0)
+  AND EXISTS (SELECT 1 FROM jobhub.jobs j WHERE j.source=s.source AND j.source_status='active' AND j.moderation_status='approved')`, source)
+	if err != nil {
+		return errors.New("Kazakhstan source activation failed")
+	}
+	if tag.RowsAffected() > 0 {
+		return nil
+	}
+	var active bool
+	err = s.pool.QueryRow(ctx, `SELECT enabled AND production_permissions_confirmed AND market='KZ'
+FROM jobhub.job_sources WHERE source=$1 AND provider='kzcompany'`, source).Scan(&active)
+	if err != nil || !active {
+		return errors.New("Kazakhstan source activation requires a successful import")
 	}
 	return nil
 }

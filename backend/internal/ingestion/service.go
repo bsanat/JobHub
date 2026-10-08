@@ -57,6 +57,7 @@ type Report struct {
 	RemainingRequests int              `json:"remaining"`
 	FailureCategory   string           `json:"failure_category,omitempty"`
 	Samples           []Sample         `json:"samples"`
+	ValidatedIDs      []string         `json:"-"`
 }
 type Sample struct {
 	ExternalID        string     `json:"external_id"`
@@ -142,6 +143,7 @@ func (s *Service) Run(ctx context.Context, p providers.VacancyProvider, opts Run
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
+	report.ValidatedIDs = ids
 	items := make([]jobs.ImportedJob, 0, len(ids))
 	for _, id := range ids {
 		item := unique[id]
@@ -167,7 +169,7 @@ func (s *Service) Run(ctx context.Context, p providers.VacancyProvider, opts Run
 		return fail("DATABASE_WRITE_FAILED")
 	}
 	report.Stats = stats
-	s.logger.Info("vacancy ingestion completed", "requests", stats.RequestCount, "fetched", stats.FetchedCount, "inserted", stats.InsertedCount, "updated", stats.UpdatedCount)
+	s.logger.Info("vacancy ingestion completed", "requests", stats.RequestCount, "fetched", stats.FetchedCount, "inserted", stats.InsertedCount, "updated", stats.UpdatedCount, "deactivated", stats.DeactivatedCount, "skipped", stats.SkippedCount)
 	return report, nil
 }
 func optional(s string) *string {

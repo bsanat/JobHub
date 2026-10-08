@@ -48,7 +48,7 @@ export function JobDetailPage() {
                 {job.data.employmentType ? <span><BriefcaseBusiness size={19} aria-hidden="true" />{job.data.source.type === "native" ? t(`employer.employmentTypes.${job.data.employmentType}`) : job.data.employmentType}</span> : null}
               </div>
             </header>
-            <div className="detail-source-cue"><span aria-hidden="true" />{t(job.data.source.type === "external" ? "jobDetail.importedFrom" : "jobDetail.publishedBy", { source: job.data.source.name })}</div>
+            <div className="detail-source-cue"><span aria-hidden="true" />{t(job.data.source.id.startsWith("kzcompany:") ? "jobDetail.kzImportedFrom" : job.data.source.type === "external" ? "jobDetail.importedFrom" : "jobDetail.publishedBy", { source: job.data.source.name })}</div>
             <section aria-labelledby="about-job-title">
               <h2 id="about-job-title">{t("jobDetail.aboutTitle")}</h2>
               {job.data.source.type === "external" && job.data.summary ? <div className="detail-description detail-description--formatted"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer nofollow">{children}</a> }}>{job.data.summary}</ReactMarkdown></div> : <p className="detail-description">{job.data.summary || t("jobDetail.noDescription")}</p>}
@@ -63,12 +63,12 @@ export function JobDetailPage() {
           <aside className="detail-rail">
             {job.data.application.method === "external" && job.data.application.ctaUrl ? <div className="job-detail-actions">
               <JobSaveButton job={job.data} />
-              <a className="external-cta" href={job.data.application.ctaUrl} target="_blank" rel="noreferrer">{t("jobDetail.externalCta")}<ExternalLink size={18} aria-hidden="true" /></a>
+              <a className="external-cta" href={job.data.application.ctaUrl} target="_blank" rel="noopener noreferrer">{t(job.data.source.id.startsWith("kzcompany:") ? "jobDetail.kzApplyCta" : "jobDetail.externalCta")}<ExternalLink size={18} aria-hidden="true" /></a>
               <p className="detail-rail__hint">{t("jobDetail.externalHint", { source: job.data.source.name })}</p>
             </div> : <div className="job-detail-actions"><JobSaveButton job={job.data} /><ApplyAction job={job.data} /></div>}
             <section>
-              <h2>{t("jobDetail.sourceTitle")}</h2>
-              {job.data.source.id === "arbeitnow:global" ? <a className="detail-source-name" href="https://www.arbeitnow.com" target="_blank" rel="noopener noreferrer"><img className="detail-source-logo" src="/brand/arbeitnow-logo.png" alt={job.data.source.name} /><ExternalLink size={16} aria-hidden="true" /></a> : <p className="detail-source-name">{job.data.source.name}</p>}
+              <h2>{t(job.data.source.id.startsWith("kzcompany:") ? "jobDetail.kzSourceTitle" : "jobDetail.sourceTitle")}</h2>
+              {job.data.source.id === "arbeitnow:global" ? <a className="detail-source-name" href="https://www.arbeitnow.com" target="_blank" rel="noopener noreferrer"><img className="detail-source-logo" src="/brand/arbeitnow-logo.png" alt={job.data.source.name} /><ExternalLink size={16} aria-hidden="true" /></a> : job.data.source.id.startsWith("kzcompany:") && job.data.application.ctaUrl ? <a className="detail-source-name" href={job.data.application.ctaUrl} target="_blank" rel="noopener noreferrer">{job.data.source.name} · {t("jobDetail.kzSourceLink")} <ExternalLink size={16} aria-hidden="true" /></a> : <p className="detail-source-name">{job.data.source.name}</p>}
               <dl>
                 {job.data.firstSeenAt ? <div><dt>{t("jobDetail.firstSeen")}</dt><dd>{formatDate(job.data.firstSeenAt, i18n.language)}</dd></div> : null}
                 {job.data.lastSyncedAt ? <div><dt>{t("jobDetail.lastUpdated")}</dt><dd>{formatDate(job.data.lastSyncedAt, i18n.language)}</dd></div> : null}

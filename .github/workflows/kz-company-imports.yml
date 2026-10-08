@@ -1,0 +1,99 @@
+name: Kazakhstan company vacancy import
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Reviewed company ID from backend/config/kz-company-sources.json
+        required: true
+        type: choice
+        options:
+          - airastana
+          - kcell
+          - technodom
+          - kolesa
+      mode:
+        description: Read-only probe or one authorized database import
+        required: true
+        type: choice
+        options:
+          - probe
+          - once
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kz-company-imports-production
+  cancel-in-progress: false
+
+jobs:
+  import:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Read-only source probe
+        if: inputs.mode == 'probe'
+        working-directory: backend
+        env:
+          SOURCE_ID: ${{ inputs.source }}
+        run: go run ./cmd/import-kz-company-jobs --config ./config/kz-company-sources.json --source "$SOURCE_ID" --dry-run --probe
+      - name: Validate production import gates
+        if: inputs.mode == 'once'
+        env:
+          SOURCE_ID: ${{ inputs.source }}
+          KZ_IMPORT_ENABLED: ${{ vars.KZ_IMPORT_ENABLED }}
+          KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED: ${{ vars.KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED }}
+          KZ_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+          KZ_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
+          DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+        run: |
+          test "$KZ_IMPORT_ENABLED" = 'true' || { echo 'Kazakhstan import is disabled'; exit 1; }
+          test "$KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED" = 'true' || { echo 'Redistribution permission review is incomplete'; exit 1; }
+          test -n "$DATABASE_URL" || { echo 'Missing Production database secret'; exit 1; }
+          test -n "$KZ_IMPORT_DATABASE_HOST" || { echo 'Missing inspected database host'; exit 1; }
+          test -n "$KZ_IMPORT_DATABASE_USER" || { echo 'Missing inspected database user'; exit 1; }
+          test -n "$SOURCE_ID" || { echo 'Missing source ID'; exit 1; }
+      - name: Prepare one-source runtime allowlist
+        if: inputs.mode == 'once'
+        env:
+          SOURCE_ID: ${{ inputs.source }}
+        run: |
+          umask 077
+          config_path="$(mktemp)"
+          export CONFIG_PATH="$config_path"
+          python3 - <<'PY'
+          import json, os
+          with open('backend/config/kz-company-sources.json', encoding='utf-8') as handle:
+              config = json.load(handle)
+          selected = [source for source in config['sources'] if source['id'] == os.environ['SOURCE_ID']]
+          if len(selected) != 1 or selected[0]['status'] != 'supported' or not selected[0].get('robots_reviewed') or not selected[0].get('adapter'):
+              raise SystemExit('Source is not eligible for authorized import')
+          config['enabled'] = True
+          for source in config['sources']:
+              source['enabled'] = source['id'] == os.environ['SOURCE_ID']
+              source['permissions_confirmed'] = source['enabled']
+          with open(os.environ['CONFIG_PATH'], 'w', encoding='utf-8') as handle:
+              json.dump(config, handle)
+          PY
+          echo "KZ_CONFIG_PATH=$config_path" >> "$GITHUB_ENV"
+      - name: Import one approved source
+        if: inputs.mode == 'once'
+        working-directory: backend
+        env:
+          SOURCE_ID: ${{ inputs.source }}
+          APP_ENV: production
+          KZ_IMPORT_TARGET: production
+          KZ_IMPORT_WRITE_ENABLED: 'true'
+          KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED: ${{ vars.KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED }}
+          KZ_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+          KZ_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
+          DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+          PGX_QUERY_EXEC_MODE: exec
+        run: go run ./cmd/import-kz-company-jobs --config "$KZ_CONFIG_PATH" --source "$SOURCE_ID" --once --activate

@@ -122,14 +122,15 @@ type SearchResult struct {
 }
 
 type ImportStats struct {
-	RunID           string
-	SearchCount     int
-	RequestCount    int
-	FetchedCount    int
-	NormalizedCount int
-	InsertedCount   int
-	UpdatedCount    int
-	SkippedCount    int
+	RunID            string
+	SearchCount      int
+	RequestCount     int
+	FetchedCount     int
+	NormalizedCount  int
+	InsertedCount    int
+	UpdatedCount     int
+	DeactivatedCount int
+	SkippedCount     int
 }
 
 type Reader interface {

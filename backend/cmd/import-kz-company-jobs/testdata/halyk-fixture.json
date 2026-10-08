@@ -1,0 +1,10 @@
+[
+  {
+    "ExternalID": "fixture-1",
+    "SourceURL": "https://halykbank.kz/about/career/vacancies/fixture-1",
+    "Title": "Тестовая вакансия — только фикстура",
+    "LocationRaw": "Алматы",
+    "Description": "Синтетическая запись для проверки импорта. Не является реальной вакансией.",
+    "DescriptionKind": "full"
+  }
+]
