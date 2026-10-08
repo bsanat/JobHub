@@ -32,7 +32,7 @@ type Client struct {
 }
 
 func New(cfg Config, maxRequests, maxJobs int, client *http.Client) (*Client, error) {
-	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak") {
+	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak" && cfg.LocationMode != "magnum" && cfg.LocationMode != "qic") {
 		return nil, providers.Failure("INVALID_BUDGET")
 	}
 	if client == nil {
@@ -120,7 +120,9 @@ func detailLinks(body []byte, listing, prefix, mode string) []string {
 							u.Path += "/"
 						}
 						raw := u.String()
-						if u.Host == base.Host && strings.HasPrefix(u.Path, prefix) && raw != listing && !seen[raw] && (mode != "bcc" || bccDetailPath.MatchString(u.Path)) {
+						if u.Host == base.Host && strings.HasPrefix(u.Path, prefix) && raw != listing && !seen[raw] &&
+							(mode != "bcc" || bccDetailPath.MatchString(u.Path)) &&
+							(mode != "qic" || qicDetailPath.MatchString(u.Path)) {
 							seen[raw] = true
 							out = append(out, raw)
 						}
@@ -140,6 +142,7 @@ func detailLinks(body []byte, listing, prefix, mode string) []string {
 }
 
 var bccDetailPath = regexp.MustCompile(`^/en/career/[0-9]+/?$`)
+var qicDetailPath = regexp.MustCompile(`^/vakansii/[0-9]+/?$`)
 
 var locationPattern = regexp.MustCompile(`(?i)(Казахстан,\s*[А-ЯA-ZЁӘІҢҒҚӨҰҮҺа-яёәіңғқөұүһ ,/-]+(?:,\s*KZ)?)`)
 
@@ -193,6 +196,12 @@ func normalize(cfg Config, raw string, body []byte) (jobs.ImportedJob, bool) {
 		if name, city, body := sulpakVacancyContent(doc); name != "" {
 			title, loc, desc = name, city, body
 		}
+	}
+	if cfg.LocationMode == "magnum" {
+		loc, desc, salary = magnumVacancyContent(doc)
+	}
+	if cfg.LocationMode == "qic" {
+		loc, desc = qicVacancyContent(doc)
 	}
 	if match := locationPattern.FindString(desc); match != "" {
 		loc = strings.TrimSpace(match)
@@ -269,6 +278,60 @@ func sulpakVacancyContent(doc *html.Node) (string, string, string) {
 	}
 	walk(doc, false)
 	return name, city, description
+}
+
+func magnumVacancyContent(doc *html.Node) (string, string, string) {
+	var city, salary string
+	var sections []string
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			if city == "" && classContains(n, "vd-right-city") {
+				city = nodeText(n)
+			}
+			if salary == "" && classContains(n, "vd-salary") {
+				salary = nodeText(n)
+			}
+			if classContains(n, "vd-terms-section") || classContains(n, "vd-unorderedList-section") {
+				if content := formattedContent(n); content != "" {
+					sections = append(sections, content)
+				}
+				return
+			}
+		}
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(doc)
+	return strings.TrimSpace(city), strings.Join(sections, "\n"), strings.TrimSpace(salary)
+}
+
+func qicVacancyContent(doc *html.Node) (string, string) {
+	var city, description string
+	var walk func(*html.Node, bool)
+	walk = func(n *html.Node, inHeader bool) {
+		if n.Type == html.ElementNode {
+			if classContains(n, "detail_top") {
+				inHeader = true
+			}
+			if inHeader && city == "" && classContains(n, "city") {
+				candidate := nodeText(n)
+				if locations.Normalize(candidate) != "" {
+					city = candidate
+				}
+			}
+			if description == "" && classContains(n, "detail_text") {
+				description = formattedContent(n)
+				return
+			}
+		}
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child, inHeader)
+		}
+	}
+	walk(doc, false)
+	return strings.TrimSpace(city), strings.TrimSpace(description)
 }
 
 func formattedContent(root *html.Node) string {

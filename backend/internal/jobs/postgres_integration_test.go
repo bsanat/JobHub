@@ -144,3 +144,65 @@ func TestPostgresSearchFiltersStayConsistent(t *testing.T) {
 }
 
 func ptr(value string) *string { return &value }
+
+func TestInitialKZCompanyPublicationLimitPreservesFutureJobs(t *testing.T) {
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" || config.ValidateLocalPOCDatabase("development", databaseURL) != nil {
+		t.Skip("integration test requires an isolated local POC database")
+	}
+	ctx := context.Background()
+	pool, err := database.Connect(ctx, databaseURL, "cache_statement")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	source := fmt.Sprintf("kzcompany:limit_%d", time.Now().UnixNano())
+	if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources
+		(source, provider, market, display_name, enabled, production_permissions_confirmed)
+		VALUES ($1, 'kzcompany', 'KZ', 'Limit fixture', false, false)`, source); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM jobhub.jobs WHERE source=$1`, source)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM jobhub.job_sources WHERE source=$1`, source)
+	})
+	insert := func(number int) {
+		t.Helper()
+		_, err := pool.Exec(ctx, `INSERT INTO jobhub.jobs
+			(source, external_id, source_url, company_name_raw, title, location_raw,
+			description, application_method, source_status, moderation_status,
+			first_seen_at, last_seen_at, last_synced_at, fresh_until, external_published_at)
+			VALUES ($1, $2, $3, 'Limit fixture', $4, 'Алматы', 'Test vacancy',
+			'external', 'active', 'approved', now(), now(), now(), now()+interval '1 day', $5)`,
+			source, fmt.Sprint(number), fmt.Sprintf("https://example.test/jobs/%d", number),
+			fmt.Sprintf("Engineer %d", number), time.Now().Add(time.Duration(-number)*24*time.Hour))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 0; i < 8; i++ {
+		insert(i)
+	}
+	store := NewPostgresStore(pool, true)
+	hidden, err := store.LimitInitialKZCompanyPublication(ctx, source, 6)
+	if err != nil || hidden != 2 {
+		t.Fatalf("expected two initial vacancies hidden, got %d, %v", hidden, err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE jobhub.job_sources
+		SET enabled=true, production_permissions_confirmed=true WHERE source=$1`, source); err != nil {
+		t.Fatal(err)
+	}
+	insert(8)
+	hidden, err = store.LimitInitialKZCompanyPublication(ctx, source, 6)
+	if err != nil || hidden != 0 {
+		t.Fatalf("active source must not hide new jobs: %d, %v", hidden, err)
+	}
+	var approved, pending int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FILTER (WHERE moderation_status='approved'),
+		count(*) FILTER (WHERE moderation_status='pending') FROM jobhub.jobs WHERE source=$1`, source).Scan(&approved, &pending); err != nil {
+		t.Fatal(err)
+	}
+	if approved != 7 || pending != 2 {
+		t.Fatalf("expected six initial and one new approved job: approved=%d pending=%d", approved, pending)
+	}
+}

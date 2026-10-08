@@ -60,17 +60,34 @@ source entry; they are review notes, not legal permission.
 | Aviata | [Corporate site](https://aviata.kz/) | Career page unverified | Review |
 | Technodom | [Vacancies](https://hr.technodom.kz/vacancies/) | Static HTML | Supported, disabled |
 | Sulpak | [Office vacancies](https://job.sulpak.kz/WorkInCompany/Office) | Server-rendered HTML, stable detail URLs | Supported, disabled by default; office roles only |
-| Magnum | [HR site](https://hr.magnum.kz/) | JS; full listing unverified | Review |
+| Magnum | [Office vacancies](https://hr.magnum.kz/office/) | Static HTML, stable first-party detail URLs | Supported, disabled by default; six initial public jobs |
 | Small | [City jobs page](https://small.kz/ru/aksu/job) | JS; not a nationwide index | Review |
 | Yandex Qazaqstan | [Corporate site](https://yandex.kz/company/ru/) | Kazakhstan-specific career feed unverified | Review |
 | Kolesa Group | [Jobs](https://kolesa.group/career/job) | Static HTML | Supported, disabled |
-| Qazaqstan Investment Corporation | [Careers](https://qic.kz/ru/o-nas/o-nas/karera/) | Hosted Baiterek portal; employer filter unverified | Review |
+| Qazaqstan Investment Corporation | [Official company listing](https://jobs.baiterek.gov.kz/kompanii/?ELEMENT_ID=757) | Baiterek-hosted HTML, numeric detail URLs | Supported, disabled by default; six initial public jobs at most |
 
 No Greenhouse, Lever, Workday, SmartRecruiters, JSON-LD or sitemap board ID was
-invented. Seven adapters exist in code, but Halyk is blocked by robots; six
+invented. Nine adapters exist in code, but Halyk is blocked by robots; eight
 remain selectable for a read-only review. The static
 adapters have bounded requests; an incomplete fetch cannot deactivate old jobs.
 Their source's publishing permission remains a separate decision.
+
+The official [Magnum office listing](https://hr.magnum.kz/office/) exposes
+first-party vacancy detail URLs. Its [robots.txt](https://hr.magnum.kz/robots.txt)
+allows the listing and detail paths. A read-only probe on 2026-10-09 found
+nine Kazakhstan office candidates. Once a Production connection is available,
+the first authorized import will show at most six; older initial records remain
+hidden, while genuinely new jobs discovered later are published automatically.
+The source remains disabled until that import and activation succeed.
+
+The [QIC career page](https://qic.kz/ru/o-nas/o-nas/karera/) links to its
+[company listing on the Baiterek jobs portal](https://jobs.baiterek.gov.kz/kompanii/?ELEMENT_ID=757).
+The portal's robots.txt returned HTTP 404; no published disallow rule was
+found. A read-only probe on 2026-10-09 found one Kazakhstan vacancy with a
+first-party detail URL. The adapter accepts only numeric vacancy detail paths
+from the QIC company listing and treats every sync as partial, so a missing
+listing cannot deactivate an existing vacancy. It remains disabled pending a
+successful authorized Production import and activation.
 
 ## Safe operation
 

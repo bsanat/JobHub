@@ -117,6 +117,20 @@ func TestConfigIsDisabledAndRequiresReviewedAccess(t *testing.T) {
 	if cfg.Validate() == nil {
 		t.Fatal("unreviewed source must not be enabled")
 	}
+	cfg.Sources[0].Enabled = false
+	for i := range cfg.Sources {
+		if cfg.Sources[i].ID == "magnum" {
+			cfg.Sources[i].InitialPublicLimit = 7
+			if cfg.Validate() == nil {
+				t.Fatal("initial public vacancy limit above six must be rejected")
+			}
+			cfg.Sources[i].InitialPublicLimit = 6
+			if err := cfg.Validate(); err != nil {
+				t.Fatalf("valid initial public vacancy limit was rejected: %v", err)
+			}
+			break
+		}
+	}
 	if _, err := os.Stat(path); err != nil {
 		t.Fatal(err)
 	}

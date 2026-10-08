@@ -176,6 +176,13 @@ func run(args []string, out, logs io.Writer, getenv func(string) string) error {
 			return collectErr
 		}
 		if *activate && store != nil {
+			if source.InitialPublicLimit > 0 {
+				hidden, err := store.LimitInitialKZCompanyPublication(ctx, provider.Source(), source.InitialPublicLimit)
+				if err != nil {
+					return err
+				}
+				logger.Info("Kazakhstan initial public vacancy limit applied", "source", provider.Source(), "hidden", hidden)
+			}
 			if err := store.ActivateKZCompanyAfterImport(ctx, provider.Source()); err != nil {
 				return err
 			}
@@ -262,17 +269,19 @@ func providerFor(source kzcompanies.Source) (providers.VacancyProvider, error) {
 		return airastana.NewClient(10, 200, nil)
 	case "kcell":
 		return kcell.NewClient(5, 200, nil)
-	case "halyk", "technodom", "kolesa", "bcc", "sulpak":
+	case "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic":
 		budget := 12
 		if source.Adapter == "technodom" {
 			budget = 60
 		} else if source.Adapter == "bcc" {
 			budget = 30
+		} else if source.Adapter == "magnum" {
+			budget = 20
 		}
 		return staticcareers.New(staticcareers.Config{
 			Source: "kzcompany:" + source.ID, Company: source.Company,
 			ListingURL: source.CareersURL, DetailPrefix: source.DetailPrefix, LocationMode: source.Adapter,
-			ForcePartial: source.Adapter == "bcc" || source.Adapter == "sulpak",
+			ForcePartial: source.Adapter == "bcc" || source.Adapter == "sulpak" || source.Adapter == "magnum" || source.Adapter == "qic",
 		}, budget, 200, &http.Client{})
 	default:
 		return nil, errors.New("source has no verified adapter")

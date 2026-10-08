@@ -107,3 +107,62 @@ func TestSulpakOfficePreservesCityAndOriginalApplicationURL(t *testing.T) {
 		t.Fatalf("unexpected Sulpak vacancy: %+v", item)
 	}
 }
+
+func TestMagnumOfficeExtractsOnlyVacancyContent(t *testing.T) {
+	listing := "https://hr.magnum.kz/office/"
+	detail := "https://hr.magnum.kz/vacancy-office/manager-42/"
+	client, err := New(Config{Source: "kzcompany:magnum", Company: "Magnum", ListingURL: listing, DetailPrefix: "/vacancy-office/", LocationMode: "magnum", ForcePartial: true}, 2, 6, &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		if r.URL.String() == listing {
+			return htmlResponse(r, `<a href="/vacancy-office/manager-42/">Менеджер</a>`), nil
+		}
+		if r.URL.String() != detail {
+			t.Fatalf("unexpected detail URL: %s", r.URL)
+		}
+		return htmlResponse(r, `<h1 class="vd-post">Менеджер</h1><p class="vd-right-city">Алматы</p>
+            <div class="vd-terms-section"><h2>Условия</h2><ul><li>5/2</li></ul></div>
+            <div class="vd-unorderedList-section"><h2>Задачи</h2><ul><li>Работать с заказами</li></ul></div>
+            <form>Телефон кандидата<script>tracking()</script></form>`), nil
+	})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.Collect(context.Background())
+	if err != nil || result.Complete || len(result.Items) != 1 {
+		t.Fatalf("unexpected Magnum collection: %+v, %v", result, err)
+	}
+	job := result.Items[0]
+	if job.Title != "Менеджер" || job.LocationRaw != "Алматы" || job.SourceURL != detail ||
+		!strings.Contains(job.Description, "## Задачи\n- Работать с заказами") ||
+		strings.Contains(job.Description, "Телефон кандидата") || strings.Contains(job.Description, "tracking") {
+		t.Fatalf("Magnum vacancy content is incorrect: %+v", job)
+	}
+}
+
+func TestQICHostedPortalPreservesOriginalApplicationURL(t *testing.T) {
+	listing := "https://jobs.baiterek.gov.kz/kompanii/?ELEMENT_ID=757"
+	detail := "https://jobs.baiterek.gov.kz/vakansii/107749/"
+	client, err := New(Config{Source: "kzcompany:qic", Company: "Qazaqstan Investment Corporation", ListingURL: listing, DetailPrefix: "/vakansii/", LocationMode: "qic", ForcePartial: true}, 2, 6, &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		if r.URL.String() == listing {
+			return htmlResponse(r, `<a href="/vakansii/">Вакансии</a><a href="/vakansii/107749/">Главный менеджер</a>`), nil
+		}
+		if r.URL.String() != detail {
+			t.Fatalf("unexpected detail URL: %s", r.URL)
+		}
+		return htmlResponse(r, `<h1 class="page_title">Главный менеджер</h1><div class="detail_top"><div class="city">Астана</div></div>
+			<div class="row detail_text_wrap"><div class="detail_text p-40"><h3>Обязанности</h3><ul><li>Вести отчётность.</li></ul></div></div>
+			<form>Личные данные<script>track()</script></form>`), nil
+	})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.Collect(context.Background())
+	if err != nil || result.Complete || len(result.Items) != 1 {
+		t.Fatalf("unexpected QIC collection: %+v, %v", result, err)
+	}
+	job := result.Items[0]
+	if job.Title != "Главный менеджер" || job.LocationRaw != "Астана" || job.SourceURL != detail ||
+		!strings.Contains(job.Description, "## Обязанности\n- Вести отчётность.") ||
+		strings.Contains(job.Description, "Личные данные") || strings.Contains(job.Description, "track") {
+		t.Fatalf("QIC vacancy content is incorrect: %+v", job)
+	}
+}

@@ -24,6 +24,7 @@ type Source struct {
 	Status               string `json:"status"`
 	Enabled              bool   `json:"enabled"`
 	PermissionsConfirmed bool   `json:"permissions_confirmed"`
+	InitialPublicLimit   int    `json:"initial_public_limit,omitempty"`
 	RobotsReviewed       bool   `json:"robots_reviewed"`
 	RobotsNote           string `json:"robots_note"`
 	TermsNote            string `json:"terms_note"`
@@ -79,9 +80,12 @@ func (c Config) Validate() error {
 		if s.DetailPrefix != "" && !strings.HasPrefix(s.DetailPrefix, "/") {
 			return errors.New("invalid detail prefix")
 		}
+		if s.InitialPublicLimit < 0 || s.InitialPublicLimit > 6 || (s.InitialPublicLimit > 0 && s.Status != "supported") {
+			return errors.New("invalid initial public vacancy limit")
+		}
 		switch s.Adapter {
 		case "":
-		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak":
+		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic":
 			if (s.Status != "supported" && s.Status != "blocked") || s.CareersURL == "" {
 				return errors.New("unsupported Kazakhstan adapter configuration")
 			}

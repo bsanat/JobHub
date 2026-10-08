@@ -14,6 +14,8 @@ on:
           - kolesa
           - bcc
           - sulpak
+          - magnum
+          - qic
       mode:
         description: Probe, import, or reconcile an existing official-source duplicate
         required: true

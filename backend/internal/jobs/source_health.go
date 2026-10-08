@@ -121,6 +121,34 @@ WHERE jobhub.job_sources.provider='kzcompany'`, source, displayName, "Official c
 	return nil
 }
 
+// LimitInitialKZCompanyPublication keeps the initial backlog small. It runs
+// only while the source is still disabled; later imports leave new jobs
+// approved, while the older hidden records stay pending across upserts.
+func (s *PostgresStore) LimitInitialKZCompanyPublication(ctx context.Context, source string, limit int) (int64, error) {
+	if !strings.HasPrefix(source, "kzcompany:") || limit < 1 || limit > 6 {
+		return 0, errors.New("invalid Kazakhstan initial public vacancy limit")
+	}
+	tag, err := s.pool.Exec(ctx, `WITH source_guard AS (
+    SELECT source FROM jobhub.job_sources
+    WHERE source=$1 AND provider='kzcompany' AND NOT enabled
+      AND NOT production_permissions_confirmed
+    FOR UPDATE
+), ranked AS (
+    SELECT j.id, row_number() OVER (
+        ORDER BY j.external_published_at DESC NULLS LAST, j.first_seen_at DESC, j.id DESC
+    ) AS rank_number
+    FROM jobhub.jobs j
+    WHERE j.source=$1 AND j.source_status='active' AND j.moderation_status='approved'
+)
+UPDATE jobhub.jobs j SET moderation_status='pending', updated_at=now()
+WHERE j.id IN (SELECT id FROM ranked WHERE rank_number > $2)
+  AND EXISTS (SELECT 1 FROM source_guard)`, source, limit)
+	if err != nil {
+		return 0, errors.New("Kazakhstan initial public vacancy limit failed")
+	}
+	return tag.RowsAffected(), nil
+}
+
 // ActivateKZCompanyAfterImport is called only after an explicitly approved
 // --once run. It never activates a source that imported zero real jobs.
 func (s *PostgresStore) ActivateKZCompanyAfterImport(ctx context.Context, source string) error {
