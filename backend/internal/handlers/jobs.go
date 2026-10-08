@@ -59,7 +59,7 @@ type jobDTO struct {
 	Benefits            []string       `json:"benefits"`
 	PublicationStatus   string         `json:"publication_status,omitempty"`
 	ModerationStatus    string         `json:"moderation_status,omitempty"`
-	PostedAt            time.Time      `json:"posted_at"`
+	PostedAt            *time.Time     `json:"posted_at,omitempty"`
 	FirstSeenAt         time.Time      `json:"first_seen_at"`
 	LastSeenAt          time.Time      `json:"last_seen_at"`
 	LastSyncedAt        time.Time      `json:"last_synced_at"`
@@ -98,7 +98,7 @@ type jobCardDTO struct {
 	SalaryCurrency string     `json:"salary_currency,omitempty"`
 	SalaryPeriod   string     `json:"salary_period,omitempty"`
 	SalaryVisible  bool       `json:"salary_visible"`
-	PostedAt       time.Time  `json:"posted_at"`
+	PostedAt       *time.Time `json:"posted_at,omitempty"`
 	Source         sourceDTO  `json:"source"`
 }
 
@@ -140,19 +140,16 @@ func ListJobs(reader jobs.Reader, logger *slog.Logger) gin.HandlerFunc {
 }
 
 func mapJobCard(job jobs.Job) jobCardDTO {
-	postedAt := job.FirstSeenAt
-	if job.PublishedAt != nil {
-		postedAt = *job.PublishedAt
-	} else if job.ExternalPublishedAt != nil {
-		postedAt = *job.ExternalPublishedAt
-	}
+	postedAt := publicationDate(job)
 	var companyID *string
-	if job.CompanyID != "" {
+	logoURL := ""
+	if job.Source == "jobhub" && job.CompanyID != "" {
 		companyID = &job.CompanyID
+		logoURL = job.CompanyLogoURL
 	}
 	result := jobCardDTO{
 		ID: job.ID, Title: job.Title,
-		Company:  companyDTO{ID: companyID, Name: job.CompanyName, LogoURL: job.CompanyLogoURL, Verified: job.CompanyVerified},
+		Company:  companyDTO{ID: companyID, Name: job.CompanyName, LogoURL: logoURL, Verified: job.Source == "jobhub" && job.CompanyVerified},
 		Location: job.Location, CityID: job.CanonicalCityID, WorkMode: job.WorkMode, EmploymentType: job.EmploymentType,
 		Category: job.Category, Summary: job.Description, SalaryRaw: job.SalaryRaw, SalaryMin: job.SalaryMin,
 		SalaryMax: job.SalaryMax, SalaryCurrency: job.SalaryCurrency, SalaryPeriod: job.SalaryPeriod,
@@ -195,18 +192,15 @@ func positiveInt(c *gin.Context, name string, fallback, min, max int) (int, bool
 }
 
 func mapJob(job jobs.Job) jobDTO {
-	postedAt := job.FirstSeenAt
-	if job.PublishedAt != nil {
-		postedAt = *job.PublishedAt
-	} else if job.ExternalPublishedAt != nil {
-		postedAt = *job.ExternalPublishedAt
-	}
+	postedAt := publicationDate(job)
 	var companyID *string
-	if job.CompanyID != "" {
+	logoURL := ""
+	if job.Source == "jobhub" && job.CompanyID != "" {
 		companyID = &job.CompanyID
+		logoURL = job.CompanyLogoURL
 	}
 	return jobDTO{
-		ID: job.ID, Title: job.Title, Company: companyDTO{ID: companyID, Name: job.CompanyName, LogoURL: job.CompanyLogoURL, Verified: job.CompanyVerified},
+		ID: job.ID, Title: job.Title, Company: companyDTO{ID: companyID, Name: job.CompanyName, LogoURL: logoURL, Verified: job.Source == "jobhub" && job.CompanyVerified},
 		Location: job.Location, CityID: job.CanonicalCityID, EmploymentType: job.EmploymentType, Category: job.Category,
 		Responsibilities: job.Responsibilities, Requirements: job.Requirements, NiceToHave: job.NiceToHave,
 		Skills: job.Skills, WorkMode: job.WorkMode, ExperienceLevel: job.ExperienceLevel, Summary: job.Description,
@@ -221,6 +215,13 @@ func mapJob(job jobs.Job) jobDTO {
 		Source:      sourceDTO{ID: job.Source, Name: job.SourceName, Type: sourceType(job.Source), URL: job.SourceURL, UpstreamName: job.UpstreamSourceName},
 		Application: applicationDTO{Method: job.ApplicationMethod, CTAURL: job.ApplyURL},
 	}
+}
+
+func publicationDate(job jobs.Job) *time.Time {
+	if job.Source == "jobhub" {
+		return job.PublishedAt
+	}
+	return job.ExternalPublishedAt
 }
 
 func searchParams(c *gin.Context, sort string, page, pageSize int) (jobs.SearchParams, bool) {

@@ -21,6 +21,8 @@ type ImportedJob struct {
 	Description         string
 	DescriptionKind     string
 	EmploymentTypeRaw   string
+	EmploymentType      string
+	WorkMode            string
 	SalaryRaw           string
 	Category            string
 	ExternalPublishedAt *time.Time
@@ -147,5 +149,5 @@ type Store interface {
 	Reader
 	BeginIngestionRun(context.Context, string, int) (string, error)
 	FailIngestionRun(context.Context, string, ImportStats, string, string) error
-	CompleteIngestionRun(context.Context, string, string, []ImportedJob, time.Time, time.Time, ImportStats) (ImportStats, error)
+	CompleteIngestionRun(context.Context, string, string, []ImportedJob, time.Time, time.Time, ImportStats, bool) (ImportStats, error)
 }

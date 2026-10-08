@@ -56,6 +56,8 @@ INSERT INTO jobhub.jobs (
     description,
     description_kind,
     employment_type_raw,
+    employment_type,
+    work_mode,
     salary_raw,
     category,
     application_method,
@@ -82,11 +84,13 @@ INSERT INTO jobhub.jobs (
     sqlc.narg(description),
     sqlc.arg(description_kind),
     sqlc.narg(employment_type_raw),
+    sqlc.narg(employment_type),
+    sqlc.narg(work_mode),
     sqlc.narg(salary_raw),
     sqlc.narg(category),
     'external',
     sqlc.arg(source_url),
-    'unknown',
+    'active',
     sqlc.arg(observed_at),
     sqlc.arg(observed_at),
     sqlc.arg(observed_at),
@@ -107,9 +111,13 @@ ON CONFLICT (source, external_id) DO UPDATE SET
     description = EXCLUDED.description,
     description_kind = EXCLUDED.description_kind,
     employment_type_raw = EXCLUDED.employment_type_raw,
+    employment_type = EXCLUDED.employment_type,
+    work_mode = EXCLUDED.work_mode,
     salary_raw = EXCLUDED.salary_raw,
     category = EXCLUDED.category,
     apply_url = EXCLUDED.apply_url,
+    source_status = 'active',
+    external_archived_at = NULL,
     last_seen_at = EXCLUDED.last_seen_at,
     last_synced_at = EXCLUDED.last_synced_at,
     fresh_until = EXCLUDED.fresh_until,
@@ -135,7 +143,7 @@ WHERE s.enabled
   AND (sqlc.narg(salary_max)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= sqlc.narg(salary_max)))
   AND (sqlc.narg(experience_level)::text IS NULL OR j.experience_level = sqlc.narg(experience_level))
   AND (sqlc.narg(employment_type)::text IS NULL OR j.employment_type = sqlc.narg(employment_type))
-  AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= sqlc.narg(posted_after));
+  AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= sqlc.narg(posted_after));
 
 -- name: ListPublicJobs :many
 SELECT
@@ -161,7 +169,7 @@ SELECT
     COALESCE(j.salary_currency, '') AS salary_currency,
     COALESCE(j.salary_period, '') AS salary_period,
     j.salary_visible,
-    COALESCE(j.published_at, j.external_published_at, j.first_seen_at) AS posted_at
+    COALESCE(j.published_at, j.external_published_at) AS posted_at
 FROM jobhub.jobs j
 JOIN jobhub.job_sources s ON s.source = j.source
 LEFT JOIN jobhub.companies c ON c.id = j.company_id
@@ -175,7 +183,7 @@ WHERE s.enabled
   AND (sqlc.narg(salary_max)::numeric IS NULL OR (j.salary_visible AND j.salary_currency = sqlc.narg(currency) AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= sqlc.narg(salary_max)))
   AND (sqlc.narg(experience_level)::text IS NULL OR j.experience_level = sqlc.narg(experience_level))
   AND (sqlc.narg(employment_type)::text IS NULL OR j.employment_type = sqlc.narg(employment_type))
-  AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= sqlc.narg(posted_after))
+  AND (sqlc.narg(posted_after)::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= sqlc.narg(posted_after))
 ORDER BY
     CASE WHEN sqlc.narg(preferred_city)::text IS NOT NULL AND j.canonical_city_id = sqlc.narg(preferred_city) THEN 0 ELSE 1 END,
     CASE WHEN sqlc.arg(sort)::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,

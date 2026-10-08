@@ -48,7 +48,7 @@ func (s *PostgresStore) FailIngestionRun(ctx context.Context, runID string, stat
 	})
 }
 
-func (s *PostgresStore) CompleteIngestionRun(ctx context.Context, runID, source string, imported []ImportedJob, observedAt, freshUntil time.Time, stats ImportStats) (ImportStats, error) {
+func (s *PostgresStore) CompleteIngestionRun(ctx context.Context, runID, source string, imported []ImportedJob, observedAt, freshUntil time.Time, stats ImportStats, complete bool) (ImportStats, error) {
 	id, err := parseUUID(runID)
 	if err != nil {
 		return stats, err
@@ -80,7 +80,7 @@ func (s *PostgresStore) CompleteIngestionRun(ctx context.Context, runID, source 
 			CompanyID: companyID,
 			Title:     item.Title, LocationRaw: nullableText(item.LocationRaw), Description: nullableText(item.Description),
 			CanonicalCityID: nullableText(item.CanonicalCityID),
-			DescriptionKind: item.DescriptionKind, EmploymentTypeRaw: nullableText(item.EmploymentTypeRaw),
+			DescriptionKind: item.DescriptionKind, EmploymentTypeRaw: nullableText(item.EmploymentTypeRaw), EmploymentType: nullableText(item.EmploymentType), WorkMode: nullableText(item.WorkMode),
 			SalaryRaw: nullableText(item.SalaryRaw), Category: nullableText(item.Category), ObservedAt: timestamptz(observedAt), FreshUntil: timestamptz(freshUntil),
 			ExternalPublishedAt: nullableTime(item.ExternalPublishedAt), ExternalExpiresAt: nullableTime(item.ExternalExpiresAt),
 			ExternalUpdatedAt: nullableTime(item.ExternalUpdatedAt), ExternalUpdatedRaw: nullableText(item.ExternalUpdatedRaw),
@@ -96,6 +96,11 @@ func (s *PostgresStore) CompleteIngestionRun(ctx context.Context, runID, source 
 			stats.UpdatedCount++
 		} else {
 			stats.InsertedCount++
+		}
+	}
+	if complete {
+		if _, err := tx.Exec(ctx, `UPDATE jobhub.jobs SET source_status='removed', external_archived_at=$2, updated_at=now() WHERE source=$1 AND last_synced_at < $2 AND source_status IN ('unknown','active')`, source, observedAt); err != nil {
+			return stats, fmt.Errorf("reconcile imported jobs: %w", err)
 		}
 	}
 	if err := q.CompleteIngestionRun(ctx, dbgen.CompleteIngestionRunParams{
@@ -281,9 +286,12 @@ func mapJobCardRow(row dbgen.ListPublicJobsRow) Job {
 		SalaryCurrency: row.SalaryCurrency, SalaryPeriod: row.SalaryPeriod, SalaryVisible: row.SalaryVisible,
 	}
 	if row.PostedAt.Valid {
-		job.FirstSeenAt = row.PostedAt.Time
 		value := row.PostedAt.Time
-		job.PublishedAt = &value
+		if job.Source == "jobhub" {
+			job.PublishedAt = &value
+		} else {
+			job.ExternalPublishedAt = &value
+		}
 	}
 	return job
 }
@@ -320,6 +328,15 @@ func sourceName(source string) string {
 	}
 	if source == "jooble:kz" {
 		return "Jooble"
+	}
+	if source == "arbeitnow:global" {
+		return "Arbeitnow"
+	}
+	if strings.HasPrefix(source, "greenhouse:") {
+		return "Greenhouse"
+	}
+	if strings.HasPrefix(source, "lever:") {
+		return "Lever"
 	}
 	if source == "demo:external" {
 		return "Demo сыртқы дереккөз"

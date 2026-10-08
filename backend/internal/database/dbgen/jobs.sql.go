@@ -70,7 +70,7 @@ WHERE s.enabled
   AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
   AND ($8::text IS NULL OR j.experience_level = $8)
   AND ($9::text IS NULL OR j.employment_type = $9)
-  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $10)
+  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $10)
 `
 
 type CountPublicJobsParams struct {
@@ -582,7 +582,7 @@ SELECT
     COALESCE(j.salary_currency, '') AS salary_currency,
     COALESCE(j.salary_period, '') AS salary_period,
     j.salary_visible,
-    COALESCE(j.published_at, j.external_published_at, j.first_seen_at) AS posted_at
+    COALESCE(j.published_at, j.external_published_at) AS posted_at
 FROM jobhub.jobs j
 JOIN jobhub.job_sources s ON s.source = j.source
 LEFT JOIN jobhub.companies c ON c.id = j.company_id
@@ -596,7 +596,7 @@ WHERE s.enabled
   AND ($7::numeric IS NULL OR (j.salary_visible AND j.salary_currency = $6 AND j.salary_period = 'month' AND COALESCE(j.salary_min, j.salary_max) <= $7))
   AND ($8::text IS NULL OR j.experience_level = $8)
   AND ($9::text IS NULL OR j.employment_type = $9)
-  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at, j.first_seen_at) >= $10)
+  AND ($10::timestamptz IS NULL OR COALESCE(j.external_published_at, j.published_at) >= $10)
 ORDER BY
     CASE WHEN $11::text IS NOT NULL AND j.canonical_city_id = $11 THEN 0 ELSE 1 END,
     CASE WHEN $12::text = 'oldest' THEN COALESCE(j.external_published_at, j.first_seen_at) END ASC,
@@ -982,6 +982,8 @@ INSERT INTO jobhub.jobs (
     description,
     description_kind,
     employment_type_raw,
+    employment_type,
+    work_mode,
     salary_raw,
     category,
     application_method,
@@ -1010,17 +1012,19 @@ INSERT INTO jobhub.jobs (
     $12,
     $13,
     $14,
-    'external',
-    $3,
-    'unknown',
-    $15,
-    $15,
     $15,
     $16,
+    'external',
+    $3,
+    'active',
+    $17,
+    $17,
     $17,
     $18,
     $19,
-    $20
+    $20,
+    $21,
+    $22
 )
 ON CONFLICT (source, external_id) DO UPDATE SET
     source_url = EXCLUDED.source_url,
@@ -1033,9 +1037,13 @@ ON CONFLICT (source, external_id) DO UPDATE SET
     description = EXCLUDED.description,
     description_kind = EXCLUDED.description_kind,
     employment_type_raw = EXCLUDED.employment_type_raw,
+    employment_type = EXCLUDED.employment_type,
+    work_mode = EXCLUDED.work_mode,
     salary_raw = EXCLUDED.salary_raw,
     category = EXCLUDED.category,
     apply_url = EXCLUDED.apply_url,
+    source_status = 'active',
+    external_archived_at = NULL,
     last_seen_at = EXCLUDED.last_seen_at,
     last_synced_at = EXCLUDED.last_synced_at,
     fresh_until = EXCLUDED.fresh_until,
@@ -1061,6 +1069,8 @@ type UpsertImportedJobParams struct {
 	Description         pgtype.Text
 	DescriptionKind     string
 	EmploymentTypeRaw   pgtype.Text
+	EmploymentType      pgtype.Text
+	WorkMode            pgtype.Text
 	SalaryRaw           pgtype.Text
 	Category            pgtype.Text
 	ObservedAt          pgtype.Timestamptz
@@ -1085,6 +1095,8 @@ func (q *Queries) UpsertImportedJob(ctx context.Context, arg UpsertImportedJobPa
 		arg.Description,
 		arg.DescriptionKind,
 		arg.EmploymentTypeRaw,
+		arg.EmploymentType,
+		arg.WorkMode,
 		arg.SalaryRaw,
 		arg.Category,
 		arg.ObservedAt,

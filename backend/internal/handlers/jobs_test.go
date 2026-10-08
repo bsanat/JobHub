@@ -57,7 +57,10 @@ func TestImportedJobEndpoints(t *testing.T) {
 		if res.Code != 200 || !strings.Contains(res.Body.String(), tc.expected) || !strings.Contains(res.Body.String(), `"id":"jooble:kz"`) {
 			t.Fatalf("unexpected response for %s: %d %s", tc.path, res.Code, res.Body.String())
 		}
-		if tc.path == "/api/v1/jobs" && (!strings.Contains(res.Body.String(), `"logo_url":"/company-logos/example.svg"`) || strings.Contains(res.Body.String(), `"responsibilities"`) || strings.Contains(res.Body.String(), `"application"`)) {
+		if strings.Contains(res.Body.String(), `"logo_url":"/company-logos/example.svg"`) || strings.Contains(res.Body.String(), `"verified":true`) || strings.Contains(res.Body.String(), `"id":"22222222-2222-4222-8222-222222222222"`) {
+			t.Fatalf("external job implied that its employer registered or authorized publication: %s", res.Body.String())
+		}
+		if tc.path == "/api/v1/jobs" && (strings.Contains(res.Body.String(), `"responsibilities"`) || strings.Contains(res.Body.String(), `"application"`)) {
 			t.Fatalf("jobs list response was not card-only: %s", res.Body.String())
 		}
 	}
