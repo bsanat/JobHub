@@ -156,13 +156,13 @@ func (s *Service) Run(ctx context.Context, p providers.VacancyProvider, opts Run
 	if opts.DryRun {
 		return report, nil
 	}
-	// No absence reconciliation in this POC. This explicit development policy
-	// avoids inventing closure or applying Jooble's stale TTL to ATS jobs.
+	// Public API imports can disable time-based expiry; absence reconciliation
+	// is handled by the store only for complete snapshots.
 	freshUntil := report.AttemptAt.Add(s.freshFor)
 	if opts.NoAutomaticExpiry {
 		freshUntil = time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
 	}
-	stats, err := s.store.CompleteIngestionRun(ctx, report.Stats.RunID, p.Source(), items, report.AttemptAt, freshUntil, report.Stats)
+	stats, err := s.store.CompleteIngestionRun(ctx, report.Stats.RunID, p.Source(), items, report.AttemptAt, freshUntil, report.Stats, report.CompleteSnapshot)
 	if err != nil {
 		return fail("DATABASE_WRITE_FAILED")
 	}

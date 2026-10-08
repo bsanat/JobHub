@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,7 +22,7 @@ import (
 )
 
 const endpoint = "https://boards-api.greenhouse.io/v1/boards/"
-const maxBytes = 5 << 20
+const maxBytes = 20 << 20
 
 var tokenPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,100}$`)
 var idPattern = regexp.MustCompile(`^[1-9][0-9]*$`)
@@ -38,6 +39,18 @@ func NewBudget(requests, jobs int) (*Budget, error) {
 	if requests < 1 || requests > 12 || jobs < 1 || jobs > 200 {
 		return nil, providers.Failure("INVALID_BUDGET")
 	}
+	return newBudget(requests, jobs)
+}
+
+// NewImportBudget allows larger known boards in the one-shot public importer.
+func NewImportBudget(requests, jobs int) (*Budget, error) {
+	if requests < 1 || requests > 12 || jobs < 1 || jobs > 5000 {
+		return nil, providers.Failure("INVALID_BUDGET")
+	}
+	return newBudget(requests, jobs)
+}
+
+func newBudget(requests, jobs int) (*Budget, error) {
 	requestBudget, _ := safety.NewRequestBudget(requests)
 	return &Budget{requests: requestBudget, maxJobs: jobs}, nil
 }
@@ -82,16 +95,9 @@ func (c *Client) Collect(ctx context.Context) (result providers.Result, err erro
 		result.RequestsUsed = m.RequestsUsed
 		result.RemainingRequests = m.Remaining
 	}()
-	if !c.budget.request() {
-		return result, providers.Failure("REQUEST_BUDGET_EXHAUSTED")
-	}
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+c.board+"/jobs?content=true", nil)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "JobHub-ATS-POC/1.0")
-	result.Requests = 1
-	res, err := c.http.Do(req)
+	res, err := c.request(ctx, &result)
 	if err != nil {
-		return result, providers.Failure("TRANSPORT_FAILED")
+		return result, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
@@ -119,6 +125,8 @@ func (c *Client) Collect(ctx context.Context) (result providers.Result, err erro
 	if len(body) > maxBytes {
 		return result, providers.Failure("RESPONSE_TOO_LARGE")
 	}
+	result.ListRequests = 1
+	result.PagesFetched = 1
 	var response struct {
 		Jobs json.RawMessage `json:"jobs"`
 		Meta struct {
@@ -159,6 +167,55 @@ func (c *Client) Collect(ctx context.Context) (result providers.Result, err erro
 		result.Items = append(result.Items, item)
 	}
 	return result, nil
+}
+
+func (c *Client) request(ctx context.Context, result *providers.Result) (*http.Response, error) {
+	for attempt := 0; attempt < 3; attempt++ {
+		if !c.budget.request() {
+			return nil, providers.Failure("REQUEST_BUDGET_EXHAUSTED")
+		}
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+c.board+"/jobs?content=true", nil)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", "JobHub-ATS-POC/1.0")
+		result.Requests++
+		res, err := c.http.Do(req)
+		if err != nil {
+			if attempt < 2 && c.budget.requests.Metrics().Remaining > 0 && retryPause(ctx, time.Duration(attempt+1)*200*time.Millisecond) {
+				continue
+			}
+			return nil, providers.Failure("TRANSPORT_FAILED")
+		}
+		if res.StatusCode == 429 && res.Header.Get("Retry-After") != "" {
+			seconds, parseErr := strconv.Atoi(res.Header.Get("Retry-After"))
+			if parseErr != nil || seconds < 0 || seconds > 3 {
+				return res, nil
+			}
+		}
+		if (res.StatusCode == 429 || res.StatusCode >= 500) && attempt < 2 && c.budget.requests.Metrics().Remaining > 0 {
+			wait := time.Duration(attempt+1) * 200 * time.Millisecond
+			if seconds, err := strconv.Atoi(res.Header.Get("Retry-After")); err == nil && seconds >= 0 && seconds <= 3 {
+				wait = time.Duration(seconds) * time.Second
+			}
+			res.Body.Close()
+			if retryPause(ctx, wait) {
+				continue
+			}
+			return nil, providers.Failure("TRANSPORT_FAILED")
+		}
+		return res, nil
+	}
+	return nil, providers.Failure("TRANSPORT_FAILED")
+}
+
+func retryPause(ctx context.Context, delay time.Duration) bool {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
 }
 
 type vacancy struct {
@@ -206,7 +263,10 @@ func normalize(source string, v vacancy) (jobs.ImportedJob, error) {
 
 // Convert the API's entity-encoded HTML to plain text. No HTML is requested or
 // rendered, and executable/script/style content is discarded.
-func plainText(value string) string {
+func plainText(value string) string { return PlainText(value) }
+
+// PlainText strips executable markup and returns text suitable for storage and display.
+func PlainText(value string) string {
 	for i := 0; i < 2; i++ {
 		value = html.UnescapeString(value)
 	}

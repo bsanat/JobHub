@@ -54,3 +54,18 @@ func (s *PostgresStore) RegisterDevelopmentSource(ctx context.Context, source, p
 	}
 	return nil
 }
+
+// RegisterPublicImportSource records a disabled, unapproved source. Enabling
+// display and confirming redistribution remain separate operator decisions.
+func (s *PostgresStore) RegisterPublicImportSource(ctx context.Context, source, provider, displayName string) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO jobhub.job_sources(source,provider,display_name,enabled,production_permissions_confirmed,attribution_text) VALUES($1,$2,$3,false,false,$4) ON CONFLICT(source) DO NOTHING`, source, provider, displayName, "Original source: "+displayName)
+	if err != nil {
+		return errors.New("public source registration failed")
+	}
+	var compatible bool
+	err = s.pool.QueryRow(ctx, `SELECT provider=$2 FROM jobhub.job_sources WHERE source=$1`, source, provider).Scan(&compatible)
+	if err != nil || !compatible {
+		return errors.New("public source provider mismatch")
+	}
+	return nil
+}

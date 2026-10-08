@@ -5,10 +5,12 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
 	"jobhub-ai/backend/internal/jobs"
+	"jobhub-ai/backend/internal/providers"
 	"jobhub-ai/backend/internal/providers/jooble"
 )
 
@@ -16,6 +18,48 @@ type fakeProvider struct {
 	vacancies []jooble.Vacancy
 	err       error
 	requests  int
+}
+
+type snapshotProvider struct {
+	result providers.Result
+	err    error
+}
+
+func (snapshotProvider) Source() string                                      { return "arbeitnow:global" }
+func (p snapshotProvider) Collect(context.Context) (providers.Result, error) { return p.result, p.err }
+
+func TestOnlyCompleteSuccessfulSnapshotArchivesMissingJobs(t *testing.T) {
+	store := newMemoryStore()
+	service := NewService(store, nil, nil, 0)
+	now := time.Date(2026, 10, 9, 1, 0, 0, 0, time.UTC)
+	job := func(id string) jobs.ImportedJob {
+		return jobs.ImportedJob{Source: "arbeitnow:global", ExternalID: id, Title: id, SourceURL: "https://www.arbeitnow.com/jobs/" + id, DescriptionKind: "full"}
+	}
+	service.now = func() time.Time { return now }
+	if _, err := service.Run(context.Background(), snapshotProvider{result: providers.Result{Items: []jobs.ImportedJob{job("a"), job("b")}, Complete: true}}, RunOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	now = now.Add(time.Hour)
+	if _, err := service.Run(context.Background(), snapshotProvider{result: providers.Result{Items: []jobs.ImportedJob{job("a")}, Complete: false}}, RunOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if store.archived["arbeitnow:global/b"] {
+		t.Fatal("partial snapshot archived an unseen job")
+	}
+	now = now.Add(time.Hour)
+	if _, err := service.Run(context.Background(), snapshotProvider{err: providers.Failure("RATE_LIMITED")}, RunOptions{}); err == nil {
+		t.Fatal("expected sync failure")
+	}
+	if store.archived["arbeitnow:global/b"] {
+		t.Fatal("failed sync archived a job")
+	}
+	now = now.Add(time.Hour)
+	if _, err := service.Run(context.Background(), snapshotProvider{result: providers.Result{Items: []jobs.ImportedJob{job("a")}, Complete: true}}, RunOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if !store.archived["arbeitnow:global/b"] || store.archived["arbeitnow:global/a"] {
+		t.Fatal("complete snapshot did not reconcile accurately")
+	}
 }
 
 func (p *fakeProvider) Search(context.Context, jooble.Search) ([]jooble.Vacancy, error) {
@@ -33,13 +77,14 @@ type storedJob struct {
 }
 
 type memoryStore struct {
-	items   map[string]storedJob
-	runs    map[string]string
-	nextRun int
+	items    map[string]storedJob
+	runs     map[string]string
+	archived map[string]bool
+	nextRun  int
 }
 
 func newMemoryStore() *memoryStore {
-	return &memoryStore{items: map[string]storedJob{}, runs: map[string]string{}}
+	return &memoryStore{items: map[string]storedJob{}, runs: map[string]string{}, archived: map[string]bool{}}
 }
 func (s *memoryStore) BeginIngestionRun(_ context.Context, _ string, _ int) (string, error) {
 	s.nextRun++
@@ -51,7 +96,7 @@ func (s *memoryStore) FailIngestionRun(_ context.Context, id string, _ jobs.Impo
 	s.runs[id] = "failed"
 	return nil
 }
-func (s *memoryStore) CompleteIngestionRun(_ context.Context, id, source string, imported []jobs.ImportedJob, observedAt, _ time.Time, stats jobs.ImportStats) (jobs.ImportStats, error) {
+func (s *memoryStore) CompleteIngestionRun(_ context.Context, id, source string, imported []jobs.ImportedJob, observedAt, _ time.Time, stats jobs.ImportStats, complete bool) (jobs.ImportStats, error) {
 	for _, item := range imported {
 		key := source + "/" + item.ExternalID
 		current, exists := s.items[key]
@@ -65,6 +110,14 @@ func (s *memoryStore) CompleteIngestionRun(_ context.Context, id, source string,
 		current.lastSeen = observedAt
 		current.lastSynced = observedAt
 		s.items[key] = current
+		s.archived[key] = false
+	}
+	if complete {
+		for key, current := range s.items {
+			if strings.HasPrefix(key, source+"/") && current.lastSynced.Before(observedAt) {
+				s.archived[key] = true
+			}
+		}
 	}
 	s.runs[id] = "succeeded"
 	return stats, nil

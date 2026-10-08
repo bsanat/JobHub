@@ -28,7 +28,7 @@ func (*panicStore) BeginIngestionRun(context.Context, string, int) (string, erro
 func (*panicStore) FailIngestionRun(context.Context, string, jobs.ImportStats, string, string) error {
 	panic("dry-run called DB")
 }
-func (*panicStore) CompleteIngestionRun(context.Context, string, string, []jobs.ImportedJob, time.Time, time.Time, jobs.ImportStats) (jobs.ImportStats, error) {
+func (*panicStore) CompleteIngestionRun(context.Context, string, string, []jobs.ImportedJob, time.Time, time.Time, jobs.ImportStats, bool) (jobs.ImportStats, error) {
 	panic("unused")
 }
 func TestDryRunNoStoreCallsDedupeAndSanitizedFailure(t *testing.T) {
