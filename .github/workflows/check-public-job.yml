@@ -1,0 +1,33 @@
+name: Check public job read
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Public vacancy UUID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+      PUBLIC_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+      PUBLIC_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Check one public job without database writes
+        working-directory: backend
+        env:
+          JOB_ID: ${{ inputs.job_id }}
+        run: go run ./cmd/check-public-job --id "$JOB_ID"
