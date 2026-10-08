@@ -73,6 +73,7 @@ hostname, schema, source permissions, and the write scope:
 ```sh
 APP_ENV=development PUBLIC_IMPORT_TARGET=development PUBLIC_IMPORT_WRITE_ENABLED=true \
 PUBLIC_IMPORT_DATABASE_HOST='<reviewed-hostname>' \
+PUBLIC_IMPORT_DATABASE_USER='<reviewed-username>' \
 DATABASE_URL='<reviewed-target-url>' \
 go run ./cmd/import-public-jobs --config /absolute/path/public-imports.json --once
 ```
@@ -81,6 +82,10 @@ go run ./cmd/import-public-jobs --config /absolute/path/public-imports.json --on
 Never set the target variable by copying an uninspected staging/production
 connection string. A Supabase PostgreSQL URL works; Docker is not required.
 Use `PGX_QUERY_EXEC_MODE=exec` for a transaction pooler on port 6543.
+For production, `PUBLIC_IMPORT_DATABASE_USER` must exactly match the username
+in the reviewed Production connection URL. Supabase staging and Production can
+share a pooler hostname, so the hostname check alone does not identify a
+project. Do not copy a staging URL into this setting.
 Staging/production also require
 `PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED=true`, after separate rights
 review; importing alone still does not enable a source for public display.
@@ -135,6 +140,7 @@ GitHub Actions values only after inspecting the target Production database:
 | Secret | `PUBLIC_IMPORT_CONFIG_JSON` | JSON config above with `enabled=true` and only verified board IDs |
 | Secret | `PUBLIC_IMPORT_DATABASE_URL` | Inspected Production Supabase PostgreSQL URL |
 | Variable | `PUBLIC_IMPORT_DATABASE_HOST` | Exact hostname of that inspected URL |
+| Variable | `PUBLIC_IMPORT_DATABASE_USER` | Exact username of that inspected Production URL |
 | Variable | `PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED` | `true` after source rights review |
 | Variable | `PUBLIC_IMPORT_ENABLED` | `true` to activate scheduled/manual workflow runs |
 

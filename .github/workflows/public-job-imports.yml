@@ -23,6 +23,7 @@ jobs:
       PUBLIC_IMPORT_WRITE_ENABLED: 'true'
       PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED: ${{ vars.PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED }}
       PUBLIC_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+      PUBLIC_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
       PUBLIC_IMPORT_CONFIG_JSON: ${{ secrets.PUBLIC_IMPORT_CONFIG_JSON }}
       DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
       PGX_QUERY_EXEC_MODE: exec
@@ -37,6 +38,7 @@ jobs:
           test -n "$PUBLIC_IMPORT_CONFIG_JSON" || { echo 'Missing PUBLIC_IMPORT_CONFIG_JSON secret'; exit 1; }
           test -n "$DATABASE_URL" || { echo 'Missing PUBLIC_IMPORT_DATABASE_URL secret'; exit 1; }
           test -n "$PUBLIC_IMPORT_DATABASE_HOST" || { echo 'Missing PUBLIC_IMPORT_DATABASE_HOST variable'; exit 1; }
+          test -n "$PUBLIC_IMPORT_DATABASE_USER" || { echo 'Missing PUBLIC_IMPORT_DATABASE_USER variable'; exit 1; }
           test "$PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED" = 'true' || { echo 'Production permission review is not confirmed'; exit 1; }
       - name: Import one batch of configured sources
         working-directory: backend

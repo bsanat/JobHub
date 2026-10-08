@@ -87,6 +87,9 @@ func run(args []string, out io.Writer, getenv func(string) string) error {
 		if dbURL.Hostname() != getenv("PUBLIC_IMPORT_DATABASE_HOST") {
 			return errors.New("PUBLIC_IMPORT_DATABASE_HOST must match the inspected database hostname")
 		}
+		if env == "production" && !matchesDatabaseUser(dbURL, getenv("PUBLIC_IMPORT_DATABASE_USER")) {
+			return errors.New("PUBLIC_IMPORT_DATABASE_USER must match the inspected production database user")
+		}
 		mode := getenv("PGX_QUERY_EXEC_MODE")
 		if mode == "" {
 			mode = "cache_statement"
@@ -137,6 +140,10 @@ func run(args []string, out io.Writer, getenv func(string) string) error {
 		}
 	}
 	return nil
+}
+
+func matchesDatabaseUser(dbURL *url.URL, expected string) bool {
+	return expected != "" && dbURL.User != nil && dbURL.User.Username() == expected
 }
 
 type configuredSource struct{ kind, id, company, display string }
