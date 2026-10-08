@@ -48,6 +48,15 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
+    -- Public API imports can insert a large initial batch. The scheduled
+    -- publisher handles new imported jobs without one webhook per row.
+    IF EXISTS (
+        SELECT 1 FROM jobhub.job_sources s
+        WHERE s.source = NEW.source
+          AND s.provider IN ('arbeitnow', 'greenhouse', 'lever')
+    ) THEN
+        RETURN NEW;
+    END IF;
     IF NOT jobhub.job_is_public(NEW) THEN
         RETURN NEW;
     END IF;

@@ -85,6 +85,10 @@ GitHub Actions workflow, а не регистрацией webhook. Маршру�
 [`scripts/supabase-telegram-publisher.sql`](https://github.com/juniorqazaq/JobHub/blob/main/scripts/supabase-telegram-publisher.sql).
 Он включает `pg_net`, `pg_cron`, создаёт функции, триггер для `jobhub.jobs`
 и задачу `jobhub-telegram-publisher-retry`.
+Триггер пропускает вакансии публичных API Arbeitnow, Greenhouse и Lever:
+первичная загрузка может создать тысячи строк, а новые записи этих источников
+публикует плановый publisher. Для уже установленного триггера применяется
+узкий патч [`scripts/supabase-telegram-import-guard.sql`](../scripts/supabase-telegram-import-guard.sql).
 
 1. После `INSERT` или `UPDATE` полей `publication_status`,
    `moderation_status`, `source_status`, `fresh_until` триггер вызывает
