@@ -8,6 +8,6 @@ export const publicationStatuses = [
 ] as const;
 
 export function jobUpdatedTime(job: JobSummary) {
-  const date = Date.parse(job.updatedAt || job.createdAt || job.postedAt);
+  const date = Date.parse(job.updatedAt || job.createdAt || job.postedAt || "");
   return Number.isNaN(date) ? 0 : date;
 }

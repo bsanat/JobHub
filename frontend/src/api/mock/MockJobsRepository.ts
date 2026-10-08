@@ -30,12 +30,12 @@ export class MockJobsRepository implements JobsRepository {
       const matchesExperience = !params.experience || job.experienceLevel === params.experience;
       const matchesEmployment = !params.employment || job.employmentType === params.employment;
       const cutoff = params.datePosted ? Date.now() - ({ "24h": 1, "3d": 3, "7d": 7, "30d": 30 }[params.datePosted] * 86400000) : 0;
-      return matchesQuery && matchesCity && matchesMode && matchesSalary && matchesSalaryMax && matchesExperience && matchesEmployment && (!cutoff || new Date(job.postedAt).getTime() >= cutoff);
+      return matchesQuery && matchesCity && matchesMode && matchesSalary && matchesSalaryMax && matchesExperience && matchesEmployment && (!cutoff || (job.postedAt ? new Date(job.postedAt).getTime() >= cutoff : false));
     });
 
     filtered.sort((a, b) => {
       if (params.preferredCity && a.cityId !== b.cityId) return a.cityId === params.preferredCity ? -1 : b.cityId === params.preferredCity ? 1 : 0;
-      const difference = new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+      const difference = (b.postedAt ? new Date(b.postedAt).getTime() : 0) - (a.postedAt ? new Date(a.postedAt).getTime() : 0);
       return params.sort === "oldest" ? -difference : difference;
     });
 

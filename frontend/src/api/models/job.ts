@@ -56,7 +56,7 @@ export interface JobSummary {
   niceToHave?: string;
   salary?: SalaryRange;
   salaryRaw?: string;
-  postedAt: string;
+  postedAt?: string;
   firstSeenAt?: string;
   lastSeenAt?: string;
   lastSyncedAt?: string;

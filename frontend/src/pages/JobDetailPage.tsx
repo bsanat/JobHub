@@ -66,7 +66,7 @@ export function JobDetailPage() {
             </div> : <div className="job-detail-actions"><JobSaveButton job={job.data} /><ApplyAction job={job.data} /></div>}
             <section>
               <h2>{t("jobDetail.sourceTitle")}</h2>
-              <p className="detail-source-name">{job.data.source.name}</p>
+              {job.data.source.id === "arbeitnow:global" ? <a className="detail-source-name" href="https://www.arbeitnow.com" target="_blank" rel="noreferrer">{job.data.source.name}<ExternalLink size={16} aria-hidden="true" /></a> : <p className="detail-source-name">{job.data.source.name}</p>}
               <dl>
                 {job.data.firstSeenAt ? <div><dt>{t("jobDetail.firstSeen")}</dt><dd>{formatDate(job.data.firstSeenAt, i18n.language)}</dd></div> : null}
                 {job.data.lastSyncedAt ? <div><dt>{t("jobDetail.lastUpdated")}</dt><dd>{formatDate(job.data.lastSyncedAt, i18n.language)}</dd></div> : null}

@@ -28,7 +28,7 @@ export function MarketplaceJobRow({ job }: { job: JobSummary }) {
       <div className="job-offer__tags">
         {tags.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}
         {tags.length > 4 ? <span className="job-offer__extra" title={tags.slice(4).join(", ")}>+{tags.length - 4}</span> : null}
-        {external ? <span className="job-offer__source"><ExternalLink size={12} aria-hidden="true" />{job.source.name}</span> : null}
+        {external ? <span className="job-offer__source"><ExternalLink size={12} aria-hidden="true" />{t("jobs.externalSource", { source: job.source.name })}</span> : null}
       </div>
       <div className="job-offer__meta">
         {job.workMode ? <span className="job-offer__mode"><House size={15} aria-hidden="true" />{t(`employer.workModes.${job.workMode}`)}</span> : null}

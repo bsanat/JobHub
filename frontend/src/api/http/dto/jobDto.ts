@@ -26,7 +26,7 @@ export interface JobDto {
   skills?: string[];
   salary?: SalaryRange;
   salary_raw?: string;
-  posted_at: string;
+  posted_at?: string;
   first_seen_at?: string;
   last_seen_at?: string;
   last_synced_at?: string;
@@ -80,7 +80,7 @@ export interface JobCardDto {
   salary_currency?: string;
   salary_period?: string;
   salary_visible?: boolean;
-  posted_at: string;
+  posted_at?: string;
   source: JobDto["source"];
 }
 

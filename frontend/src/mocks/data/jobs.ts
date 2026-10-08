@@ -97,3 +97,44 @@ export const mockJobs: JobSummary[] = [
     },
   },
 ];
+
+// Local preview data only. These roles are fictional and must never be published as employer vacancies.
+const studentDemoRoles = [
+  ["Маркетинг тағылымдамасы (демо)", "internship", "junior", "almaty", "Алматы", "hybrid"],
+  ["Frontend тағылымдамасы (демо)", "internship", "junior", "astana", "Астана", "remote"],
+  ["Деректер талдауы бойынша тағылымдама (демо)", "internship", "junior", "almaty", "Алматы", "on_site"],
+  ["Дизайн тағылымдамасы (демо)", "internship", "junior", "shymkent", "Шымкент", "hybrid"],
+  ["HR тағылымдамасы (демо)", "internship", "junior", "astana", "Астана", "on_site"],
+  ["Қаржы талдаушысының тағылымдамасы (демо)", "internship", "junior", "almaty", "Алматы", "hybrid"],
+  ["Қолдау қызметінің маманы (демо)", "full_time", "no_experience", "almaty", "Алматы", "on_site"],
+  ["Бастапқы деңгейдегі контент маманы (демо)", "full_time", "no_experience", "astana", "Астана", "hybrid"],
+  ["Деректерді енгізу маманы (демо)", "full_time", "no_experience", "karaganda", "Қарағанды", "remote"],
+  ["Junior QA маманы (демо)", "full_time", "no_experience", "almaty", "Алматы", "hybrid"],
+  ["Клиенттермен жұмыс маманы (демо)", "full_time", "no_experience", "shymkent", "Шымкент", "on_site"],
+  ["Кеңсе көмекшісі (демо)", "full_time", "no_experience", "astana", "Астана", "on_site"],
+  ["Маркетинг көмекшісі (демо)", "full_time", "no_experience", "aktobe", "Ақтөбе", "hybrid"],
+  ["Мәтін редакторының көмекшісі (демо)", "full_time", "no_experience", "almaty", "Алматы", "remote"],
+  ["Жартылай жұмыс: кеңесші (демо)", "part_time", "no_experience", "almaty", "Алматы", "on_site"],
+  ["Жартылай жұмыс: оператор (демо)", "part_time", "no_experience", "astana", "Астана", "remote"],
+  ["Жартылай жұмыс: контент көмекшісі (демо)", "part_time", "no_experience", "shymkent", "Шымкент", "hybrid"],
+  ["Жартылай жұмыс: іс-шара көмекшісі (демо)", "part_time", "no_experience", "almaty", "Алматы", "on_site"],
+  ["Жартылай жұмыс: репетитор көмекшісі (демо)", "part_time", "no_experience", "karaganda", "Қарағанды", "remote"],
+  ["Жартылай жұмыс: әкімшілік көмекші (демо)", "part_time", "no_experience", "astana", "Астана", "on_site"],
+] as const;
+
+mockJobs.push(...studentDemoRoles.map(([title, employmentType, experienceLevel, cityId, location, workMode], index) => ({
+  id: `demo-student-${index + 1}`,
+  title,
+  company: { name: "JobHub Demo", verified: false },
+  location,
+  cityId,
+  workMode,
+  employmentType,
+  experienceLevel,
+  postedAt: "2026-10-09T08:00:00.000Z",
+  tags: ["Демо"],
+  summary: "Бұл — интерфейсті тексеруге арналған үлгі вакансия. Нақты жұмыс ұсынысы емес.",
+  isSaved: false,
+  source: { id: "demo", name: "JobHub Demo", type: "native" as const },
+  application: { method: "internal" as const },
+})));
