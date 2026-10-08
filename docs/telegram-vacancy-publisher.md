@@ -94,9 +94,11 @@ Production и отклоняется вне staging. Режим без ссыл�
 `TELEGRAM_PUBLISHER_ENABLED=true`. GitHub может задержать или пропустить
 запуск; точное время доставки не гарантируется.
 
-Secrets: `TELEGRAM_PUBLISHER_DATABASE_URL` для той же Production-базы и
-`TELEGRAM_BOT_TOKEN`. Variables: `TELEGRAM_PUBLIC_CHANNEL_ID` и
-`TELEGRAM_PUBLIC_CHANNEL_USERNAME`. Не записывайте секреты в файл workflow,
+Secrets: проверенный `PUBLIC_IMPORT_DATABASE_URL` той же Production-базы и
+`TELEGRAM_BOT_TOKEN`. Variables: `PUBLIC_IMPORT_DATABASE_HOST`,
+`PUBLIC_IMPORT_DATABASE_USER`, `TELEGRAM_PUBLIC_CHANNEL_ID` и
+`TELEGRAM_PUBLIC_CHANNEL_USERNAME`. Workflow проверяет имя хоста и пользователя
+перед подключением. Не записывайте секреты в файл workflow,
 Variables или `VITE_*`. Домен ссылок — `https://jobhub-lovat.vercel.app`.
 Один запуск отправляет до десяти вакансий. После отправки проверяйте логи
 workflow и при необходимости вручную сверяйте `pending`.

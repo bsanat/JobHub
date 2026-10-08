@@ -19,7 +19,9 @@ jobs:
     timeout-minutes: 10
     env:
       APP_ENV: production
-      DATABASE_URL: ${{ secrets.TELEGRAM_PUBLISHER_DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+      PUBLIC_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+      PUBLIC_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
       PGX_QUERY_EXEC_MODE: exec
       FRONTEND_ORIGIN: https://jobhub-lovat.vercel.app
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -38,10 +40,22 @@ jobs:
           cache-dependency-path: backend/go.sum
       - name: Validate configuration
         run: |
-          test -n "$DATABASE_URL" || { echo 'Missing TELEGRAM_PUBLISHER_DATABASE_URL secret'; exit 1; }
+          test -n "$DATABASE_URL" || { echo 'Missing PUBLIC_IMPORT_DATABASE_URL secret'; exit 1; }
+          test -n "$PUBLIC_IMPORT_DATABASE_HOST" || { echo 'Missing PUBLIC_IMPORT_DATABASE_HOST variable'; exit 1; }
+          test -n "$PUBLIC_IMPORT_DATABASE_USER" || { echo 'Missing PUBLIC_IMPORT_DATABASE_USER variable'; exit 1; }
           test -n "$TELEGRAM_BOT_TOKEN" || { echo 'Missing TELEGRAM_BOT_TOKEN secret'; exit 1; }
           test -n "$TELEGRAM_PUBLIC_CHANNEL_ID" || { echo 'Missing TELEGRAM_PUBLIC_CHANNEL_ID variable'; exit 1; }
           test -n "$TELEGRAM_PUBLIC_CHANNEL_USERNAME" || { echo 'Missing TELEGRAM_PUBLIC_CHANNEL_USERNAME variable'; exit 1; }
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit
+
+          parsed = urlsplit(os.environ['DATABASE_URL'])
+          if (parsed.scheme not in ('postgres', 'postgresql') or
+              parsed.hostname != os.environ['PUBLIC_IMPORT_DATABASE_HOST'] or
+              parsed.username != os.environ['PUBLIC_IMPORT_DATABASE_USER']):
+              raise SystemExit('Production database identity check failed')
+          PY
       - name: Publish one batch
         working-directory: backend
         run: go run ./cmd/telegram-publisher --once

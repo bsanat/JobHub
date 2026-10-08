@@ -63,8 +63,8 @@ Webhook не получает ID или текст вакансии. Backend з�
 | Там же | `DATABASE_URL` (Secret) | Подключение Go API к Production Supabase |
 | Supabase `JobHub Production` -> Integrations -> Vault -> Secrets | `jobhub_telegram_publisher_url` | `https://jobhub-lovat.vercel.app/api/v1/internal/telegram-publish` |
 | Там же | `jobhub_telegram_publisher_secret` | То же значение, что у Vercel `TELEGRAM_WEBHOOK_SECRET` |
-| GitHub `juniorqazaq/JobHub` -> Settings -> Secrets and variables -> Actions | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_PUBLISHER_DATABASE_URL` (Secrets) | Резервный workflow |
-| Там же, Variables | `TELEGRAM_PUBLISHER_ENABLED`, `TELEGRAM_PUBLIC_CHANNEL_ID`, `TELEGRAM_PUBLIC_CHANNEL_USERNAME` | Включение резерва и выбор канала |
+| GitHub `juniorqazaq/JobHub` -> Settings -> Secrets and variables -> Actions | `TELEGRAM_BOT_TOKEN`, `PUBLIC_IMPORT_DATABASE_URL` (Secrets) | Резервный workflow на проверенной Production-базе |
+| Там же, Variables | `TELEGRAM_PUBLISHER_ENABLED`, `TELEGRAM_PUBLIC_CHANNEL_ID`, `TELEGRAM_PUBLIC_CHANNEL_USERNAME`, `PUBLIC_IMPORT_DATABASE_HOST`, `PUBLIC_IMPORT_DATABASE_USER` | Включение резерва, выбор канала и проверка базы |
 
 **Webhook secret и bot token — разные ключи.** Первый защищает внутренний
 endpoint, второй даёт боту право отправлять сообщения. Не переносите их в
