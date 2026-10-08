@@ -1,0 +1,48 @@
+name: Public job API imports
+
+on:
+  schedule:
+    - cron: '19 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-job-imports-production
+  cancel-in-progress: false
+
+jobs:
+  import:
+    if: github.ref == 'refs/heads/main' && vars.PUBLIC_IMPORT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_ENV: production
+      PUBLIC_IMPORT_TARGET: production
+      PUBLIC_IMPORT_WRITE_ENABLED: 'true'
+      PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED: ${{ vars.PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED }}
+      PUBLIC_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+      PUBLIC_IMPORT_CONFIG_JSON: ${{ secrets.PUBLIC_IMPORT_CONFIG_JSON }}
+      DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+      PGX_QUERY_EXEC_MODE: exec
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Validate import configuration
+        run: |
+          test -n "$PUBLIC_IMPORT_CONFIG_JSON" || { echo 'Missing PUBLIC_IMPORT_CONFIG_JSON secret'; exit 1; }
+          test -n "$DATABASE_URL" || { echo 'Missing PUBLIC_IMPORT_DATABASE_URL secret'; exit 1; }
+          test -n "$PUBLIC_IMPORT_DATABASE_HOST" || { echo 'Missing PUBLIC_IMPORT_DATABASE_HOST variable'; exit 1; }
+          test "$PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED" = 'true' || { echo 'Production permission review is not confirmed'; exit 1; }
+      - name: Import one batch of configured sources
+        working-directory: backend
+        run: |
+          umask 077
+          config_path="$(mktemp)"
+          trap 'rm -f "$config_path"' EXIT
+          printf '%s' "$PUBLIC_IMPORT_CONFIG_JSON" > "$config_path"
+          go run ./cmd/import-public-jobs --config "$config_path" --once
