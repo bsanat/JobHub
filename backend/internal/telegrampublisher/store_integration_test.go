@@ -231,6 +231,7 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		{marker + "-arbeitnow", "arbeitnow", true, "Arbeitnow External Engineer"},
 		{marker + "-greenhouse", "greenhouse", true, "Greenhouse External Engineer"},
 		{marker + "-lever", "lever", true, "Lever External Engineer"},
+		{marker + "-kzcompany", "kzcompany", true, "Kazakhstan Company Engineer"},
 	}
 	var sourceNames, jobIDs []string
 	t.Cleanup(func() {

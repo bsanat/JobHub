@@ -106,8 +106,9 @@ actions. It upserts by `(source, external_id)`;
 new company records use existing linking and are not verified automatically.
 The source is registered disabled/unapproved in the DB. Public visibility
 requires a separate source approval and activation review using the existing
-`jobhub.job_sources` controls. The `kzcompany` provider is excluded from the
-automatic Telegram publisher even after activation.
+`jobhub.job_sources` controls. Approved, active company vacancies are eligible
+for the Telegram publisher after activation. The publisher records each
+vacancy/channel pair so scheduled imports do not repost unchanged jobs.
 
 The prepared manual GitHub Actions workflow is
 `.github/workflows/kz-company-imports.yml`. Its `probe` mode has no database
@@ -119,7 +120,7 @@ variables, and the inspected `PUBLIC_IMPORT_DATABASE_HOST` and
 `PUBLIC_IMPORT_DATABASE_USER` variables match the secret URL. The workflow
 has no schedule and runs only on manual dispatch from the default branch.
 After a successful non-empty import it explicitly activates that source for
-public display; the Telegram publisher still excludes `kzcompany`.
+public display and makes its approved vacancies eligible for Telegram.
 For Air Astana or Kcell, choose `reconcile-preview` first, inspect the exact
 match counts, then `reconcile` to retire only URL-matched new-source jobs.
 Their unique new jobs, the established importer, and original application URLs

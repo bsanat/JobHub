@@ -145,7 +145,7 @@ LEFT JOIN jobhub.companies c ON c.id = j.company_id
 LEFT JOIN jobhub.telegram_publications tp ON tp.job_id = j.id AND tp.channel_id = $1
 WHERE s.enabled
   AND (s.production_permissions_confirmed OR $4)
-  AND s.provider NOT IN ('demo', 'kzcompany')
+  AND s.provider <> 'demo'
   AND (s.provider NOT IN ('arbeitnow', 'greenhouse', 'lever') OR (s.updated_at > s.created_at AND j.first_seen_at > s.updated_at))
   AND jobhub.job_is_public(j)
   AND NOT EXISTS (
@@ -169,7 +169,7 @@ WITH eligible AS (
     LEFT JOIN jobhub.telegram_publications tp ON tp.job_id = j.id AND tp.channel_id = $1
     WHERE s.enabled
       AND (s.production_permissions_confirmed OR $4)
-      AND s.provider NOT IN ('demo', 'kzcompany')
+      AND s.provider <> 'demo'
       AND (s.provider NOT IN ('arbeitnow', 'greenhouse', 'lever') OR (s.updated_at > s.created_at AND j.first_seen_at > s.updated_at))
       AND jobhub.job_is_public(j)
       AND NOT EXISTS (
