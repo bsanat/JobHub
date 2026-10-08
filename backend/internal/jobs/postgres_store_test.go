@@ -20,3 +20,12 @@ func TestSourceName(t *testing.T) {
 		}
 	}
 }
+
+func TestKazakhstanCompanySourceUsesReadableName(t *testing.T) {
+	if got := sourceNameForJob("kzcompany:bcc", "Bank CenterCredit"); got != "Bank CenterCredit" {
+		t.Fatalf("source name = %q", got)
+	}
+	if got := sourceNameForJob("kzcompany:bcc", ""); got != "kzcompany:bcc" {
+		t.Fatalf("missing company fallback = %q", got)
+	}
+}

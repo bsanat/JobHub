@@ -300,7 +300,7 @@ func mapJobCardRow(row dbgen.ListPublicJobsRow) Job {
 
 func mapRow(row dbgen.JobhubJob) Job {
 	job := Job{
-		ID: formatUUID(row.ID), Source: row.Source, SourceName: sourceName(row.Source),
+		ID: formatUUID(row.ID), Source: row.Source, SourceName: sourceNameForJob(row.Source, textValue(row.CompanyNameRaw)),
 		ExternalID: textValue(row.ExternalID), SourceURL: textValue(row.SourceUrl),
 		UpstreamSourceName: textValue(row.UpstreamSourceName), CompanyName: textValue(row.CompanyNameRaw),
 		CompanyID: formatUUID(row.CompanyID), Title: row.Title, Category: textValue(row.Category), Location: textValue(row.LocationRaw), CanonicalCityID: textValue(row.CanonicalCityID), Description: textValue(row.Description),
@@ -344,6 +344,13 @@ func sourceName(source string) string {
 		return "Demo сыртқы дереккөз"
 	}
 	return source
+}
+
+func sourceNameForJob(source, companyName string) string {
+	if strings.HasPrefix(source, "kzcompany:") && strings.TrimSpace(companyName) != "" {
+		return companyName
+	}
+	return sourceName(source)
 }
 
 func nullableText(value string) pgtype.Text { return pgtype.Text{String: value, Valid: value != ""} }
