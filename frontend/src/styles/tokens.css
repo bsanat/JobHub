@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
 
-  --color-primary: #1b1b1b;
-  --color-primary-hover: #333333;
-  --color-primary-soft: #f7f7f8;
-  --color-accent: #1b1b1b;
-  --color-accent-soft: #f7f7f8;
-  --color-background: #ffffff;
+  --color-primary: #1769e0;
+  --color-primary-hover: #0f56bf;
+  --color-primary-soft: #eaf2fd;
+  --color-accent: #f59e0b;
+  --color-accent-soft: #fff7e6;
+  --color-background: #f7f8fa;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
   --color-border: #e5e7eb;
-  --color-border-strong: #c9cdd3;
-  --color-text-primary: #1b1b1b;
-  --color-text-secondary: #62666d;
-  --color-text-muted: #62666d;
+  --color-border-strong: #cbd2dc;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
   --color-success: #15803d;
   --color-success-soft: #ecf8f0;
   --color-warning: #9a5807;
@@ -24,8 +24,8 @@
   --color-focus: #1769e0;
   --color-overlay: rgb(17 24 39 / 52%);
 
-  --font-display: "Noto Sans Variable", "Arial", sans-serif;
-  --font-body: "Noto Sans Variable", "Arial", sans-serif;
+  --font-display: "Source Sans 3 Variable", "Arial", sans-serif;
+  --font-body: "Source Sans 3 Variable", "Arial", sans-serif;
 
   --text-12: 0.75rem;
   --text-14: 0.875rem;
@@ -35,7 +35,6 @@
   --text-24: 1.5rem;
   --text-32: 2rem;
   --text-40: 2.5rem;
-  --text-48: 3rem;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -48,19 +47,19 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  --radius-sm: 0.625rem;
+  --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-full: 999px;
 
-  --shadow-raised: 0 4px 14px rgb(27 27 27 / 5%);
-  --shadow-overlay: 0 16px 40px rgb(27 27 27 / 14%);
+  --shadow-raised: 0 8px 24px rgb(17 24 39 / 7%);
+  --shadow-overlay: 0 20px 56px rgb(17 24 39 / 18%);
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
 
-  --container-wide: 75rem;
-  --container-page: 75rem;
-  --container-reading: 46rem;
-  --header-height: 4.5rem;
+  --container-wide: 90rem;
+  --container-page: 73.75rem;
+  --container-reading: 45rem;
+  --header-height: 4rem;
   --control-height: 3rem;
 }

@@ -101,6 +101,7 @@ export interface NativeJobInput {
 
 export interface JobSearchParams {
   query?: string;
+  region?: "kazakhstan" | "international";
   city?: string;
   preferredCity?: string;
   workModes?: WorkMode[];

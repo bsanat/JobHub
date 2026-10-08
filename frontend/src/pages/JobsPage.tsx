@@ -25,7 +25,7 @@ export function JobsPage() {
   const setSearch = (next: JobSearchParams) => setUrlParams(serializeJobSearchParams(next));
   const updateKeyword = (values: JobSearchValues) => setSearch({ ...search, query: values.query || undefined, page: 1 });
   const clear = () => setUrlParams(new URLSearchParams());
-  const hasFilters = Boolean(search.query || search.city || search.workModes?.length || search.salaryMin != null || search.salaryMax != null || search.experience || search.employment || search.datePosted);
+  const hasFilters = Boolean(search.query || search.region || search.city || search.workModes?.length || search.salaryMin != null || search.salaryMax != null || search.experience || search.employment || search.datePosted);
   const chips = makeChips(search, t, i18n.resolvedLanguage ?? i18n.language);
   return (
     <SiteShell>
@@ -62,6 +62,7 @@ export function JobsPage() {
 function makeChips(search: JobSearchParams, t: (key: string, options?: Record<string, unknown>) => string, language: string) {
   const chips: Array<{ key: string; label: string; clear: Partial<JobSearchParams> }> = [];
   if (search.query) chips.push({ key: "q", label: search.query, clear: { query: undefined } });
+  if (search.region) chips.push({ key: "region", label: t(`jobs.region${search.region === "kazakhstan" ? "Kazakhstan" : "International"}`), clear: { region: undefined } });
   if (search.city) chips.push({ key: "city", label: cityName(search.city, language), clear: { city: undefined } });
   for (const mode of search.workModes ?? []) chips.push({ key: `mode-${mode}`, label: t(`employer.workModes.${mode}`), clear: { workModes: search.workModes?.filter((item) => item !== mode) } });
   if ((search.salaryMin != null || search.salaryMax != null) && search.currency) {

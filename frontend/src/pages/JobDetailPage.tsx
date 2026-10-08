@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ArrowLeft, BriefcaseBusiness, ExternalLink, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -49,7 +51,7 @@ export function JobDetailPage() {
             <div className="detail-source-cue"><span aria-hidden="true" />{t(job.data.source.type === "external" ? "jobDetail.importedFrom" : "jobDetail.publishedBy", { source: job.data.source.name })}</div>
             <section aria-labelledby="about-job-title">
               <h2 id="about-job-title">{t("jobDetail.aboutTitle")}</h2>
-              <p className="detail-description">{job.data.summary || t("jobDetail.noDescription")}</p>
+              {job.data.source.type === "external" && job.data.summary ? <div className="detail-description detail-description--formatted"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer nofollow">{children}</a> }}>{job.data.summary}</ReactMarkdown></div> : <p className="detail-description">{job.data.summary || t("jobDetail.noDescription")}</p>}
               {job.data.descriptionKind === "snippet" ? <p className="detail-note">{t("jobDetail.snippetNote")}</p> : null}
             </section>
             {job.data.responsibilities ? <DetailListSection title={t("jobDetail.responsibilitiesTitle")} value={job.data.responsibilities} /> : null}
@@ -66,7 +68,7 @@ export function JobDetailPage() {
             </div> : <div className="job-detail-actions"><JobSaveButton job={job.data} /><ApplyAction job={job.data} /></div>}
             <section>
               <h2>{t("jobDetail.sourceTitle")}</h2>
-              {job.data.source.id === "arbeitnow:global" ? <a className="detail-source-name" href="https://www.arbeitnow.com" target="_blank" rel="noreferrer">{job.data.source.name}<ExternalLink size={16} aria-hidden="true" /></a> : <p className="detail-source-name">{job.data.source.name}</p>}
+              {job.data.source.id === "arbeitnow:global" ? <a className="detail-source-name" href="https://www.arbeitnow.com" target="_blank" rel="noopener noreferrer"><img className="detail-source-logo" src="/brand/arbeitnow-logo.png" alt={job.data.source.name} /><ExternalLink size={16} aria-hidden="true" /></a> : <p className="detail-source-name">{job.data.source.name}</p>}
               <dl>
                 {job.data.firstSeenAt ? <div><dt>{t("jobDetail.firstSeen")}</dt><dd>{formatDate(job.data.firstSeenAt, i18n.language)}</dd></div> : null}
                 {job.data.lastSyncedAt ? <div><dt>{t("jobDetail.lastUpdated")}</dt><dd>{formatDate(job.data.lastSyncedAt, i18n.language)}</dd></div> : null}
@@ -88,5 +90,5 @@ function DetailSkeleton({ label }: { label: string }) {
 
 function formatDate(value: string, language: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(date);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(language === "kk" ? "kk-KZ" : "ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Almaty" }).format(date);
 }

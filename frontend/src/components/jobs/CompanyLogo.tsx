@@ -12,7 +12,6 @@ export function CompanyLogo({ job, size = "list" }: CompanyLogoProps) {
   const presentation = companyPresentationFor(job);
   const mark = companyMarkFor(presentation.name || job.company.name, presentation.logoUrl);
   const [failedUrl, setFailedUrl] = useState<string>();
-  const [wideLogoUrl, setWideLogoUrl] = useState<string>();
   const showLogo = Boolean(mark.logoUrl && failedUrl !== mark.logoUrl);
 
   return (
@@ -21,11 +20,6 @@ export function CompanyLogo({ job, size = "list" }: CompanyLogoProps) {
         <img
           src={mark.logoUrl}
           alt=""
-          style={{ objectFit: wideLogoUrl === mark.logoUrl ? "contain" : "cover" }}
-          onLoad={(event) => {
-            const image = event.currentTarget;
-            setWideLogoUrl(image.naturalWidth > image.naturalHeight * 1.5 ? mark.logoUrl : undefined);
-          }}
           onError={() => setFailedUrl(mark.logoUrl)}
         />
       ) : (

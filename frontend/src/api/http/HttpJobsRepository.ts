@@ -9,6 +9,7 @@ export class HttpJobsRepository implements JobsRepository {
     const response = await apiClient.get<JobSearchResponseDto>("/jobs", {
       params: {
         q: params.query,
+        region: params.region,
         city: params.city,
         preferred_city: params.preferredCity,
         work_mode: params.workModes?.join(","),

@@ -15,7 +15,8 @@ export function JobFilters({ search, onChange, onReset }: { search: JobSearchPar
   const toggleMode = (mode: WorkMode, checked: boolean) => update({ workModes: checked ? [...(search.workModes ?? []), mode] : (search.workModes ?? []).filter((item) => item !== mode) });
   return (
     <div className="job-filters">
-      <CitySelect label={t("search.locationLabel")} anyLabel={t("jobs.anyLocation")} value={search.city} onChange={(city) => update({ city: city || undefined })} />
+      <RadioGroup name="region" label={t("jobs.regionLabel")} value={search.region ?? ""} onChange={(value) => update({ region: (value || undefined) as JobSearchParams["region"], city: undefined })} options={[{ value: "", label: t("jobs.anyOption") }, { value: "kazakhstan", label: t("jobs.regionKazakhstan") }, { value: "international", label: t("jobs.regionInternational") }]} />
+      {search.region === "international" ? <p className="filter-region-note">{t("jobs.internationalNote")}</p> : <CitySelect label={t("search.locationLabel")} anyLabel={t("jobs.anyLocation")} value={search.city} onChange={(city) => update({ city: city || undefined })} />}
       <SalaryFilter key={`${search.salaryMin ?? ""}:${search.salaryMax ?? ""}:${search.currency ?? ""}`} search={search} onApply={update} />
       <fieldset className="filter-fieldset"><legend>{t("jobs.workMode")}</legend>{modes.map((mode) => <Checkbox key={mode} label={t(`employer.workModes.${mode}`)} checked={search.workModes?.includes(mode) ?? false} onChange={(event) => toggleMode(mode, event.target.checked)} />)}</fieldset>
       <RadioGroup name="employment" label={t("employer.fields.employmentType")} value={search.employment ?? ""} onChange={(value) => update({ employment: (value || undefined) as EmploymentType | undefined })} options={[{ value: "", label: t("jobs.anyOption") }, ...employments.map((value) => ({ value, label: t(`employer.employmentTypes.${value}`) }))]} />

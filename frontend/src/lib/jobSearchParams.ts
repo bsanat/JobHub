@@ -20,6 +20,7 @@ function positiveInteger(value: string | null): number | undefined {
 
 export function parseJobSearchParams(params: URLSearchParams): JobSearchParams {
   const rawSort = params.get("sort");
+  const rawRegion = params.get("region");
   const rawCity = params.get("city");
   const rawWorkModes = (params.get("work_mode") ?? "").split(",").filter((value): value is WorkMode => workModes.includes(value as WorkMode));
   const experience = params.get("experience");
@@ -32,6 +33,7 @@ export function parseJobSearchParams(params: URLSearchParams): JobSearchParams {
   const sort: JobSort = rawSort === "oldest" ? "oldest" : "newest";
   return {
     query: params.get("q") || undefined,
+    region: rawRegion === "kazakhstan" || rawRegion === "international" ? rawRegion : undefined,
     city: isCityId(rawCity) ? rawCity : undefined,
     workModes: [...new Set(rawWorkModes)],
     salaryMin,
@@ -48,6 +50,7 @@ export function parseJobSearchParams(params: URLSearchParams): JobSearchParams {
 export function serializeJobSearchParams(search: JobSearchParams): URLSearchParams {
   const params = new URLSearchParams();
   if (search.query) params.set("q", search.query);
+  if (search.region) params.set("region", search.region);
   if (search.city && isCityId(search.city)) params.set("city", search.city);
   const modes = workModes.filter((mode) => search.workModes?.includes(mode));
   if (modes.length) params.set("work_mode", modes.join(","));
