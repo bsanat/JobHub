@@ -12,6 +12,8 @@ on:
           - kcell
           - technodom
           - kolesa
+          - bcc
+          - sulpak
       mode:
         description: Probe, import, or reconcile an existing official-source duplicate
         required: true

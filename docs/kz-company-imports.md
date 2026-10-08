@@ -44,7 +44,7 @@ source entry; they are review notes, not legal permission.
 | Freedom Bank Kazakhstan | [Corporate site](https://www.bankffin.kz/) | Career page unverified | Review |
 | Freedom Finance Kazakhstan | — | Employer identity and career page unverified | Review |
 | ForteBank | [Careers](https://career.forte.kz/ru) | JS | Review |
-| Bank CenterCredit | [Careers](https://www.bcc.kz/en/career/) | JS | Review |
+| Bank CenterCredit | [Official vacancies](https://www.bcc.kz/en/career/vacancies/) | Server-rendered HTML, numeric vacancy URLs | Supported, disabled by default |
 | Jusan Bank / Alatau City Bank | [Current careers](https://alataucitybank.kz/en/career/vacancy) | JS | Review |
 | Eurasian Bank | [Corporate site](https://eubank.kz/) | Career page unverified | Review |
 | BI Group | [Careers](https://bi.group/ru/career) | JS; robots review returned 403 | Blocked |
@@ -56,7 +56,7 @@ source entry; they are review notes, not legal permission.
 | Chocofamily | [Corporate site](https://chocofamily.kz/) | Current vacancies path unavailable | Review |
 | Aviata | [Corporate site](https://aviata.kz/) | Career page unverified | Review |
 | Technodom | [Vacancies](https://hr.technodom.kz/vacancies/) | Static HTML | Supported, disabled |
-| Sulpak | [Career map](https://job.sulpak.kz/WorkMap/WorkMap) | JS; detail contract unverified | Review |
+| Sulpak | [Office vacancies](https://job.sulpak.kz/WorkInCompany/Office) | Server-rendered HTML, stable detail URLs | Supported, disabled by default; office roles only |
 | Magnum | [HR site](https://hr.magnum.kz/) | JS; full listing unverified | Review |
 | Small | [City jobs page](https://small.kz/ru/aksu/job) | JS; not a nationwide index | Review |
 | Yandex Qazaqstan | [Corporate site](https://yandex.kz/company/ru/) | Kazakhstan-specific career feed unverified | Review |
@@ -64,7 +64,7 @@ source entry; they are review notes, not legal permission.
 | Qazaqstan Investment Corporation | [Careers](https://qic.kz/ru/o-nas/o-nas/karera/) | Hosted Baiterek portal; employer filter unverified | Review |
 
 No Greenhouse, Lever, Workday, SmartRecruiters, JSON-LD or sitemap board ID was
-invented. Five adapters exist in code, but Halyk is blocked by robots; four
+invented. Seven adapters exist in code, but Halyk is blocked by robots; six
 remain selectable for a read-only review. The static
 adapters have bounded requests; an incomplete fetch cannot deactivate old jobs.
 Their source's publishing permission remains a separate decision.
@@ -121,6 +121,28 @@ For Air Astana or Kcell, choose `reconcile-preview` first, inspect the exact
 match counts, then `reconcile` to retire only URL-matched new-source jobs.
 Their unique new jobs, the established importer, and original application URLs
 remain active. Every later `once` run for these two sources reconciles again.
+
+The separate `.github/workflows/kz-company-scheduled-import.yml` polls the
+explicit `KZ_IMPORT_AUTO_SOURCES` repository-variable list every hour at minute
+17. Set `KZ_IMPORT_AUTO_ENABLED=true` to enable it after source review. The
+workflow uses the same Production host/user identity and permission gates,
+imports each approved source once, and reconciles Air Astana and Kcell URL
+duplicates. A failed source does not prevent later sources in that run from
+updating. This is **hourly polling**, not instant source notifications; GitHub
+may delay scheduled starts. Neither the API server nor a persistent worker
+starts an importer automatically.
+
+The read-only probes on 2026-10-09 found 10 Kazakhstan vacancies on the
+[Bank CenterCredit official listing](https://www.bcc.kz/en/career/vacancies/)
+and one location-explicit office vacancy on
+[Sulpak's official office page](https://job.sulpak.kz/WorkInCompany/Office).
+Two other Sulpak office details did not state a location and were excluded.
+Both adapters treat their page as a partial snapshot, so unseen jobs are never
+deactivated on that basis. The BCC [robots.txt](https://www.bcc.kz/robots.txt)
+allows the reviewed career paths; the Sulpak career host returned 404 for
+`robots.txt`, which does not establish a prohibition or grant redistribution
+rights. The operator confirmed publication rights, while checked-in source
+flags remain off by default.
 
 ## Read-only source review, 2026-10-09
 

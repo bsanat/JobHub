@@ -20,7 +20,10 @@ import (
 	"jobhub-ai/backend/internal/safety"
 )
 
-type Config struct{ Source, Company, ListingURL, DetailPrefix, LocationMode string }
+type Config struct {
+	Source, Company, ListingURL, DetailPrefix, LocationMode string
+	ForcePartial                                            bool
+}
 type Client struct {
 	cfg     Config
 	http    *http.Client
@@ -29,7 +32,7 @@ type Client struct {
 }
 
 func New(cfg Config, maxRequests, maxJobs int, client *http.Client) (*Client, error) {
-	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa") {
+	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak") {
 		return nil, providers.Failure("INVALID_BUDGET")
 	}
 	if client == nil {
@@ -53,7 +56,7 @@ func (c *Client) Collect(ctx context.Context) (out providers.Result, err error) 
 	if err != nil {
 		return out, err
 	}
-	links := detailLinks(body, c.cfg.ListingURL, c.cfg.DetailPrefix)
+	links := detailLinks(body, c.cfg.ListingURL, c.cfg.DetailPrefix, c.cfg.LocationMode)
 	out.Fetched = len(links)
 	if out.Fetched > c.maxJobs {
 		return out, providers.Failure("JOB_BUDGET_EXHAUSTED")
@@ -72,7 +75,7 @@ func (c *Client) Collect(ctx context.Context) (out providers.Result, err error) 
 		}
 		out.Items = append(out.Items, item)
 	}
-	out.Complete = out.Skipped == 0 && out.Malformed == 0 && len(out.Items) == len(links)
+	out.Complete = !c.cfg.ForcePartial && out.Skipped == 0 && out.Malformed == 0 && len(out.Items) == len(links)
 	return out, nil
 }
 func (c *Client) fetch(ctx context.Context, raw string, out *providers.Result, detail bool) ([]byte, error) {
@@ -101,7 +104,7 @@ func (c *Client) fetch(ctx context.Context, raw string, out *providers.Result, d
 	}
 	return b, nil
 }
-func detailLinks(body []byte, listing, prefix string) []string {
+func detailLinks(body []byte, listing, prefix, mode string) []string {
 	base, _ := url.Parse(listing)
 	seen := map[string]bool{}
 	var out []string
@@ -113,8 +116,11 @@ func detailLinks(body []byte, listing, prefix string) []string {
 					u, e := url.Parse(strings.TrimSpace(a.Val))
 					if e == nil {
 						u = base.ResolveReference(u)
+						if mode == "bcc" && bccDetailPath.MatchString(u.Path) && !strings.HasSuffix(u.Path, "/") {
+							u.Path += "/"
+						}
 						raw := u.String()
-						if u.Host == base.Host && strings.HasPrefix(u.Path, prefix) && raw != listing && !seen[raw] {
+						if u.Host == base.Host && strings.HasPrefix(u.Path, prefix) && raw != listing && !seen[raw] && (mode != "bcc" || bccDetailPath.MatchString(u.Path)) {
 							seen[raw] = true
 							out = append(out, raw)
 						}
@@ -132,6 +138,8 @@ func detailLinks(body []byte, listing, prefix string) []string {
 	}
 	return out
 }
+
+var bccDetailPath = regexp.MustCompile(`^/en/career/[0-9]+/?$`)
 
 var locationPattern = regexp.MustCompile(`(?i)(Казахстан,\s*[А-ЯA-ZЁӘІҢҒҚӨҰҮҺа-яёәіңғқөұүһ ,/-]+(?:,\s*KZ)?)`)
 
@@ -176,6 +184,16 @@ func normalize(cfg Config, raw string, body []byte) (jobs.ImportedJob, bool) {
 			desc = structured
 		}
 	}
+	if cfg.LocationMode == "bcc" {
+		if city, body := bccVacancyContent(doc); city != "" {
+			loc, desc = city, body
+		}
+	}
+	if cfg.LocationMode == "sulpak" {
+		if name, city, body := sulpakVacancyContent(doc); name != "" {
+			title, loc, desc = name, city, body
+		}
+	}
 	if match := locationPattern.FindString(desc); match != "" {
 		loc = strings.TrimSpace(match)
 	}
@@ -190,6 +208,99 @@ func normalize(cfg Config, raw string, body []byte) (jobs.ImportedJob, bool) {
 	sum := sha256.Sum256([]byte(raw))
 	id := "url_" + hex.EncodeToString(sum[:8])
 	return jobs.ImportedJob{Source: cfg.Source, ExternalID: id, SourceURL: raw, CompanyNameRaw: cfg.Company, Title: title, LocationRaw: strings.TrimSpace(loc), Description: strings.TrimSpace(desc), DescriptionKind: "full", SalaryRaw: salary}, true
+}
+
+func bccVacancyContent(doc *html.Node) (string, string) {
+	var city, description string
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "h1" {
+			for sibling := n.NextSibling; sibling != nil; sibling = sibling.NextSibling {
+				if sibling.Type != html.ElementNode {
+					continue
+				}
+				if city == "" && classContains(sibling, "text-sm") {
+					candidate := nodeText(sibling)
+					if locations.Normalize(candidate) != "" {
+						city = candidate
+					}
+				}
+				if city != "" && classContains(sibling, "text-neutral-700") {
+					description = formattedContent(sibling)
+					return
+				}
+			}
+		}
+		for child := n.FirstChild; child != nil && description == ""; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(doc)
+	return city, description
+}
+
+func sulpakVacancyContent(doc *html.Node) (string, string, string) {
+	var name, city, description string
+	var walk func(*html.Node, bool)
+	walk = func(n *html.Node, inVacancy bool) {
+		if n.Type == html.ElementNode {
+			for _, attr := range n.Attr {
+				if attr.Key == "id" && attr.Val == "vacancy" {
+					inVacancy = true
+				}
+			}
+			if inVacancy && name == "" && n.Data == "strong" {
+				full := nodeText(n)
+				if comma := strings.LastIndex(full, ","); comma > 0 {
+					candidate := strings.TrimSpace(full[comma+1:])
+					if locations.Normalize(candidate) != "" {
+						name, city = strings.TrimSpace(full[:comma]), candidate
+					}
+				}
+			}
+			if inVacancy && description == "" && classContains(n, "vacancy-info") {
+				description = formattedContent(n)
+				return
+			}
+		}
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child, inVacancy)
+		}
+	}
+	walk(doc, false)
+	return name, city, description
+}
+
+func formattedContent(root *html.Node) string {
+	var lines []string
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			var prefix string
+			switch n.Data {
+			case "h2", "h3", "h4":
+				prefix = "## "
+			case "li":
+				prefix = "- "
+			case "p":
+				prefix = ""
+			default:
+				for child := n.FirstChild; child != nil; child = child.NextSibling {
+					walk(child)
+				}
+				return
+			}
+			if value := nodeText(n); value != "" {
+				lines = append(lines, prefix+value)
+			}
+			return
+		}
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(root)
+	return strings.Join(lines, "\n")
 }
 
 func specificLocation(doc *html.Node, mode string) (string, string) {

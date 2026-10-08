@@ -24,6 +24,8 @@
 - `backend/cmd/import-kz-company-jobs/`, `backend/internal/kzcompanies/` и
   `backend/config/kz-company-sources.json` — отключённый импорт официальных
   карьерных страниц компаний Казахстана; реестр и запуск — `docs/kz-company-imports.md`.
+- `.github/workflows/kz-company-scheduled-import.yml` — почасовой запуск только
+  для проверенных источников из переменной `KZ_IMPORT_AUTO_SOURCES`.
 - `frontend/src/components/` — общие и функциональные компоненты.
 - `frontend/src/components/jobs/SalaryFilter.tsx` — диапазон зарплаты в каталоге;
   параметры URL — `frontend/src/lib/jobSearchParams.ts`, SQL — `backend/sql/queries/jobs.sql`.
