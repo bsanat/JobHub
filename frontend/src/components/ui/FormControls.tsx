@@ -144,7 +144,7 @@ export function Checkbox({ label, description, id: providedId, ...props }: Choic
 
 export interface RadioOption {
   value: string;
-  label: string;
+  label: ReactNode;
 }
 
 export interface RadioGroupProps {

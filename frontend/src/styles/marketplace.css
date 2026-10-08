@@ -307,6 +307,9 @@
 .job-filters .ui-radio-group .ui-choice { min-height: 2rem; align-items: center; }
 .job-filters .ui-radio-group .ui-choice strong { font-size: var(--text-14); font-weight: 500; }
 .job-filters .ui-radio-group .ui-choice-control { width: 1.125rem; height: 1.125rem; margin-top: 0; }
+.job-filter-region-option { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.job-filter-region-option img { display: block; flex: 0 0 auto; border-radius: 2px; box-shadow: 0 0 0 1px rgb(20 32 26 / 10%); }
+.job-filter-region-option svg { flex: 0 0 auto; color: var(--color-text-muted); }
 .job-filters .ui-label,
 .filter-fieldset legend { font-size: var(--text-14); font-weight: 650; }
 .job-filters .ui-input,

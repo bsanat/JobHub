@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JobHub — брендті қолдану нұсқаулығы / Руководство по применению бренда</title>
+  <style>
+    :root { --blue:#1769e0; --ink:#111827; --muted:#4b5563; --paper:#f7f8fa; --line:#e5e7eb; font-family:"Source Sans 3 Variable",Arial,sans-serif; color:var(--ink); background:var(--paper); }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    main { width:min(1100px,calc(100% - 32px)); margin:auto; padding:32px 0 80px; }
+    h1 { font-size:clamp(36px,5vw,64px); line-height:1; margin:20px 0; }
+    h2 { font-size:30px; line-height:1.15; margin:0 0 18px; }
+    h3 { font-size:20px; margin:0 0 8px; }
+    p { margin:8px 0 0; line-height:1.45; }
+    section { margin-top:44px; }
+    .lead { max-width:720px; font-size:20px; color:var(--muted); }
+    .tag { display:inline-block; padding:5px 11px; border:1px solid var(--line); border-radius:999px; background:#fff; font-size:13px; font-weight:750; }
+    .eyebrow { color:var(--blue); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .panel { border:1px solid var(--line); border-radius:16px; background:white; overflow:hidden; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .grid.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .specimen { min-height:200px; padding:28px; display:grid; place-items:center; }
+    .caption { padding:18px 20px; border-top:1px solid var(--line); }
+    .caption p { color:var(--muted); font-size:14px; }
+    .logo { width:230px; max-width:100%; height:auto; display:block; }
+    .logo-silhouette { display:block; width:230px; max-width:100%; height:auto; filter:brightness(0) invert(1); }
+    .mono .logo-silhouette { filter:brightness(0) saturate(100%) invert(29%) sepia(93%) saturate(1552%) hue-rotate(199deg) brightness(96%) contrast(95%); }
+    .bw .logo-silhouette { filter:brightness(0); }
+    .wrong-color .logo-silhouette { filter:brightness(0) saturate(100%) invert(24%) sepia(93%) saturate(1705%) hue-rotate(322deg); }
+    .dark { background:#111827; color:white; }
+    .mono { color:#1769e0; }
+    .bw { color:#111827; }
+    .clearspace { display:flex; align-items:center; gap:14px; border:1px dashed #1769e0; padding:28px; position:relative; }
+    .clearspace:before { content:"x"; position:absolute; top:3px; left:8px; color:var(--blue); font-weight:800; }
+    .rules { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .rule { padding:22px; }
+    .rule strong { color:var(--blue); }
+    .bad { color:#b42318; font-weight:800; }
+    .wrong .specimen { height:130px; min-height:130px; background:#fff; }
+    .wrong .logo,.wrong .logo-silhouette { width:155px; }
+    .stretched { transform:scaleX(1.45); }
+    .rotated { transform:rotate(-12deg); }
+    .effect { filter:drop-shadow(8px 8px 3px #8b95a5); }
+    .lowcontrast { background:#1769e0!important; }
+    .rearranged { display:flex; flex-direction:column; align-items:center; gap:4px; font-weight:900; }
+    .rearranged img { width:38px; }
+    .partner { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:22px; min-height:125px; }
+    .partner .logo { width:180px; }
+    .placeholder { min-width:128px; padding:13px 20px; border:2px dashed #9ca3af; border-radius:9px; text-align:center; font-weight:800; }
+    .times { color:#6b7280; font-size:25px; }
+    .colors { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+    .swatch { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:white; }
+    .swatch .paint { height:76px; border-bottom:1px solid var(--line); }
+    .swatch p { padding:0 12px 12px; font-size:14px; }
+    .swatch strong { display:block; padding:10px 12px 0; }
+    .contrast { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+    .contrast > div { padding:16px 20px; border-radius:9px; font-weight:750; }
+    .type-sample { padding:24px; }
+    .type-sample div { padding:12px 0; border-bottom:1px solid var(--line); }
+    .type-sample small { color:var(--muted); display:block; }
+    .example { padding:20px; }
+    .example .mini-head { display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid var(--line); padding-bottom:14px; }
+    .example .mini-head img { width:120px; }
+    .fake-card { margin-top:14px; border:1px solid var(--line); border-radius:12px; padding:18px; background:white; }
+    .fake-card strong { font-size:22px; }
+    .fake-card p { color:var(--muted); }
+    .button { display:inline-block; margin-top:12px; padding:9px 16px; border-radius:8px; background:var(--blue); color:white; font-weight:800; }
+    .social { min-height:190px; padding:20px; background:#111827; color:white; }
+    .social .logo-silhouette { width:140px; color:white; }
+    .social strong { display:block; margin-top:22px; font-size:26px; }
+    .note { margin-top:14px; padding:14px 18px; border-left:4px solid var(--blue); background:white; }
+    @media(max-width:720px) { .grid,.grid.three,.rules,.colors { grid-template-columns:1fr; } .specimen { min-height:160px; } }
+    @media print { body { background:white; } main { width:100%; padding:0; } section { break-inside:auto; margin-top:28px; } h2 { break-after:avoid; } .panel { break-inside:avoid; box-shadow:none; } }
+  </style>
+</head>
+<body><main>
+  <span class="tag">JobHub · 2026</span>
+  <h1>Брендті қолдану<br>Руководство по бренду</h1>
+  <p class="lead">Қолданыстағы логотип, интерфейс түстері және қаріп сақталды. Ұсынылған өлшемдер мен бір түсті нұсқалар ресми стандарт ретінде бекітілмеген.<br>Существующие логотип, цвета интерфейса и шрифт сохранены. Рекомендуемые размеры и одноцветные версии пока не утверждены как официальный стандарт.</p>
+
+  <section><span class="eyebrow">01 · Логотип / Логотип</span><h2>Нұсқалар / Версии</h2>
+    <div class="grid">
+      <div class="panel"><div class="specimen"><img class="logo" src="/brand/jobhub-logo.png" alt="JobHub"></div><div class="caption"><span class="tag">Қолданыстағы / Действующий</span><h3>Негізгі / Основной</h3><p>Ақ немесе ашық бейтарап фонда қолданыңыз. / Используйте на белом или светлом нейтральном фоне.</p></div></div>
+      <div class="panel"><div class="specimen dark"><img class="logo-silhouette" src="/brand/jobhub-logo.png" alt="JobHub"></div><div class="caption"><span class="tag">Ұсыныс / Рекомендация</span><h3>Кері / Инвертированный</h3><p>Қараңғы фонда ақ силуэт қолданыңыз; бастапқы файлдың түстерін өзгертпеңіз. / На тёмном фоне используйте белый силуэт; не перекрашивайте исходный файл.</p></div></div>
+      <div class="panel"><div class="specimen mono"><img class="logo-silhouette" src="/brand/jobhub-logo.png" alt="JobHub"></div><div class="caption"><span class="tag">Ұсыныс / Рекомендация</span><h3>Бір түсті / Монохромный</h3><p>Бір ғана бренд түсі қолжетімді болғанда. / Когда доступен только один фирменный цвет.</p></div></div>
+      <div class="panel"><div class="specimen bw"><img class="logo-silhouette" src="/brand/jobhub-logo.png" alt="JobHub"></div><div class="caption"><span class="tag">Ұсыныс / Рекомендация</span><h3>Қара-ақ / Чёрно-белый</h3><p>Құжат пен баспаға қара силуэт; қара фонда ақ нұсқа. / Для документов и печати — чёрный силуэт, на чёрном фоне — белый.</p></div></div>
+    </div>
+  </section>
+
+  <section><span class="eyebrow">02 · Кеңістік / Размещение</span><h2>Логотипке орын беріңіз / Оставляйте логотипу пространство</h2>
+    <div class="panel"><div class="specimen"><div class="clearspace"><img class="logo" src="/brand/jobhub-logo.png" alt="JobHub"></div></div><div class="caption"><span class="tag">Ұсыныс / Рекомендация</span><p><strong>x</strong> — таңба үстіндегі көк нүктенің диаметрі. Әр жақта кемінде 1× бос орын қалдырыңыз. / <strong>x</strong> — диаметр синей точки над знаком. Оставляйте не менее 1× свободного пространства со всех сторон.</p></div></div>
+    <div class="rules"><div class="panel rule"><strong>120 px / 35 мм</strong><p>Толық логотиптің ең кіші цифрлық/баспа ені. / Минимальная ширина полного логотипа в цифре/печати.</p></div><div class="panel rule"><strong>36 px / 10 мм</strong><p>Тек таңба үшін ең кіші өлшем. / Минимальный размер отдельного знака.</p></div><div class="panel rule"><strong>Тақырып / Верхний край</strong><p>Сайтта сол жақ жоғарғы бұрыш; құжатта жоғарғы шет; әлеуметтік суретте қауіпсіз аймақ ішінде. / В шапке сайта слева; в документе сверху; в соцсетях внутри безопасной зоны.</p></div></div>
+  </section>
+
+  <section><span class="eyebrow">03 · Қате қолдану / Ошибки</span><h2>Пішінін сақтаңыз / Сохраняйте форму</h2>
+    <div class="grid three wrong">
+      <div class="panel"><div class="specimen"><img class="logo stretched" src="/brand/jobhub-logo.png" alt=""></div><div class="caption"><span class="bad">✕</span> Созбаңыз / Не растягивайте.</div></div>
+      <div class="panel"><div class="specimen"><img class="logo rotated" src="/brand/jobhub-logo.png" alt=""></div><div class="caption"><span class="bad">✕</span> Бұрамаңыз / Не поворачивайте.</div></div>
+      <div class="panel"><div class="specimen wrong-color"><img class="logo-silhouette" src="/brand/jobhub-logo.png" alt=""></div><div class="caption"><span class="bad">✕</span> Түстерін өзгертпеңіз / Не меняйте цвета.</div></div>
+      <div class="panel"><div class="specimen"><img class="logo effect" src="/brand/jobhub-logo.png" alt=""></div><div class="caption"><span class="bad">✕</span> Көлеңке, контур, әсер қоспаңыз / Не добавляйте тени, обводку и эффекты.</div></div>
+      <div class="panel"><div class="specimen lowcontrast"><img class="logo" src="/brand/jobhub-logo.png" alt=""></div><div class="caption"><span class="bad">✕</span> Контрасты төмен фонға қоймаңыз / Не размещайте на фоне с низким контрастом.</div></div>
+      <div class="panel"><div class="specimen"><div class="rearranged"><img src="/brand/jobhub-mark.png" alt=""><span>JobHub</span></div></div><div class="caption"><span class="bad">✕</span> Таңба мен жазуды қайта орналастырмаңыз / Не переставляйте знак и надпись.</div></div>
+    </div>
+  </section>
+
+  <section><span class="eyebrow">04 · Бірлескен белгі / Кобрендинг</span><h2>Тең салмақ / Равный визуальный вес</h2>
+    <div class="grid"><div class="panel"><div class="partner"><img class="logo" src="/brand/jobhub-logo.png" alt="JobHub"><span class="times">×</span><span class="placeholder">Серіктес / Партнёр</span></div><div class="caption"><p>Бір серіктес: аралық кемінде 1×; логотип биіктігін көзбен теңестіріңіз. / Один партнёр: интервал не менее 1×; выравнивайте логотипы по оптическому весу.</p></div></div><div class="panel"><div class="partner"><img class="logo" src="/brand/jobhub-logo.png" alt="JobHub"><span class="times">×</span><span class="placeholder">Серіктес A / Партнёр А</span><span class="times">×</span><span class="placeholder">Серіктес Б / Партнёр Б</span></div><div class="caption"><p>Бірнеше серіктес: әрқайсысының арасында × және бірдей бос орын. Бұл тек үлгі. / Несколько партнёров: × и равный интервал между всеми. Это только макет.</p></div></div></div>
+  </section>
+
+  <section><span class="eyebrow">05 · Түстер / Цвета</span><h2>Қолданыстағы интерфейс палитрасы / Действующая палитра интерфейса</h2>
+    <p>Логотип файлының басым пиксель түстері: көк <strong>#005AF7 · RGB 0,90,247</strong>, қою <strong>#0F151E · RGB 15,21,30</strong>. Бұл суреттегі өлшенген мәндер; логотиптің градиентін бір түспен алмастырмаңыз. / Преобладающие цвета пикселей файла логотипа: синий <strong>#005AF7 · RGB 0,90,247</strong>, тёмный <strong>#0F151E · RGB 15,21,30</strong>. Это измеренные значения файла; не заменяйте градиент логотипа одним цветом.</p>
+    <div class="colors">
+      <div class="swatch"><div class="paint" style="background:#1769e0"></div><strong>Негізгі көк / Основной синий</strong><p>#1769E0 · RGB 23,105,224<br>Әрекеттер, акцент / Действия, акцент</p></div>
+      <div class="swatch"><div class="paint" style="background:#111827"></div><strong>Негізгі мәтін / Основной текст</strong><p>#111827 · RGB 17,24,39<br>Тақырып, мәтін / Заголовки, текст</p></div>
+      <div class="swatch"><div class="paint" style="background:#4b5563"></div><strong>Қосымша мәтін / Вторичный текст</strong><p>#4B5563 · RGB 75,85,99<br>Сипаттама / Описание</p></div>
+      <div class="swatch"><div class="paint" style="background:#f7f8fa"></div><strong>Фон / Фон</strong><p>#F7F8FA · RGB 247,248,250<br>Бет фоны / Фон страницы</p></div>
+      <div class="swatch"><div class="paint" style="background:#ffffff"></div><strong>Беткі қабат / Поверхность</strong><p>#FFFFFF · RGB 255,255,255<br>Карточкалар / Карточки</p></div>
+      <div class="swatch"><div class="paint" style="background:#e5e7eb"></div><strong>Шекара / Граница</strong><p>#E5E7EB · RGB 229,231,235<br>Бөлгіштер / Разделители</p></div>
+      <div class="swatch"><div class="paint" style="background:#eaf2fd"></div><strong>Ашық көк / Светло-синий</strong><p>#EAF2FD · RGB 234,242,253<br>Жұмсақ фон / Мягкий фон</p></div>
+      <div class="swatch"><div class="paint" style="background:#0f56bf"></div><strong>Көк hover / Синий hover</strong><p>#0F56BF · RGB 15,86,191<br>Белсенді әрекет / Наведение</p></div>
+    </div>
+    <div class="contrast"><div style="background:#1769e0;color:white">Ақ мәтін + көк фон / Белый текст + синий фон</div><div style="background:white;color:#1769e0;border:1px solid #e5e7eb">Көк мәтін + ақ фон / Синий текст + белый фон</div><div style="background:#eaf2fd;color:#111827">Қою мәтін + ашық көк / Тёмный текст + светло-синий</div></div>
+    <p class="note">Көк мәтін мен белгішені көк немесе ашық көк фонға қоймаңыз. / Не ставьте синий текст и иконки на синий или светло-синий фон.</p>
+  </section>
+
+  <section><span class="eyebrow">06 · Қаріп / Типографика</span><h2>Source Sans 3 Variable</h2>
+    <p>Қолданыстағы сайт қарпі. Қазақ және орыс кириллицасын бірізді көрсетеді. / Действующий шрифт сайта. Единообразно отображает казахскую и русскую кириллицу.</p>
+    <div class="panel type-sample"><div style="font-size:32px;line-height:1.2;font-weight:800">Студенттерге арналған жұмыс<br>Работа для студентов<small>Тақырып / Заголовок · 32 px / 1.2 · 750–800</small></div><div style="font-size:18px;line-height:1.5;font-weight:400">Өзіңізге сай вакансияны табыңыз. Найдите подходящую вакансию.<small>Негізгі мәтін / Основной текст · 16–18 px / 1.5 · 400–500</small></div><div style="font-size:16px;line-height:1.3;font-weight:750">Вакансияны көру / Смотреть вакансию<small>Түйме / Кнопка · 16 px / 1.3 · 700–750</small></div></div>
+    <p class="note">Ұсыныс: бір бетте 3–4 өлшемнен аспаңыз; қаріпті созбаңыз; мәтінге жеткілікті жол аралығын беріңіз. / Рекомендация: не более 3–4 размеров на странице; не растягивайте шрифт; оставляйте достаточный межстрочный интервал.</p>
+  </section>
+
+  <section><span class="eyebrow">07 · Қолдану / Применение</span><h2>Нақты макеттер / Практические макеты</h2>
+    <div class="grid">
+      <div class="panel example"><div class="fake-card"><strong>Дизайн тағылымдамасы / Стажировка в дизайне</strong><p>Алматы · Гибридный формат</p><span class="button">Вакансияны көру / Открыть</span></div><p><strong>Вакансия карточкасы / Карточка вакансии:</strong> қою тақырып, ақ карточка, көк әрекет түймесі. / Тёмный заголовок, белая карточка, синяя кнопка.</p></div>
+      <div class="panel example"><div class="fake-card"><strong>Компания / Компания</strong><p>Қысқа сипаттама / Краткое описание</p><span class="button">Толығырақ / Подробнее</span></div><p><strong>Компания карточкасы / Карточка компании:</strong> логотипке орын, сұр қосымша мәтін, айқын шекара. / Место для логотипа, серый вторичный текст, ясная граница.</p></div>
+      <div class="panel example"><div class="mini-head"><img src="/brand/jobhub-logo.png" alt="JobHub"><strong>Вакансиялар · Компаниялар</strong></div><p><strong>Сайт шапкасы / Шапка сайта:</strong> негізгі логотип ақ фонда, 1× бос орын және сол жаққа теңдеу. / Основной логотип на белом фоне, отступ 1× и выравнивание слева.</p></div>
+      <div class="panel example"><div class="social"><img class="logo-silhouette" src="/brand/jobhub-logo.png" alt="JobHub"><strong>Жаңа мүмкіндік / Новая возможность</strong></div><p><strong>Әлеуметтік пост / Пост для соцсетей:</strong> қараңғы фонда ақ нұсқа, шетінен 1× бос орын; қысқа ірі тақырып. / На тёмном фоне белая версия, отступ 1× от края; короткий крупный заголовок.</p></div>
+    </div>
+  </section>
+</main></body></html>

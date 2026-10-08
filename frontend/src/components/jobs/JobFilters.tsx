@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Globe2 } from "lucide-react";
 import type { EmploymentType, ExperienceLevel, JobSearchParams, WorkMode } from "../../api/models/job";
 import { CitySelect } from "../location/CitySelect";
 import { Button } from "../ui/Button";
@@ -13,9 +14,21 @@ export function JobFilters({ search, onChange, onReset }: { search: JobSearchPar
   const { t } = useTranslation();
   const update = (patch: Partial<JobSearchParams>) => onChange({ ...search, ...patch, page: 1 });
   const toggleMode = (mode: WorkMode, checked: boolean) => update({ workModes: checked ? [...(search.workModes ?? []), mode] : (search.workModes ?? []).filter((item) => item !== mode) });
+  const kazakhstanLabel = (
+    <span className="job-filter-region-option">
+      <img src="/flags/kz.svg" alt="" width="20" height="15" />
+      {t("jobs.regionKazakhstan")}
+    </span>
+  );
+  const internationalLabel = (
+    <span className="job-filter-region-option">
+      <Globe2 size={18} aria-hidden="true" />
+      {t("jobs.regionInternational")}
+    </span>
+  );
   return (
     <div className="job-filters">
-      <RadioGroup name="region" label={t("jobs.regionLabel")} value={search.region ?? ""} onChange={(value) => update({ region: (value || undefined) as JobSearchParams["region"], city: undefined })} options={[{ value: "", label: t("jobs.anyOption") }, { value: "kazakhstan", label: t("jobs.regionKazakhstan") }, { value: "international", label: t("jobs.regionInternational") }]} />
+      <RadioGroup name="region" label={t("jobs.regionLabel")} value={search.region ?? ""} onChange={(value) => update({ region: (value || undefined) as JobSearchParams["region"], city: undefined })} options={[{ value: "", label: t("jobs.anyOption") }, { value: "kazakhstan", label: kazakhstanLabel }, { value: "international", label: internationalLabel }]} />
       {search.region === "international" ? <p className="filter-region-note">{t("jobs.internationalNote")}</p> : <CitySelect label={t("search.locationLabel")} anyLabel={t("jobs.anyLocation")} value={search.city} onChange={(city) => update({ city: city || undefined })} />}
       <SalaryFilter key={`${search.salaryMin ?? ""}:${search.salaryMax ?? ""}:${search.currency ?? ""}`} search={search} onApply={update} />
       <fieldset className="filter-fieldset"><legend>{t("jobs.workMode")}</legend>{modes.map((mode) => <Checkbox key={mode} label={t(`employer.workModes.${mode}`)} checked={search.workModes?.includes(mode) ?? false} onChange={(event) => toggleMode(mode, event.target.checked)} />)}</fieldset>

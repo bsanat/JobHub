@@ -113,6 +113,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
             </nav>
             <nav className="site-footer__group" aria-label={t("footer.information")}>
               <h2>{t("footer.information")}</h2>
+              <a href="/brandguide.html"><FileText size={17} aria-hidden="true" />{t("footer.brandGuide")}</a>
               <Link to="/privacy"><FileText size={17} aria-hidden="true" />{t("footer.privacy")}</Link>
               <Link to="/terms"><FileText size={17} aria-hidden="true" />{t("footer.terms")}</Link>
             </nav>
