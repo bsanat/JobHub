@@ -28,7 +28,7 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	}
 	t.Cleanup(pool.Close)
 	fixtureIDs := createPublisherFixtures(t, ctx, pool)
-	approvedExternalIDs := createExternalPublisherFixtures(t, ctx, pool)
+	approvedExternalIDs, baselineJobID := createExternalPublisherFixtures(t, ctx, pool)
 	channelID := -time.Now().UnixNano()
 	defer func() {
 		_, _ = pool.Exec(context.Background(), "DELETE FROM jobhub.telegram_publications WHERE channel_id = $1", channelID)
@@ -119,6 +119,9 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 		if !claimedIDs[id] {
 			t.Fatalf("approved external fixture %s was not claimed", id)
 		}
+	}
+	if claimedIDs[baselineJobID] {
+		t.Fatal("initial public API import was claimed for Telegram")
 	}
 	var demoClaimed int
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM jobhub.telegram_publications tp
@@ -212,7 +215,7 @@ func createPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	return jobIDs
 }
 
-func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Pool) map[string]bool {
+func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (map[string]bool, string) {
 	t.Helper()
 	marker := fmt.Sprintf("publisher-external-%d", time.Now().UnixNano())
 	type fixture struct {
@@ -239,9 +242,11 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		}
 	})
 	approvedIDs := map[string]bool{}
+	var baselineJobID string
 	for _, fixture := range fixtures {
-		if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources (source, provider, display_name, enabled, production_permissions_confirmed)
-			VALUES ($1, $2, $3, true, $4)`, fixture.source, fixture.provider, fixture.title, fixture.approved); err != nil {
+		if _, err := pool.Exec(ctx, `INSERT INTO jobhub.job_sources (source, provider, display_name, enabled, production_permissions_confirmed, created_at, updated_at)
+			VALUES ($1, $2, $3, true, $4, now()-interval '2 hours',
+			CASE WHEN $2 IN ('arbeitnow','greenhouse','lever') THEN now()-interval '1 hour' ELSE now()-interval '2 hours' END)`, fixture.source, fixture.provider, fixture.title, fixture.approved); err != nil {
 			t.Fatal(err)
 		}
 		sourceNames = append(sourceNames, fixture.source)
@@ -258,6 +263,17 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		if fixture.approved && fixture.provider != "demo" {
 			approvedIDs[jobID] = true
 		}
+		if fixture.provider == "arbeitnow" {
+			if err := pool.QueryRow(ctx, `INSERT INTO jobhub.jobs
+				(source, external_id, source_url, company_name_raw, title, description, application_method,
+				source_status, moderation_status, first_seen_at, last_seen_at, last_synced_at, fresh_until, external_published_at)
+				VALUES ($1, $2, 'https://example.test/jobs/baseline', 'External Test', 'Initial Arbeitnow Import', 'External test vacancy', 'external',
+				'active', 'approved', now()-interval '90 minutes', now(), now(), now()+interval '1 day', now()) RETURNING id::text`,
+				fixture.source, fixture.source+"-baseline").Scan(&baselineJobID); err != nil {
+				t.Fatal(err)
+			}
+			jobIDs = append(jobIDs, baselineJobID)
+		}
 	}
 	var duplicateID string
 	if err := pool.QueryRow(ctx, `INSERT INTO jobhub.jobs
@@ -269,5 +285,5 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		t.Fatal(err)
 	}
 	jobIDs = append(jobIDs, duplicateID)
-	return approvedIDs
+	return approvedIDs, baselineJobID
 }

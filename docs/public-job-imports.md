@@ -51,9 +51,11 @@ identifier and company name supplied by the operator. Example shape only:
 The placeholders are **not** working identifiers. Do not copy them into a live
 allowlist. Source IDs are `arbeitnow:global`, `greenhouse:<token>`, and
 `lever:<slug>`. A new source is registered disabled and with
-`production_permissions_confirmed=false`; the CLI does not enable public
-display. Rights review and explicit source activation are separate operational
-steps.
+`production_permissions_confirmed=false`. For Arbeitnow only, the optional
+`PUBLIC_IMPORT_ACTIVATE_ARBEITNOW=true` switch activates public display after
+a successful production `--once` run with at least one normalized job. This
+requires a confirmed permission review. Greenhouse and Lever remain disabled
+until their own rights and board IDs are confirmed.
 
 ## Commands
 
@@ -107,13 +109,23 @@ the board exceeds either cap.
 
 The Telegram publisher can now include imported Arbeitnow, Greenhouse, and
 Lever jobs. A deployment by itself does **not** import or broadcast jobs.
-For each source, first record the redistribution permission decision, then
-explicitly enable that source and set `production_permissions_confirmed=true`
-in `jobhub.job_sources`. The source must have a public, approved, active job
-from a successful `--once` import. The existing Telegram webhook/cron (or
-publisher CLI) then picks up eligible unsent jobs; `(job_id, channel_id)`
-prevents duplicate sends. Newly registered sources remain disabled and
-unapproved, and demo/unapproved sources remain excluded.
+For each source, first record the redistribution permission decision. The
+Arbeitnow activation switch above enables its source after a successful import;
+Greenhouse and Lever require a separate, approved operator activation. The
+source must have a public, approved, active job. The existing Telegram
+webhook/cron (or publisher CLI) then picks up eligible **new** unsent jobs;
+`(job_id, channel_id)` prevents duplicate sends. Newly registered sources
+remain disabled and unapproved, and demo/unapproved sources remain excluded.
+
+For public API sources, the Telegram publisher requires an explicit publication
+baseline: `job_sources.updated_at` must be later than `created_at`, and only
+jobs with `first_seen_at` after that baseline are eligible. The one-time
+Arbeitnow activation above sets this timestamp **after** the initial import,
+so the initial batch is visible on the site but not broadcast to Telegram.
+Subsequent scheduled imports do not move the baseline. If Greenhouse or Lever
+is activated manually later, set `updated_at=now()` in the same source update
+to establish its baseline; do not enable the source before this publisher
+protection is deployed.
 
 Telegram messages identify the source, link to the original vacancy, and link
 to the JobHub detail page. Arbeitnow messages also link directly to
@@ -125,8 +137,8 @@ importer nor deployment starts a persistent worker automatically. Verify the
 publisher with a dry-run and inspect the first live message before relying on
 the proposed schedule above.
 
-**Proposed schedule, not activated:** configured sources every 6 hours with a
-one-shot CLI under an external scheduler, with alerts
+**Schedule:** configured sources every 6 hours with a
+one-shot CLI under GitHub Actions, with alerts
 on failures and incomplete snapshots. Keep per-source request counts, revisit
 terms and employer consent, and honor removal requests before enabling display.
 
@@ -142,9 +154,11 @@ GitHub Actions values only after inspecting the target Production database:
 | Variable | `PUBLIC_IMPORT_DATABASE_HOST` | Exact hostname of that inspected URL |
 | Variable | `PUBLIC_IMPORT_DATABASE_USER` | Exact username of that inspected Production URL |
 | Variable | `PUBLIC_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED` | `true` after source rights review |
+| Variable | `PUBLIC_IMPORT_ACTIVATE_ARBEITNOW` | `true` to show Arbeitnow jobs after a successful first import and establish the Telegram baseline |
 | Variable | `PUBLIC_IMPORT_ENABLED` | `true` to activate scheduled/manual workflow runs |
 
-The workflow runs `--once`, never a resident worker. It cannot enable a source
-for public display or Telegram and does not call Telegram itself. GitHub
-Actions schedules may be delayed, so this is a six-hour polling proposal, not
-a guarantee of immediate publication after deployment.
+The workflow runs `--once`, never a resident worker. With the optional
+Arbeitnow activation switch, it enables site display only after a successful
+import and sets the Telegram cutoff; it does not send Telegram messages itself.
+GitHub Actions schedules may be delayed, so this polling interval is not a
+guarantee of immediate publication after deployment.

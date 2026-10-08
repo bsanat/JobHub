@@ -64,6 +64,9 @@ func run(args []string, out io.Writer, getenv func(string) string) error {
 	if config.MaxPages < 1 || config.MaxPages > 50 {
 		return errors.New("invalid max_pages")
 	}
+	if getenv("PUBLIC_IMPORT_ACTIVATE_ARBEITNOW") == "true" && (!*once || getenv("APP_ENV") != "production" || !config.Arbeitnow) {
+		return errors.New("Arbeitnow activation requires a production --once import with Arbeitnow enabled")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
@@ -80,9 +83,9 @@ func run(args []string, out io.Writer, getenv func(string) string) error {
 			return errors.New("staging/production public imports require explicit permission review")
 		}
 		raw := getenv("DATABASE_URL")
-		dbURL, err := url.Parse(raw)
-		if err != nil || dbURL.Hostname() == "" || (dbURL.Scheme != "postgres" && dbURL.Scheme != "postgresql") {
-			return errors.New("DATABASE_URL must be a PostgreSQL URL")
+		dbURL, err := parseDatabaseURL(raw)
+		if err != nil {
+			return err
 		}
 		if dbURL.Hostname() != getenv("PUBLIC_IMPORT_DATABASE_HOST") {
 			return errors.New("PUBLIC_IMPORT_DATABASE_HOST must match the inspected database hostname")
@@ -138,12 +141,29 @@ func run(args []string, out io.Writer, getenv func(string) string) error {
 		if err != nil {
 			return err
 		}
+		if configured.kind == "arbeitnow" && store != nil && getenv("PUBLIC_IMPORT_ACTIVATE_ARBEITNOW") == "true" {
+			if err := store.ActivateArbeitnowAfterInitialSync(ctx); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
 
 func matchesDatabaseUser(dbURL *url.URL, expected string) bool {
 	return expected != "" && dbURL.User != nil && dbURL.User.Username() == expected
+}
+
+func parseDatabaseURL(raw string) (*url.URL, error) {
+	raw = strings.TrimSpace(raw)
+	if strings.HasPrefix(raw, "'") || strings.HasPrefix(raw, "\"") || strings.Contains(raw, "[YOUR-PASSWORD]") {
+		return nil, errors.New("DATABASE_URL must contain the raw PostgreSQL URL, without surrounding quotes or password placeholders")
+	}
+	dbURL, err := url.Parse(raw)
+	if err != nil || dbURL.Hostname() == "" || (dbURL.Scheme != "postgres" && dbURL.Scheme != "postgresql") {
+		return nil, errors.New("DATABASE_URL must be a PostgreSQL URL with a valid scheme and host")
+	}
+	return dbURL, nil
 }
 
 type configuredSource struct{ kind, id, company, display string }

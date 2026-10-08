@@ -69,3 +69,30 @@ func (s *PostgresStore) RegisterPublicImportSource(ctx context.Context, source, 
 	}
 	return nil
 }
+
+// ActivateArbeitnowAfterInitialSync opens a successfully imported source once.
+// updated_at records the Telegram baseline; the publisher only selects jobs
+// first seen after this moment. Repeated imports must not move that baseline.
+func (s *PostgresStore) ActivateArbeitnowAfterInitialSync(ctx context.Context) error {
+	const source = "arbeitnow:global"
+	tag, err := s.pool.Exec(ctx, `UPDATE jobhub.job_sources s
+SET enabled=true, production_permissions_confirmed=true, updated_at=now()
+WHERE s.source=$1 AND s.provider='arbeitnow' AND NOT s.enabled
+  AND EXISTS (SELECT 1 FROM jobhub.ingestion_runs r
+              WHERE r.source=s.source AND r.status='succeeded' AND r.normalized_count>0)
+  AND EXISTS (SELECT 1 FROM jobhub.jobs j
+              WHERE j.source=s.source AND j.source_status='active' AND j.moderation_status='approved')`, source)
+	if err != nil {
+		return errors.New("Arbeitnow activation failed")
+	}
+	if tag.RowsAffected() > 0 {
+		return nil
+	}
+	var active bool
+	err = s.pool.QueryRow(ctx, `SELECT enabled AND production_permissions_confirmed AND updated_at>created_at
+		FROM jobhub.job_sources WHERE source=$1 AND provider='arbeitnow'`, source).Scan(&active)
+	if err != nil || !active {
+		return errors.New("Arbeitnow activation requires a successful import and an unused publication baseline")
+	}
+	return nil
+}
