@@ -346,6 +346,10 @@
 .results-toolbar label { display: flex; align-items: center; gap: var(--space-3); color: var(--color-text-muted); font-size: var(--text-14); }
 .results-toolbar select { min-height: 2.75rem; padding: 0 var(--space-8) 0 var(--space-3); border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); }
 .results-pagination { display: flex; justify-content: center; margin-top: var(--space-6); }
+@media (max-width: 480px) {
+  .results-pagination .ui-pagination { gap: 0.125rem; }
+  .results-pagination .ui-pagination > button { width: 2.25rem; min-height: 2.25rem; }
+}
 
 .job-row--offer { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-areas: "identity salary" "tags meta"; align-items: center; gap: .75rem 1.25rem; padding: 1.25rem; border-radius: var(--radius-sm); }
 .job-offer__identity { grid-area: identity; display: flex; align-items: center; gap: .75rem; min-width: 0; }

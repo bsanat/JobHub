@@ -26,7 +26,9 @@ export function Tabs({ tabs, activeId, onChange, label }: { tabs: TabItem[]; act
 }
 
 export function Pagination({ page, totalPages, onChange, label, previousLabel, nextLabel, pageLabel }: { page: number; totalPages: number; onChange: (page: number) => void; label: string; previousLabel: string; nextLabel: string; pageLabel: (page: number) => string }) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const visiblePageCount = Math.min(totalPages, 5);
+  const firstPage = Math.max(1, Math.min(page - 2, totalPages - visiblePageCount + 1));
+  const pages = Array.from({ length: visiblePageCount }, (_, index) => firstPage + index);
   return (
     <nav className="ui-pagination" aria-label={label}>
       <IconButton label={previousLabel} icon={<ChevronLeft size={18} />} disabled={page <= 1} onClick={() => onChange(page - 1)} />
