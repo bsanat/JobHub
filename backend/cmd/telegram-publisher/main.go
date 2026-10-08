@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"jobhub-ai/backend/internal/config"
 	"jobhub-ai/backend/internal/database"
 	"jobhub-ai/backend/internal/providers/telegram"
@@ -89,8 +90,37 @@ func run(logger *slog.Logger) error {
 			return err
 		}
 		logger.Info("Telegram publisher batch finished", "checked", stats.Checked, "sent", stats.Sent, "failed", stats.Failed, "unknown", stats.Unknown, "dry_run", stats.DryRun)
+		if err := logKZCompanyPublicationStatus(ctx, pool, publisherConfig.ChannelID, logger); err != nil {
+			logger.Warn("Kazakhstan company publication status unavailable", "error", err)
+		}
 		return nil
 	}
 	logger.Info("Telegram publisher started", "interval", publisherConfig.Interval.String(), "dry_run", publisherConfig.DryRun)
 	return publisher.Run(ctx, publisherConfig.Interval)
+}
+
+func logKZCompanyPublicationStatus(ctx context.Context, pool *pgxpool.Pool, channelID int64, logger *slog.Logger) error {
+	check, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := pool.Query(check, `SELECT j.source, COALESCE(tp.status, 'unrecorded'), count(*)
+FROM jobhub.jobs j
+JOIN jobhub.job_sources s ON s.source = j.source
+LEFT JOIN jobhub.telegram_publications tp ON tp.job_id = j.id AND tp.channel_id = $1
+WHERE s.provider = 'kzcompany' AND s.enabled AND s.production_permissions_confirmed
+  AND jobhub.job_is_public(j)
+GROUP BY j.source, COALESCE(tp.status, 'unrecorded')
+ORDER BY j.source, COALESCE(tp.status, 'unrecorded')`, channelID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var source, status string
+		var count int64
+		if err := rows.Scan(&source, &status, &count); err != nil {
+			return err
+		}
+		logger.Info("Kazakhstan company Telegram publication status", "source", source, "status", status, "count", count)
+	}
+	return rows.Err()
 }
