@@ -66,6 +66,16 @@ func TestProviderKeepsApplicationParametersAndNeverCompletesEmptySnapshot(t *tes
 	}
 }
 
+func TestProviderSkipsOnlyExactLegacyOriginalURLs(t *testing.T) {
+	cfg := Source{ID: "kcell", Company: "Kcell", CareersURL: "https://jobs.kcell.kz/"}
+	duplicate := jobs.ImportedJob{ExternalID: "1", SourceURL: "https://jobs.kcell.kz/job/1", Title: "Engineer", LocationRaw: "Алматы", DescriptionKind: "full"}
+	unique := jobs.ImportedJob{ExternalID: "2", SourceURL: "https://jobs.kcell.kz/job/2", Title: "Analyst", LocationRaw: "Астана", DescriptionKind: "full"}
+	result, err := (Provider{SourceConfig: cfg, Upstream: fakeProvider{result: providers.Result{Fetched: 2, Complete: true, Items: []jobs.ImportedJob{duplicate, unique}}}, ExcludedOriginalURLs: map[string]bool{duplicate.SourceURL: true}}).Collect(context.Background())
+	if err != nil || !result.Complete || result.Skipped != 1 || len(result.Items) != 1 || result.Items[0].SourceURL != unique.SourceURL {
+		t.Fatalf("legacy duplicate filtering changed unique jobs or snapshot safety: %+v, %v", result, err)
+	}
+}
+
 func TestProviderFiltersDeduplicatesAndSanitizes(t *testing.T) {
 	cfg := Source{ID: "halyk", Company: "Halyk Bank", CareersURL: "https://halykbank.kz/about/career/vacancies"}
 	sourceURL := "https://halykbank.kz/about/career/vacancies/42"

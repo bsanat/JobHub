@@ -17,6 +17,35 @@ type SourceHealth struct {
 	Status          string     `json:"status"`
 }
 
+// LegacyPublicURLs returns only publicly visible originals from the two
+// established career importers. New Kazakhstan imports use them to avoid
+// briefly republishing the same vacancy under another source ID.
+func (s *PostgresStore) LegacyPublicURLs(ctx context.Context, source string) (map[string]bool, error) {
+	if source != "airastana:careers" && source != "kcell:careers" {
+		return nil, errors.New("unsupported legacy career source")
+	}
+	rows, err := s.pool.Query(ctx, `SELECT j.source_url FROM jobhub.jobs j
+JOIN jobhub.job_sources src ON src.source=j.source
+WHERE j.source=$1 AND src.enabled AND src.production_permissions_confirmed
+AND jobhub.job_is_public(j) AND j.source_url IS NOT NULL`, source)
+	if err != nil {
+		return nil, errors.New("legacy career URL read failed")
+	}
+	defer rows.Close()
+	urls := make(map[string]bool)
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			return nil, errors.New("legacy career URL read failed")
+		}
+		urls[url] = true
+	}
+	if rows.Err() != nil {
+		return nil, errors.New("legacy career URL read failed")
+	}
+	return urls, nil
+}
+
 // SourceHealth is a read-only projection of real run records, not dry-run output.
 // No cached registry columns or new schema are required for the bounded POC.
 func (s *PostgresStore) SourceHealth(ctx context.Context, source string) (SourceHealth, error) {

@@ -19,8 +19,9 @@ var htmlTag = regexp.MustCompile(`(?i)</?[a-z][^>]*>`)
 // sources. It never converts a location-free or globally remote post into a
 // Kazakhstan vacancy.
 type Provider struct {
-	SourceConfig Source
-	Upstream     providers.VacancyProvider
+	SourceConfig         Source
+	Upstream             providers.VacancyProvider
+	ExcludedOriginalURLs map[string]bool
 }
 
 func (p Provider) Source() string { return "kzcompany:" + p.SourceConfig.ID }
@@ -62,6 +63,10 @@ func (p Provider) Collect(ctx context.Context) (providers.Result, error) {
 			continue
 		}
 		seenURLs[key] = true
+		if p.ExcludedOriginalURLs[item.SourceURL] {
+			result.Skipped++
+			continue
+		}
 		if !KazakhstanEligible(item.LocationRaw) && !kazakhstanRemoteEligible(item.LocationRaw, item.Description) {
 			result.Skipped++
 			if strings.TrimSpace(item.LocationRaw) == "" {

@@ -21,6 +21,9 @@ Both reconciliation runs succeeded: 50 duplicate records were retired, leaving
 Kazakhstan listing showed 158 jobs immediately afterward, including 22 from
 the new Air Astana source, 3 from the new Kcell source, 38 Technodom and 2
 Kolesa Group jobs. These counts are a dated snapshot, not a promised feed size.
+The 2026-10-09 follow-up added 10 Bank CenterCredit and one Sulpak vacancy;
+the Kazakhstan listing then showed 169 jobs. A complete scheduled six-source
+run updated existing records without inserting copies or deactivating jobs.
 
 ## Source register
 
@@ -124,10 +127,12 @@ remain active. Every later `once` run for these two sources reconciles again.
 
 The separate `.github/workflows/kz-company-scheduled-import.yml` polls the
 explicit `KZ_IMPORT_AUTO_SOURCES` repository-variable list every hour at minute
-17. Set `KZ_IMPORT_AUTO_ENABLED=true` to enable it after source review. The
-workflow uses the same Production host/user identity and permission gates,
+17. `KZ_IMPORT_AUTO_ENABLED=true` currently enables the six reviewed sources.
+The workflow uses the same Production host/user identity and permission gates,
 imports each approved source once, and reconciles Air Astana and Kcell URL
-duplicates. A failed source does not prevent later sources in that run from
+duplicates. The importer also skips URLs already public through their
+established career sources, avoiding transient duplicate listings during a
+scheduled run. A failed source does not prevent later sources in that run from
 updating. This is **hourly polling**, not instant source notifications; GitHub
 may delay scheduled starts. Neither the API server nor a persistent worker
 starts an importer automatically.

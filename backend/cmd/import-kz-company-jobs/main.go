@@ -128,6 +128,21 @@ func run(args []string, out, logs io.Writer, getenv func(string) string) error {
 			}
 		}
 		provider := kzcompanies.Provider{SourceConfig: source, Upstream: upstream}
+		if store != nil {
+			var legacy string
+			switch source.ID {
+			case "airastana":
+				legacy = "airastana:careers"
+			case "kcell":
+				legacy = "kcell:careers"
+			}
+			if legacy != "" {
+				provider.ExcludedOriginalURLs, err = store.LegacyPublicURLs(ctx, legacy)
+				if err != nil {
+					return err
+				}
+			}
+		}
 		logger.Info("Kazakhstan source started", "source", provider.Source())
 		var target jobs.Store
 		if store != nil {
