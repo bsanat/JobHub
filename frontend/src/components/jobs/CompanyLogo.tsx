@@ -15,7 +15,7 @@ export function CompanyLogo({ job, size = "list" }: CompanyLogoProps) {
   const showLogo = Boolean(mark.logoUrl && failedUrl !== mark.logoUrl);
 
   return (
-    <span className={`company-logo company-logo--${size}`} aria-hidden="true">
+    <span className={`company-logo company-logo--${size} company-logo--brand-${mark.brand}`} aria-hidden="true">
       {showLogo ? (
         <img
           src={mark.logoUrl}

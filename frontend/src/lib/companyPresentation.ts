@@ -50,10 +50,18 @@ export function companyPresentationFor(job: JobSummary): CompanyPresentation {
 const wordmarkCompanies: Record<string, { brand: string; initials: string }> = {
   "kaspi.kz": { brand: "kaspi", initials: "K" },
   kaspi: { brand: "kaspi", initials: "K" },
+  "kaspi bank": { brand: "kaspi", initials: "K" },
+  "air astana": { brand: "air-astana", initials: "AA" },
+  "air astana group": { brand: "air-astana", initials: "AA" },
+  halyk: { brand: "halyk", initials: "H" },
   "halyk bank": { brand: "halyk", initials: "H" },
   kcell: { brand: "kcell", initials: "K" },
+  "kcell jsc": { brand: "kcell", initials: "K" },
+  "forte bank": { brand: "forte", initials: "F" },
   fortebank: { brand: "forte", initials: "F" },
   "freedom bank": { brand: "freedom", initials: "F" },
+  "freedom holding": { brand: "freedom", initials: "F" },
+  freedom: { brand: "freedom", initials: "F" },
   "kolesa group": { brand: "kolesa", initials: "KG" },
   technodom: { brand: "technodom", initials: "T" },
   "bi group": { brand: "bi", initials: "BI" },
@@ -64,9 +72,13 @@ const wordmarkCompanies: Record<string, { brand: string; initials: string }> = {
 export function companyMarkFor(name: string, logoUrl?: string): CompanyMark {
   const normalized = name.trim().toLocaleLowerCase();
   const assets: Record<string, string> = {
-    "air astana": "air-astana.svg", "kaspi.kz": "kaspi.png", kaspi: "kaspi.png",
-    "halyk bank": "halyk-bank.svg", kcell: "kcell.svg", fortebank: "forte.ico",
-    "freedom bank": "freedom.svg", "kolesa group": "kolesa-group.svg",
+    "air astana": "air-astana.svg", "air astana group": "air-astana-group.png",
+    "kaspi.kz": "kaspi.png", kaspi: "kaspi.png", "kaspi bank": "kaspi.png",
+    halyk: "halyk-bank.svg", "halyk bank": "halyk-bank.svg",
+    kcell: "kcell.svg", "kcell jsc": "kcell.svg",
+    "forte bank": "forte.ico", fortebank: "forte.ico",
+    freedom: "freedom.svg", "freedom bank": "freedom.svg", "freedom holding": "freedom.svg",
+    "kolesa group": "kolesa-group.svg",
     technodom: "technodom.svg", magnum: "magnum.ico", beeline: "beeline.svg", "beeline kazakhstan": "beeline.svg", kazpost: "kazpost.ico", "қазпошта": "kazpost.ico",
     "init ag": "init-ag.png", sfeir: "sfeir.png", "its gruppe": "its-gruppe.png", camunda: "camunda.svg", nuuenergy: "nuuenergy.webp",
   };

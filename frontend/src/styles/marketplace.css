@@ -177,6 +177,20 @@
 .company-logo--list { width: 2.75rem; height: 2.75rem; padding: .25rem; }
 .company-logo--detail { width: 3.5rem; height: 3.5rem; padding: .3rem; }
 .company-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.company-logo--brand-kaspi,
+.company-logo--brand-forte,
+.company-logo--brand-magnum,
+.company-logo--brand-kazpost { padding: 0; background: #fff; }
+.company-logo--brand-kaspi img,
+.company-logo--brand-forte img,
+.company-logo--brand-magnum img,
+.company-logo--brand-kazpost img { object-fit: cover; transform: scale(1.35); }
+.company-logo--brand-halyk img,
+.company-logo--brand-kcell img,
+.company-logo--brand-freedom img,
+.company-logo--brand-kolesa img,
+.company-logo--brand-technodom img,
+.company-logo--brand-air-astana img { object-fit: contain; }
 .company-mark { display: grid; width: 100%; height: 100%; place-items: center; border-radius: inherit; font-size: var(--text-14); letter-spacing: -0.04em; }
 .company-mark--kaspi { background: #f04438; color: #fff; }
 .company-mark--halyk { background: #eaf7f3; color: #00896b; }
@@ -219,6 +233,14 @@
 .company-identity { display: flex; min-width: 0; align-items: center; gap: var(--space-3); }
 .company-identity__logo { display: grid; flex: 0 0 auto; width: 3.5rem; height: 3.5rem; place-items: center; overflow: hidden; padding: .45rem; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-background); color: var(--color-text-secondary); font-family: var(--font-display); font-weight: 800; }
 .company-identity__logo img { width: 100%; height: 100%; object-fit: contain; }
+.company-identity__logo--brand-kaspi,
+.company-identity__logo--brand-forte,
+.company-identity__logo--brand-magnum,
+.company-identity__logo--brand-kazpost { padding: 0; background: #fff; }
+.company-identity__logo--brand-kaspi img,
+.company-identity__logo--brand-forte img,
+.company-identity__logo--brand-magnum img,
+.company-identity__logo--brand-kazpost img { object-fit: cover; transform: scale(1.35); }
 .company-identity > div { display: grid; min-width: 0; gap: var(--space-1); }
 .company-identity__name { color: var(--color-text-primary); font-family: var(--font-display); font-size: var(--text-20); font-weight: 800; overflow-wrap: anywhere; }
 .company-identity--hero .company-identity__logo { width: 4.75rem; height: 4.75rem; padding: .55rem; }
@@ -1093,7 +1115,7 @@
 .home-company-card:hover,
 .home-company-card:focus-visible { border-color: var(--color-primary); }
 .home-company-card .company-logo { display: grid; width: 4rem; height: 4rem; align-items: center; justify-content: center; padding: 0; border: 1px solid #e3e7ee; border-radius: 50%; background: #fff; }
-.home-company-card .company-logo img { width: 100%; height: 100%; max-width: 100%; object-fit: cover; object-position: center; }
+.home-company-card .company-logo img { width: 100%; height: 100%; max-width: 100%; object-fit: contain; object-position: center; }
 .home-company-card strong { align-self: end; font-family: var(--font-display); font-size: var(--text-18); overflow-wrap: anywhere; }
 .home-company-card span:not(.company-logo) { align-self: end; padding-right: 2rem; color: #637086; }
 .home-company-card > svg { position: absolute; right: var(--space-4); bottom: var(--space-5); color: var(--color-primary); }

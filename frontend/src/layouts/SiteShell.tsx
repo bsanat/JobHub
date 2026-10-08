@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Building2, FileText, MapPin } from "lucide-react";
+import { BriefcaseBusiness, Building2, FileText, GraduationCap, MapPin } from "lucide-react";
 import { useEffect, type PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -114,7 +114,7 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
               <h2>{t("footer.explore")}</h2>
               <Link to="/jobs"><BriefcaseBusiness size={17} aria-hidden="true" />{t("nav.jobs")}</Link>
               <Link to="/companies"><Building2 size={17} aria-hidden="true" />{t("nav.companies")}</Link>
-              <Link to="/students"><BriefcaseBusiness size={17} aria-hidden="true" />{t("nav.students")}</Link>
+              <Link to="/students"><GraduationCap size={17} aria-hidden="true" />{t("nav.students")}</Link>
             </nav>
             <nav className="site-footer__group" aria-label={t("footer.information")}>
               <h2>{t("footer.information")}</h2>

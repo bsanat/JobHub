@@ -8,7 +8,7 @@ export function CompanyIdentity({ company, size = "card", verifiedLabel }: { com
   const mark = companyMarkFor(company.name, company.logoUrl);
   return (
     <div className={`company-identity company-identity--${size}`}>
-      <span className="company-identity__logo" aria-hidden="true">
+      <span className={`company-identity__logo company-identity__logo--brand-${mark.brand}`} aria-hidden="true">
         {mark.logoUrl && failedUrl !== mark.logoUrl ? <img src={mark.logoUrl} alt="" onError={() => setFailedUrl(mark.logoUrl)} /> : <Building2 size={24} />}
       </span>
       <div>
