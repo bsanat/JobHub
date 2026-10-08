@@ -69,7 +69,12 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
           <div className="site-header__actions">
             <span className="site-nav__location"><MapPin size={16} aria-hidden="true" /><CitySelect className="header-city-select" compact label={t("nav.location")} anyLabel={t("jobs.anyLocation")} value={selectedCity} onChange={changeCity} /></span>
             <LanguageSelect />
-            {auth.session ? (
+            {auth.isLoading ? (
+              <span className="auth-loading-pill" aria-hidden="true">
+                <span />
+                <span />
+              </span>
+            ) : auth.session ? (
               <Link
                 className="candidate-menu-link"
                 to={

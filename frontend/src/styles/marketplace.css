@@ -92,8 +92,13 @@
 .language-select__trigger:hover, .language-select__menu button:hover, .language-select__menu button[aria-checked="true"] { background: var(--color-background); }
 .language-select button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .header-city-select .compact-select__value { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+.auth-loading-pill { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 7.5rem; min-height: 2.75rem; padding-inline: var(--space-2); }
+.auth-loading-pill span { display: block; border-radius: var(--radius-full); background: linear-gradient(90deg, var(--color-border), var(--color-background), var(--color-border)); background-size: 200% 100%; animation: auth-loading-pulse 1.2s ease-in-out infinite; }
+.auth-loading-pill span:first-child { width: 2.25rem; height: 2.25rem; }
+.auth-loading-pill span:last-child { width: 4.25rem; height: .875rem; }
 .auth-link { padding: var(--space-2) var(--space-3); color: var(--color-text-primary); font-family: var(--font-display); font-weight: 700; white-space: nowrap; }
 .auth-link--primary { border-radius: var(--radius-sm); background: var(--color-primary); color: var(--color-surface); }
+@keyframes auth-loading-pulse { 0% { background-position: 0 0; } 100% { background-position: -200% 0; } }
 
 .site-footer { margin-top: auto; border-top: 1px solid var(--color-border); background: var(--color-surface); }
 .site-footer__inner { display: grid; grid-template-columns: minmax(15rem, 1.25fr) minmax(19rem, 1fr); gap: var(--space-12); padding-block: var(--space-12) var(--space-6); }
@@ -818,6 +823,8 @@
   .site-nav a { padding-inline: var(--space-3); }
   .auth-link--primary { display: none; }
   .candidate-menu-link > strong { display: none; }
+  .auth-loading-pill { min-width: 2.75rem; }
+  .auth-loading-pill span:last-child { display: none; }
   .jobs-workspace { grid-template-columns: 16.5rem minmax(0, 1fr); gap: var(--space-5); }
   .detail-layout { grid-template-columns: minmax(0, 1fr) 19rem; }
 }
