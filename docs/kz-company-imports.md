@@ -16,6 +16,11 @@ matches and unique new records. `reconcile` retires only the matched records,
 preserving the 25 unique new vacancies. Future `once` runs automatically
 reconcile Air Astana and Kcell after importing, so the two official adapters
 can continue to supply unique records without leaving duplicates public.
+Both reconciliation runs succeeded: 50 duplicate records were retired, leaving
+65 distinct new active vacancies across the four sources. The public
+Kazakhstan listing showed 158 jobs immediately afterward, including 22 from
+the new Air Astana source, 3 from the new Kcell source, 38 Technodom and 2
+Kolesa Group jobs. These counts are a dated snapshot, not a promised feed size.
 
 ## Source register
 
