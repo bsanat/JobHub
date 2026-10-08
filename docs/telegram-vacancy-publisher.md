@@ -99,6 +99,11 @@ Production и отклоняется вне staging. Режим без ссыл�
 `TELEGRAM_PUBLISHER_ENABLED=true`. GitHub может задержать или пропустить
 запуск; точное время доставки не гарантируется.
 
+После успешной синхронизации официальных страниц компаний workflow импорта
+также сразу вызывает publisher. Новую вакансию на чужом сайте JobHub узнаёт
+только при очередной проверке источника; без webhook от работодателя
+мгновенное обнаружение невозможно.
+
 Secrets: проверенный `PUBLIC_IMPORT_DATABASE_URL` той же Production-базы и
 `TELEGRAM_BOT_TOKEN`. Variables: `PUBLIC_IMPORT_DATABASE_HOST`,
 `PUBLIC_IMPORT_DATABASE_USER`, `TELEGRAM_PUBLIC_CHANNEL_ID` и

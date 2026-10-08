@@ -127,14 +127,16 @@ Their unique new jobs, the established importer, and original application URLs
 remain active. Every later `once` run for these two sources reconciles again.
 
 The separate `.github/workflows/kz-company-scheduled-import.yml` polls the
-explicit `KZ_IMPORT_AUTO_SOURCES` repository-variable list every hour at minute
-17. `KZ_IMPORT_AUTO_ENABLED=true` currently enables the six reviewed sources.
+explicit `KZ_IMPORT_AUTO_SOURCES` repository-variable list every five minutes.
+`KZ_IMPORT_AUTO_ENABLED=true` currently enables the six reviewed sources.
 The workflow uses the same Production host/user identity and permission gates,
 imports each approved source once, and reconciles Air Astana and Kcell URL
 duplicates. The importer also skips URLs already public through their
 established career sources, avoiding transient duplicate listings during a
 scheduled run. A failed source does not prevent later sources in that run from
-updating. This is **hourly polling**, not instant source notifications; GitHub
+updating. After a successful run, the workflow invokes the Telegram publisher;
+the publication table prevents reposts. The manual `once` workflow does the
+same. This is **five-minute polling**, not instant source notifications; GitHub
 may delay scheduled starts. Neither the API server nor a persistent worker
 starts an importer automatically.
 
@@ -185,6 +187,6 @@ and their application path remain separate. Imported jobs link to the original
 HTTPS application URL, preserve available salary/date/language, and do not
 infer missing fields. Worldwide remote alone is not Kazakhstan eligibility.
 
-Proposed schedule after permission and production review: a manually triggered
-`--once` per source, then at most daily per source after observing stable
-pagination and rate limits. Do not start a persistent worker automatically.
+New sources should be added to the five-minute workflow only after checking
+their load, pagination and rate limits. GitHub Actions may delay a scheduled
+run, so no fixed delivery time is promised.

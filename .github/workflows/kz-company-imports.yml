@@ -141,3 +141,18 @@ jobs:
           KZ_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
           DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
         run: go run ./cmd/reconcile-kz-legacy-duplicates --source "$SOURCE_ID" --once
+      - name: Publish newly imported vacancies
+        if: ${{ success() && inputs.mode == 'once' && vars.TELEGRAM_PUBLISHER_ENABLED == 'true' }}
+        working-directory: backend
+        env:
+          APP_ENV: production
+          DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+          PGX_QUERY_EXEC_MODE: exec
+          FRONTEND_ORIGIN: https://jobhub-lovat.vercel.app
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_PUBLIC_CHANNEL_ID: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_ID }}
+          TELEGRAM_PUBLIC_CHANNEL_USERNAME: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_USERNAME }}
+          TELEGRAM_PUBLISHER_ENABLED: 'true'
+          TELEGRAM_PUBLISH_BATCH_SIZE: '15'
+          JOBHUB_PUBLIC_BASE_URL: https://jobhub-lovat.vercel.app
+        run: go run ./cmd/telegram-publisher --once
