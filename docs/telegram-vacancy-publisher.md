@@ -103,5 +103,5 @@ Secrets: проверенный `PUBLIC_IMPORT_DATABASE_URL` той же Product
 `TELEGRAM_PUBLIC_CHANNEL_USERNAME`. Workflow проверяет имя хоста и пользователя
 перед подключением. Не записывайте секреты в файл workflow,
 Variables или `VITE_*`. Домен ссылок — `https://jobhub-lovat.vercel.app`.
-Один запуск отправляет до 50 вакансий. После отправки проверяйте логи
+Один запуск отправляет до 15 вакансий. После отправки проверяйте логи
 workflow и при необходимости вручную сверяйте `pending`.
