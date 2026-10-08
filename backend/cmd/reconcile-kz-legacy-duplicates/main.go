@@ -91,10 +91,11 @@ func run(args []string) error {
 		}
 	}
 	r := report{Source: newSource, ExistingSource: oldSource, DryRun: *dry}
-	// The exact original URL must already be active in the established importer.
+	// The exact original URL must already be public in the established importer.
+	// Legacy imports can use source_status=unknown while remaining public.
 	err = tx.QueryRow(ctx, `SELECT count(*)::int,
 count(*) FILTER (WHERE EXISTS (SELECT 1 FROM jobhub.jobs old
- WHERE old.source=$2 AND old.source_status='active' AND old.source_url=added.source_url))::int
+ WHERE old.source=$2 AND jobhub.job_is_public(old) AND old.source_url=added.source_url))::int
 FROM jobhub.jobs added WHERE added.source=$1 AND added.source_status='active'`, newSource, oldSource).Scan(&r.ActiveNew, &r.ExactMatches)
 	if err != nil {
 		return errors.New("duplicate comparison failed")
