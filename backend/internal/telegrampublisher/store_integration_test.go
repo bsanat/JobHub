@@ -56,7 +56,7 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 			testPublicProviders[job.Title] = true
 		}
 	}
-	if !testUnapproved || testDemo || testApprovedCopies != 1 || len(testPublicProviders) != 3 {
+	if !testUnapproved || testDemo || testApprovedCopies != 2 || len(testPublicProviders) != 3 {
 		t.Fatalf("staging test mode eligibility is wrong: unapproved=%t demo=%t approved_copies=%d", testUnapproved, testDemo, testApprovedCopies)
 	}
 	var preview bytes.Buffer
@@ -255,9 +255,9 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 		if err := pool.QueryRow(ctx, `INSERT INTO jobhub.jobs
 			(source, external_id, source_url, company_name_raw, title, description, application_method,
 			source_status, moderation_status, first_seen_at, last_seen_at, last_synced_at, fresh_until, external_published_at)
-			VALUES ($1, $2, 'https://example.test/jobs/1', 'External Test', $3, 'External test vacancy', 'external',
+			VALUES ($1, $2, $4, 'External Test', $3, 'External test vacancy', 'external',
 			'active', 'approved', now(), now(), now(), now() + interval '1 day', now()) RETURNING id::text`,
-			fixture.source, fixture.source+"-id", fixture.title).Scan(&jobID); err != nil {
+			fixture.source, fixture.source+"-id", fixture.title, "https://example.test/jobs/"+fixture.source).Scan(&jobID); err != nil {
 			t.Fatal(err)
 		}
 		jobIDs = append(jobIDs, jobID)
@@ -280,11 +280,22 @@ func createExternalPublisherFixtures(t *testing.T, ctx context.Context, pool *pg
 	if err := pool.QueryRow(ctx, `INSERT INTO jobhub.jobs
 		(source, external_id, source_url, company_name_raw, title, description, application_method,
 		source_status, moderation_status, first_seen_at, last_seen_at, last_synced_at, fresh_until, external_published_at)
-		VALUES ($1, $2, 'https://example.test/jobs/2', 'External Test', 'Approved External Engineer', 'External test vacancy', 'external',
+		VALUES ($1, $2, $3, 'External Test', 'Approved External Engineer', 'External test vacancy', 'external',
 		'active', 'approved', now(), now(), now(), now() + interval '1 day', now() + interval '1 hour') RETURNING id::text`,
-		fixtures[0].source, fixtures[0].source+"-duplicate").Scan(&duplicateID); err != nil {
+		fixtures[0].source, fixtures[0].source+"-duplicate", "https://example.test/jobs/"+fixtures[0].source).Scan(&duplicateID); err != nil {
 		t.Fatal(err)
 	}
 	jobIDs = append(jobIDs, duplicateID)
+	var distinctURLID string
+	if err := pool.QueryRow(ctx, `INSERT INTO jobhub.jobs
+		(source, external_id, source_url, company_name_raw, title, description, application_method,
+		source_status, moderation_status, first_seen_at, last_seen_at, last_synced_at, fresh_until, external_published_at)
+		VALUES ($1, $2, 'https://example.test/jobs/distinct-requisition', 'External Test', 'Approved External Engineer', 'External test vacancy', 'external',
+		'active', 'approved', now(), now(), now(), now() + interval '1 day', now() + interval '1 hour') RETURNING id::text`,
+		fixtures[0].source, fixtures[0].source+"-distinct").Scan(&distinctURLID); err != nil {
+		t.Fatal(err)
+	}
+	jobIDs = append(jobIDs, distinctURLID)
+	approvedIDs[distinctURLID] = true
 	return approvedIDs, baselineJobID
 }

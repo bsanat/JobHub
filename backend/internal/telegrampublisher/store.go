@@ -123,11 +123,18 @@ const canonicalVacancySQL = `
         AND (duplicate_source.production_permissions_confirmed OR $4)
         AND duplicate_source.provider <> 'demo'
         AND jobhub.job_is_public(duplicate)
-        AND lower(btrim(duplicate.title)) = lower(btrim(j.title))
-        AND lower(btrim(COALESCE((SELECT name FROM jobhub.companies WHERE id = duplicate.company_id), duplicate.company_name_raw, '')))
-            = lower(btrim(COALESCE((SELECT name FROM jobhub.companies WHERE id = j.company_id), j.company_name_raw, '')))
-        AND lower(btrim(COALESCE(duplicate.location_raw, ''))) = lower(btrim(COALESCE(j.location_raw, '')))
-        AND COALESCE(duplicate.description, '') = COALESCE(j.description, '')
+        AND (
+            (NULLIF(btrim(duplicate.source_url), '') IS NOT NULL
+             AND NULLIF(btrim(j.source_url), '') IS NOT NULL
+             AND btrim(duplicate.source_url) = btrim(j.source_url))
+            OR
+            ((NULLIF(btrim(duplicate.source_url), '') IS NULL OR NULLIF(btrim(j.source_url), '') IS NULL)
+             AND lower(btrim(duplicate.title)) = lower(btrim(j.title))
+             AND lower(btrim(COALESCE((SELECT name FROM jobhub.companies WHERE id = duplicate.company_id), duplicate.company_name_raw, '')))
+                 = lower(btrim(COALESCE((SELECT name FROM jobhub.companies WHERE id = j.company_id), j.company_name_raw, '')))
+             AND lower(btrim(COALESCE(duplicate.location_raw, ''))) = lower(btrim(COALESCE(j.location_raw, '')))
+             AND COALESCE(duplicate.description, '') = COALESCE(j.description, ''))
+        )
         AND NOT EXISTS (
             SELECT 1 FROM jobhub.users creator
             WHERE creator.id = duplicate.created_by_user_id
