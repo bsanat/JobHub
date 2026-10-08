@@ -27,6 +27,7 @@ type report struct {
 	ExistingSource string `json:"existing_source"`
 	ActiveNew      int    `json:"active_new"`
 	ExactMatches   int    `json:"exact_matches"`
+	UniqueNew      int    `json:"unique_new"`
 	Retired        int    `json:"retired"`
 	DryRun         bool   `json:"dry_run"`
 }
@@ -100,25 +101,21 @@ FROM jobhub.jobs added WHERE added.source=$1 AND added.source_status='active'`, 
 	if err != nil {
 		return errors.New("duplicate comparison failed")
 	}
-	if r.ActiveNew == 0 || r.ExactMatches != r.ActiveNew {
-		return fmt.Errorf("refusing reconciliation: %d of %d active records have an exact original-URL match", r.ExactMatches, r.ActiveNew)
-	}
+	r.UniqueNew = r.ActiveNew - r.ExactMatches
 	if *once {
 		var oldEnabled bool
 		err = tx.QueryRow(ctx, `SELECT enabled FROM jobhub.job_sources WHERE source=$1`, oldSource).Scan(&oldEnabled)
 		if err != nil || !oldEnabled {
 			return errors.New("established source is not publicly enabled")
 		}
-		tag, err := tx.Exec(ctx, `UPDATE jobhub.jobs SET source_status='removed', external_archived_at=now(), updated_at=now()
-WHERE source=$1 AND source_status='active'`, newSource)
-		if err != nil || tag.RowsAffected() != int64(r.ActiveNew) {
+		tag, err := tx.Exec(ctx, `UPDATE jobhub.jobs added SET source_status='removed', external_archived_at=now(), updated_at=now()
+WHERE added.source=$1 AND added.source_status='active' AND EXISTS (
+ SELECT 1 FROM jobhub.jobs old WHERE old.source=$2 AND jobhub.job_is_public(old) AND old.source_url=added.source_url
+)`, newSource, oldSource)
+		if err != nil || tag.RowsAffected() != int64(r.ExactMatches) {
 			return errors.New("duplicate retirement failed")
 		}
-		tag, err = tx.Exec(ctx, `UPDATE jobhub.job_sources SET enabled=false WHERE source=$1 AND provider='kzcompany' AND enabled=true`, newSource)
-		if err != nil || tag.RowsAffected() != 1 {
-			return errors.New("duplicate source disable failed")
-		}
-		r.Retired = r.ActiveNew
+		r.Retired = r.ExactMatches
 		if err := tx.Commit(ctx); err != nil {
 			return errors.New("duplicate retirement commit failed")
 		}

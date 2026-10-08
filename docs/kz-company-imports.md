@@ -10,11 +10,12 @@ explicit, guarded GitHub Actions run; the checked-in configuration stays off.
 On 2026-10-09, with the operator's permission, the manual workflow imported
 36 Air Astana, 39 Kcell, 38 Technodom and 2 Kolesa Group records. Air Astana
 and Kcell were already served by older official-careers importers, so the new
-records overlap. The `reconcile-preview` workflow mode checks that **every**
-active new record has an active old record with the exact same original URL;
-`reconcile` retires the duplicate set and disables the redundant source only
-when that entire check passes. Future `once` runs are limited to Technodom and
-Kolesa Group; Air Astana and Kcell continue through their established sources.
+records overlap. Read-only comparison found 14 exact original-URL matches at
+Air Astana and 36 at Kcell. The `reconcile-preview` workflow mode shows exact
+matches and unique new records. `reconcile` retires only the matched records,
+preserving the 25 unique new vacancies. Future `once` runs automatically
+reconcile Air Astana and Kcell after importing, so the two official adapters
+can continue to supply unique records without leaving duplicates public.
 
 ## Source register
 
@@ -28,11 +29,11 @@ source entry; they are review notes, not legal permission.
 | --- | --- | --- | --- |
 | Kaspi.kz | [Kaspi Job](https://job.kaspi.kz/) | JS; `/api/web/` disallowed by robots | Review |
 | Halyk Bank | [Careers](https://halykbank.kz/about/career/vacancies) | Static HTML; career path disallowed by robots | Blocked |
-| Air Astana | [Careers](https://job.airastana.com/) | Official API | Existing importer active; new pipeline redundant |
+| Air Astana | [Careers](https://job.airastana.com/) | Official API | Existing importer active; new pipeline adds unique records |
 | KazMunayGas | [Work portal](https://work.kmg.kz/) | JS / hosted portal | Review |
 | Kazatomprom | [HR portal](https://hrekap.kazatomprom.kz/) | JS | Review |
 | KEGOC | [Corporate site](https://www.kegoc.kz/) | Samruk Qyzmet portal reported; exact career URL unverified | Review |
-| Kcell | [Careers](https://jobs.kcell.kz/) | Official API | Existing importer active; new pipeline redundant |
+| Kcell | [Careers](https://jobs.kcell.kz/) | Official API | Existing importer active; new pipeline adds unique records |
 | Beeline Kazakhstan | [People](https://people.beeline.kz/) | JS | Review |
 | Tele2/Altel Kazakhstan | [Careers](https://job.tele2.kz/) | Static HTML, detail contract unverified | Review |
 | Freedom Bank Kazakhstan | [Corporate site](https://www.bankffin.kz/) | Career page unverified | Review |
@@ -112,8 +113,9 @@ has no schedule and runs only on manual dispatch from the default branch.
 After a successful non-empty import it explicitly activates that source for
 public display; the Telegram publisher still excludes `kzcompany`.
 For Air Astana or Kcell, choose `reconcile-preview` first, inspect the exact
-match counts, then `reconcile` to retire only fully duplicated new-source jobs.
-The established importer and original application URLs remain active.
+match counts, then `reconcile` to retire only URL-matched new-source jobs.
+Their unique new jobs, the established importer, and original application URLs
+remain active. Every later `once` run for these two sources reconciles again.
 
 ## Read-only source review, 2026-10-09
 

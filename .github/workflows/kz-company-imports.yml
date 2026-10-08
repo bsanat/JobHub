@@ -62,9 +62,6 @@ jobs:
           test -n "$KZ_IMPORT_DATABASE_HOST" || { echo 'Missing inspected database host'; exit 1; }
           test -n "$KZ_IMPORT_DATABASE_USER" || { echo 'Missing inspected database user'; exit 1; }
           test -n "$SOURCE_ID" || { echo 'Missing source ID'; exit 1; }
-          if test '${{ inputs.mode }}' = 'once'; then
-            case "$SOURCE_ID" in technodom|kolesa) ;; *) echo 'Existing official importer already covers this source'; exit 1;; esac
-          fi
           if test '${{ inputs.mode }}' = 'reconcile' || test '${{ inputs.mode }}' = 'reconcile-preview'; then
             case "$SOURCE_ID" in airastana|kcell) ;; *) echo 'No established duplicate source mapping'; exit 1;; esac
           fi
@@ -105,6 +102,19 @@ jobs:
           DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
           PGX_QUERY_EXEC_MODE: exec
         run: go run ./cmd/import-kz-company-jobs --config "$KZ_CONFIG_PATH" --source "$SOURCE_ID" --once --activate
+      - name: Retire only exact duplicates after an official-source import
+        if: inputs.mode == 'once' && (inputs.source == 'airastana' || inputs.source == 'kcell')
+        working-directory: backend
+        env:
+          SOURCE_ID: ${{ inputs.source }}
+          APP_ENV: production
+          KZ_IMPORT_TARGET: production
+          KZ_IMPORT_WRITE_ENABLED: 'true'
+          KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED: ${{ vars.KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED }}
+          KZ_IMPORT_DATABASE_HOST: ${{ vars.PUBLIC_IMPORT_DATABASE_HOST }}
+          KZ_IMPORT_DATABASE_USER: ${{ vars.PUBLIC_IMPORT_DATABASE_USER }}
+          DATABASE_URL: ${{ secrets.PUBLIC_IMPORT_DATABASE_URL }}
+        run: go run ./cmd/reconcile-kz-legacy-duplicates --source "$SOURCE_ID" --once
       - name: Preview exact original-URL duplicates
         if: inputs.mode == 'reconcile-preview'
         working-directory: backend
