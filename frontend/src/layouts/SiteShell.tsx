@@ -3,6 +3,7 @@ import { useEffect, type PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/authContext";
+import { LanguageSelect } from "../components/i18n/LanguageSelect";
 import { CitySelect } from "../components/location/CitySelect";
 import { isCityId } from "../lib/cities";
 import { setSearchCityPreference, usePreferredSearchCity } from "../lib/searchCityPreference";
@@ -64,19 +65,8 @@ export function SiteShell({ children, variant = "default" }: PropsWithChildren<{
             ) : null}
           </nav>
           <div className="site-header__actions">
-            <span className="site-nav__location"><MapPin size={16} aria-hidden="true" /><CitySelect className="header-city-select" label={t("nav.location")} anyLabel={t("jobs.anyLocation")} value={selectedCity} onChange={changeCity} /></span>
-            <label className="language-select">
-              <span className="visually-hidden">{t("common.language")}</span>
-              <select
-                value={language}
-                onChange={(event) =>
-                  void i18n.changeLanguage(event.target.value)
-                }
-              >
-                <option value="kk">Қазақша</option>
-                <option value="ru">Русский</option>
-              </select>
-            </label>
+            <span className="site-nav__location"><MapPin size={16} aria-hidden="true" /><CitySelect className="header-city-select" compact label={t("nav.location")} anyLabel={t("jobs.anyLocation")} value={selectedCity} onChange={changeCity} /></span>
+            <LanguageSelect />
             {auth.session ? (
               <Link
                 className="candidate-menu-link"

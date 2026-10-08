@@ -57,8 +57,8 @@ export function ComponentShowcasePage() {
           <div className="showcase-language">
             <label htmlFor="showcase-language">{t("dev.language")}</label>
             <select id="showcase-language" value={language} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
-              <option value="kk">Қазақша</option>
-              <option value="ru">Русский</option>
+              <option value="kk">🇰🇿 Қазақша</option>
+              <option value="ru">🇷🇺 Русский</option>
             </select>
           </div>
         </div>

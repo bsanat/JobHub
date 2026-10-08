@@ -13,7 +13,7 @@ import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
 import { googleAuthConfigured, googleRedirectTo, supabase, supabaseAuthConfigured } from "../lib/supabase";
-import { authErrorCode } from "./authUtils";
+import { authErrorCode, emailCodeSendErrorKey } from "./authUtils";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
 const schema = z.object({
@@ -55,20 +55,24 @@ export function RegisterPage() {
       setServerError(t("auth.errors.emailVerificationUnavailable"));
       return;
     }
-    const { error } = await supabase.auth.signInWithOtp({
-      email: values.email,
-      options: {
-        shouldCreateUser: true,
-        data: { full_name: values.fullName },
-      },
-    });
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: values.email,
+        options: {
+          shouldCreateUser: true,
+          data: { full_name: values.fullName },
+        },
+      });
+      if (error) {
+        setServerError(t(emailCodeSendErrorKey(error)));
+        return;
+      }
+      setPendingRegistration(values);
+      setVerificationCode("");
+      setVerificationNotice("");
+    } catch {
       setServerError(t("auth.errors.codeSend"));
-      return;
     }
-    setPendingRegistration(values);
-    setVerificationCode("");
-    setVerificationNotice("");
   });
 
   const finishRegistration = async (event: FormEvent<HTMLFormElement>) => {
@@ -117,13 +121,18 @@ export function RegisterPage() {
     setServerError("");
     setVerificationNotice("");
     setIsResending(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: pendingRegistration.email,
-      options: { shouldCreateUser: true, data: { full_name: pendingRegistration.fullName } },
-    });
-    setIsResending(false);
-    if (error) setServerError(t("auth.errors.codeSend"));
-    else setVerificationNotice(t("auth.codeResent"));
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: pendingRegistration.email,
+        options: { shouldCreateUser: true, data: { full_name: pendingRegistration.fullName } },
+      });
+      if (error) setServerError(t(emailCodeSendErrorKey(error)));
+      else setVerificationNotice(t("auth.codeResent"));
+    } catch {
+      setServerError(t("auth.errors.codeSend"));
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const startGoogleRegistration = async () => {

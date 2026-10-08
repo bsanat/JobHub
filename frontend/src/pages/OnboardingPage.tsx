@@ -10,6 +10,7 @@ import type {
 } from "../api/models/auth";
 import { repositories } from "../api/repositories";
 import { useAuth } from "../app/authContext";
+import { LanguageSelect } from "../components/i18n/LanguageSelect";
 import { CitySelect } from "../components/location/CitySelect";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
@@ -94,16 +95,7 @@ export function OnboardingPage() {
           height="187"
           alt="JobHub"
         />
-        <label className="language-select">
-          <span className="visually-hidden">{t("common.language")}</span>
-          <select
-            value={i18n.resolvedLanguage === "ru" ? "ru" : "kk"}
-            onChange={(event) => void i18n.changeLanguage(event.target.value)}
-          >
-            <option value="kk">KK</option>
-            <option value="ru">RU</option>
-          </select>
-        </label>
+        <LanguageSelect />
       </header>
       <main id="main-content" className="onboarding-main">
         {!query.data || !query.data.required ? (
