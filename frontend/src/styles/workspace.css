@@ -170,6 +170,68 @@
 .workbench .profile-privacy-pills dt { font-size: .875rem; font-weight: 500; }
 .workbench .profile-privacy-pills dd { font-size: .875rem; font-weight: 650; }
 .workbench .profile-save-bar { position: sticky; bottom: 0; z-index: 5; padding: 1rem 0; border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: #f7f8fa; }
+/* Profile: a compact, readable overview that keeps related facts together. */
+.workbench .profile-page { max-width: 70rem; }
+.workbench .profile-page .candidate-identity-header { align-items: center; gap: 1.25rem; margin-bottom: 1.25rem; padding: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.workbench .profile-page .profile-avatar { width: 4rem; height: 4rem; border-color: var(--color-border); background: var(--color-surface); color: var(--color-primary); }
+.workbench .profile-page .candidate-identity-header h1 { font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1.2; }
+.workbench .profile-page .candidate-identity-header__position { font-size: .9375rem; }
+.workbench .profile-page .candidate-identity-header__meta { margin-top: .5rem; }
+.workbench .profile-page .search-status { display: inline-flex; padding: .25rem .65rem; border-radius: var(--radius-full); background: var(--color-success-soft); font-weight: 650; }
+.workbench .profile-page .candidate-identity-header__tools { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
+.workbench .profile-page .profile-completion { width: 11rem; }
+.workbench .profile-page .profile-completion > div { width: 100%; }
+.workbench .profile-page .profile-view { gap: 1.25rem; }
+.workbench .profile-page .profile-section-nav { width: fit-content; max-width: 100%; gap: .375rem; padding: .3rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.workbench .profile-page .profile-section-nav button { min-height: 2.75rem; padding: .5rem 1rem; border: 0; border-radius: var(--radius-sm); font-weight: 650; white-space: nowrap; cursor: pointer; }
+.workbench .profile-page .profile-section-nav button[aria-pressed="true"] { background: var(--color-primary); color: var(--color-surface); }
+.workbench .profile-page .profile-section-nav button:not([aria-pressed="true"]):hover { background: var(--color-background); color: var(--color-text-primary); }
+.workbench .profile-page .profile-section-nav button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.workbench .profile-page .profile-view-panel { gap: 1rem; }
+.workbench .profile-page .profile-view-panel:first-of-type { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.workbench .profile-page .profile-overview { grid-template-columns: 1fr; gap: 0; margin: 0; padding: .25rem 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.workbench .profile-page .profile-summary-card { display: flex; align-items: center; gap: 1rem; padding: .85rem 0; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; }
+.workbench .profile-page .profile-summary-card:last-child { border-bottom: 0; }
+.workbench .profile-page .profile-summary-card > span { display: grid; width: 2.25rem; height: 2.25rem; flex-shrink: 0; background: var(--color-background); }
+.workbench .profile-page .profile-summary-card div { display: grid; grid-template-columns: minmax(8rem, .8fr) minmax(0, 1fr); gap: .75rem; width: 100%; align-items: center; }
+.workbench .profile-page .profile-summary-card div > span { font-size: .875rem; }
+.workbench .profile-page .profile-summary-card strong { margin: 0; font-size: .9375rem; }
+.workbench .profile-page .profile-section { padding: 0 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.workbench .profile-page .profile-section > header { padding: 1.25rem 0 .75rem; border: 0; }
+.workbench .profile-page .profile-section__body { padding: 0 0 1.5rem; }
+.workbench .profile-page .profile-about-layout { grid-template-columns: 1fr; gap: 1rem; }
+.workbench .profile-page .profile-view-copy--lead { min-height: 0; padding: 0 0 1rem; border-bottom: 1px solid var(--color-border); }
+.workbench .profile-page .profile-view-copy--lead h3 { display: block; margin-bottom: .4rem; font-size: .875rem; color: var(--color-text-muted); font-weight: 600; }
+.workbench .profile-page .profile-mini-facts { gap: 0; }
+.workbench .profile-page .profile-mini-facts > div { display: grid; grid-template-columns: minmax(8rem, .8fr) minmax(0, 1fr); align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--color-border); }
+.workbench .profile-page .profile-mini-facts > div:last-child { border-bottom: 0; }
+.workbench .profile-page .profile-mini-facts dd { margin: 0; }
+.workbench .profile-page .profile-view-tags { grid-column: 1 / -1; gap: 1rem; }
+.workbench .profile-page .profile-view-tags .profile-tags h3 { display: none; }
+.workbench .profile-page .profile-view-tags .profile-section { min-height: 8.5rem; }
+.workbench .profile-page .profile-tags li { background: var(--color-background); color: var(--color-primary); }
+
+@media (max-width: 64rem) {
+  .workbench .profile-page .profile-view-panel:first-of-type { grid-template-columns: 1fr; }
+  .workbench .profile-page .profile-view-tags { grid-column: auto; }
+}
+
+@media (max-width: 48rem) {
+  .workbench .profile-page .candidate-identity-header { grid-template-columns: auto minmax(0, 1fr); align-items: start; padding: 1rem; }
+  .workbench .profile-page .candidate-identity-header__tools { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+  .workbench .profile-page .profile-section-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .workbench .profile-page .profile-section-nav button { padding-inline: .75rem; white-space: normal; text-align: center; }
+  .workbench .profile-page .profile-section-nav button:last-child { grid-column: 1 / -1; }
+  .workbench .profile-page .profile-view-tags { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 32rem) {
+  .workbench .profile-page .candidate-identity-header__tools { flex-wrap: wrap; }
+  .workbench .profile-page .profile-summary-card div,
+  .workbench .profile-page .profile-mini-facts > div { grid-template-columns: 1fr; gap: .1rem; }
+  .workbench .profile-page .profile-section { padding-inline: 1rem; }
+  .workbench .profile-page .profile-overview { padding-inline: 1rem; }
+}
 .workbench .workspace-page__header h1 { font-size: 1.75rem; }
 
 .company-profile-view { max-width: 48rem; }

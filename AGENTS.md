@@ -12,6 +12,10 @@
 - Do not print secrets or private files, use staging/production for destructive tests, or consume provider quota without authorization.
 - Preserve unrelated work and `roadmap.md`. Do not commit, push, or change global Codex settings without authorization.
 
+## UI color preference
+
+- Never place blue text or blue icons on a blue or pale-blue background. Use white foreground on solid blue; put blue foreground on white or neutral surfaces. Check default, hover, focus, and selected states.
+
 ## Current UI locales
 
 - JobHub currently supports only `kk` and `ru` in the active UI.

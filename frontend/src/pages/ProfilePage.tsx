@@ -762,19 +762,15 @@ function ProfileView({ profile }: { profile: CandidateProfile }) {
               />
             </dl>
           </div>
-          <div className="profile-two-column">
-            <TagGroup
-              label={t("profile.fields.skills")}
-              values={profile.skills}
-              empty={empty}
-            />
-            <TagGroup
-              label={t("profile.fields.certifications")}
-              values={profile.certifications}
-              empty={empty}
-            />
-          </div>
         </ProfileSection>
+        <div className="profile-two-column profile-view-tags">
+          <ProfileSection title={t("profile.fields.skills")}>
+            <TagGroup label={t("profile.fields.skills")} values={profile.skills} empty={empty} />
+          </ProfileSection>
+          <ProfileSection title={t("profile.fields.certifications")}>
+            <TagGroup label={t("profile.fields.certifications")} values={profile.certifications} empty={empty} />
+          </ProfileSection>
+        </div>
       </div>
       <div className="profile-view-panel" hidden={activeSection !== "career"}>
         <ProfileSection title={t("profile.sections.experience")}>
