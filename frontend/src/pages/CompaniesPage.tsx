@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BriefcaseBusiness, MapPin, Search } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, MapPin, Search, Star } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -25,7 +25,7 @@ export function CompaniesPage() {
   return (
     <SiteShell>
       <div className="page-container companies-page">
-        <header className="companies-page__header"><h1>{t("companies.title")}</h1><p>{t("companies.description")}</p></header>
+        <header className="companies-page__header"><p className="auth-eyebrow">{t("companies.eyebrow")}</p><h1>{t("companies.title")}</h1><p>{t("companies.description")}</p></header>
         <form className="company-search" onSubmit={submit} role="search">
           <label htmlFor="company-query">{t("companies.searchLabel")}</label>
           <div><Search size={19} aria-hidden="true" /><input id="company-query" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={120} placeholder={t("companies.searchPlaceholder")} /><button type="submit">{t("companies.search")}</button></div>
@@ -41,6 +41,7 @@ export function CompaniesPage() {
               {company.industry ? <span><BriefcaseBusiness size={16} aria-hidden="true" />{company.industry}</span> : null}
               {company.city ? <span><MapPin size={16} aria-hidden="true" />{company.city}</span> : null}
             </div>
+            <div className="company-card__rating"><Star size={16} aria-hidden="true" /><span>{t("companies.ratingUnavailable")}</span></div>
             <div className="company-card__footer">
               <span className="company-card__vacancies"><BriefcaseBusiness size={16} aria-hidden="true" />{t("companies.jobCount", { count: company.openJobsCount })}</span>
               <Link className="ui-button ui-button--secondary ui-button--md" to={`/companies/${company.id}`}>{t("companies.openProfile")}<ArrowRight size={17} aria-hidden="true" /></Link>

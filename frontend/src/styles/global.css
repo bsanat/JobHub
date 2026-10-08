@@ -68,9 +68,9 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+  font-weight: 780;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
 }
 
 img,
@@ -123,17 +123,12 @@ svg {
 @media (min-width: 48rem) {
   .page-container,
   .wide-container {
-    width: min(100% - 3rem, var(--container-page));
+    width: min(100% - 4rem, var(--container-page));
   }
 
   .wide-container {
-    width: min(100% - 3rem, var(--container-wide));
+    width: min(100% - 4rem, var(--container-wide));
   }
-}
-
-@media (min-width: 75rem) {
-  .page-container { width: min(100% - 4rem, var(--container-page)); }
-  .wide-container { width: min(100% - 4rem, var(--container-wide)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
