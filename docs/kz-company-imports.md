@@ -48,7 +48,7 @@ source entry; they are review notes, not legal permission.
 | Freedom Finance Kazakhstan | — | Employer identity and career page unverified | Review |
 | ForteBank | [Careers](https://career.forte.kz/ru) | JS | Review |
 | Bank CenterCredit | [Official vacancies](https://www.bcc.kz/en/career/vacancies/) | Server-rendered HTML, numeric vacancy URLs | Supported, disabled by default |
-| Jusan Bank / Alatau City Bank | [Current careers](https://alataucitybank.kz/en/career/vacancy) | JS | Review |
+| Alatau City Bank (formerly Jusan Bank) | [Official vacancies](https://alataucitybank.kz/career/vacancy) | Server-embedded vacancy JSON | Supported, disabled by default; six initial public jobs |
 | Eurasian Bank | [Corporate site](https://eubank.kz/) | Career page unverified | Review |
 | BI Group | [Careers](https://bi.group/ru/career) | JS; robots review returned 403 | Blocked |
 | Bazis-A | [Vacancies](https://bazis.kz/vacancy) | Static HTML; per-job ID/URL unverified | Review |
@@ -67,7 +67,7 @@ source entry; they are review notes, not legal permission.
 | Qazaqstan Investment Corporation | [Official company listing](https://jobs.baiterek.gov.kz/kompanii/?ELEMENT_ID=757) | Baiterek-hosted HTML, numeric detail URLs | Supported, disabled by default; six initial public jobs at most |
 
 No Greenhouse, Lever, Workday, SmartRecruiters, JSON-LD or sitemap board ID was
-invented. Nine adapters exist in code, but Halyk is blocked by robots; eight
+invented. Ten adapters exist in code, but Halyk is blocked by robots; nine
 remain selectable for a read-only review. The static
 adapters have bounded requests; an incomplete fetch cannot deactivate old jobs.
 Their source's publishing permission remains a separate decision.
@@ -88,6 +88,18 @@ first-party detail URL. The adapter accepts only numeric vacancy detail paths
 from the QIC company listing and treats every sync as partial, so a missing
 listing cannot deactivate an existing vacancy. It remains disabled pending a
 successful authorized Production import and activation.
+
+The [Alatau City Bank vacancy listing](https://alataucitybank.kz/career/vacancy)
+embeds vacancy IDs, descriptions, city and available salary in its own HTML.
+The [official robots.txt](https://alataucitybank.kz/robots.txt) allows that
+path. A read-only probe on 2026-10-09 found 75 Kazakhstan vacancies; the
+first authorized import would display six, with later new IDs displayed
+automatically. The adapter accepts only cities observed on the bank's official
+Kazakhstan listing, excludes unknown/foreign locations, strips external HTML
+to formatted text, and does not invent a publication date. Official detail
+URLs were verified to render the vacancy in a browser. The bank's former
+Jusan identity must be reviewed against any existing JobHub company record
+before Production activation. Its source stays disabled until then.
 
 ## Safe operation
 

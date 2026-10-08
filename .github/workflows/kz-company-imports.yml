@@ -16,6 +16,7 @@ on:
           - sulpak
           - magnum
           - qic
+          - jusan
       mode:
         description: Probe, import, or reconcile an existing official-source duplicate
         required: true

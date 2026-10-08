@@ -32,7 +32,7 @@ type Client struct {
 }
 
 func New(cfg Config, maxRequests, maxJobs int, client *http.Client) (*Client, error) {
-	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak" && cfg.LocationMode != "magnum" && cfg.LocationMode != "qic") {
+	if strings.TrimSpace(cfg.Source) == "" || strings.TrimSpace(cfg.ListingURL) == "" || maxRequests < 1 || maxRequests > 60 || maxJobs < 1 || maxJobs > 200 || (cfg.LocationMode != "" && cfg.LocationMode != "technodom" && cfg.LocationMode != "kolesa" && cfg.LocationMode != "bcc" && cfg.LocationMode != "sulpak" && cfg.LocationMode != "magnum" && cfg.LocationMode != "qic" && cfg.LocationMode != "alatau") {
 		return nil, providers.Failure("INVALID_BUDGET")
 	}
 	if client == nil {
@@ -55,6 +55,9 @@ func (c *Client) Collect(ctx context.Context) (out providers.Result, err error) 
 	body, err := c.fetch(ctx, c.cfg.ListingURL, &out, false)
 	if err != nil {
 		return out, err
+	}
+	if c.cfg.LocationMode == "alatau" {
+		return c.collectAlatau(body, out)
 	}
 	links := detailLinks(body, c.cfg.ListingURL, c.cfg.DetailPrefix, c.cfg.LocationMode)
 	out.Fetched = len(links)

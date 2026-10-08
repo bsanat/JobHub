@@ -85,7 +85,7 @@ func (c Config) Validate() error {
 		}
 		switch s.Adapter {
 		case "":
-		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic":
+		case "airastana", "kcell", "halyk", "technodom", "kolesa", "bcc", "sulpak", "magnum", "qic", "alatau":
 			if (s.Status != "supported" && s.Status != "blocked") || s.CareersURL == "" {
 				return errors.New("unsupported Kazakhstan adapter configuration")
 			}

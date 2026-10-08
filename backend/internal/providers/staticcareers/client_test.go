@@ -166,3 +166,44 @@ func TestQICHostedPortalPreservesOriginalApplicationURL(t *testing.T) {
 		t.Fatalf("QIC vacancy content is incorrect: %+v", job)
 	}
 }
+
+func TestAlatauEmbeddedVacanciesFilterCountryAndSanitizeHTML(t *testing.T) {
+	listing := "https://alataucitybank.kz/career/vacancy"
+	body := `<script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"initialState":{"api":{"queries":{"GetAllVacanciesWithFilter({\"searchText\":\"\",\"selectedCategory\":\"\",\"selectedCity\":\"\",\"selectedSchedules\":\"\"})":{"data":{"allVacancies":[{"id":"101","name":"Аналитик","area":{"name":"Алматы"},"description":"<h3>Задачи</h3><ul><li>Анализировать данные</li></ul><img src=x onerror=track()>","employment":{"name":"Полная"},"salary":{"from":175000,"to":null,"currency":"KZT"}},{"id":"102","name":"Foreign role","area":{"name":"Berlin"},"description":"<p>Remote</p>"},{"id":"103","name":"Кассир","area":{"name":"Жанаозен"},"description":"<p>Работа с клиентами.</p>"},{"id":"101","name":"Duplicate","area":{"name":"Астана"},"description":"<p>Duplicate</p>"}]}}}}}}}}</script>`
+	client, err := New(Config{Source: "kzcompany:jusan", Company: "Alatau City Bank", ListingURL: listing, LocationMode: "alatau", ForcePartial: true}, 1, 200, &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		if r.URL.String() != listing {
+			t.Fatalf("unexpected URL: %s", r.URL)
+		}
+		return htmlResponse(r, body), nil
+	})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.Collect(context.Background())
+	if err != nil || result.Complete || result.Fetched != 4 || result.Skipped != 2 || len(result.Items) != 2 {
+		t.Fatalf("unexpected Alatau collection: %+v, %v", result, err)
+	}
+	if result.Items[1].LocationRaw != "Жанаозен, Казахстан" {
+		t.Fatalf("unknown but verified Kazakhstan city lost: %+v", result.Items[1])
+	}
+	item := result.Items[0]
+	if item.SourceURL != "https://alataucitybank.kz/career/vacancy/101" || item.ExternalID != "101" ||
+		item.LocationRaw != "Алматы" || item.ExternalPublishedAt != nil || item.SalaryRaw != "от 175000 KZT" ||
+		item.EmploymentTypeRaw != "Полная" || !strings.Contains(item.Description, "## Задачи\n- Анализировать данные") ||
+		strings.Contains(item.Description, "track") || strings.Contains(item.Description, "<script") {
+		t.Fatalf("unexpected Alatau vacancy: %+v", item)
+	}
+}
+
+func TestAlatauMalformedListingCannotDeactivateJobs(t *testing.T) {
+	client, err := New(Config{Source: "kzcompany:jusan", Company: "Alatau City Bank", ListingURL: "https://alataucitybank.kz/career/vacancy", LocationMode: "alatau"}, 1, 200, &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		return htmlResponse(r, `<html><h1>Vacancies</h1></html>`), nil
+	})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.Collect(context.Background())
+	if err == nil || result.Complete || len(result.Items) != 0 {
+		t.Fatalf("malformed listing must fail without complete snapshot: %+v, %v", result, err)
+	}
+}
