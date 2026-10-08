@@ -4,8 +4,17 @@ The one-shot Go command imports only explicitly allowlisted, Kazakhstan-eligible
 vacancies. It reuses the existing career-site adapters, job upsert, company
 linking and ingestion-run logic. It does not run with the API server or a worker.
 All 30 sources in `backend/config/kz-company-sources.json` are **disabled** and
-`permissions_confirmed=false`. No live import, migration or database operation
-was performed while adding this pipeline.
+`permissions_confirmed=false`. Production activation is handled only by an
+explicit, guarded GitHub Actions run; the checked-in configuration stays off.
+
+On 2026-10-09, with the operator's permission, the manual workflow imported
+36 Air Astana, 39 Kcell, 38 Technodom and 2 Kolesa Group records. Air Astana
+and Kcell were already served by older official-careers importers, so the new
+records overlap. The `reconcile-preview` workflow mode checks that **every**
+active new record has an active old record with the exact same original URL;
+`reconcile` retires the duplicate set and disables the redundant source only
+when that entire check passes. Future `once` runs are limited to Technodom and
+Kolesa Group; Air Astana and Kcell continue through their established sources.
 
 ## Source register
 
@@ -19,11 +28,11 @@ source entry; they are review notes, not legal permission.
 | --- | --- | --- | --- |
 | Kaspi.kz | [Kaspi Job](https://job.kaspi.kz/) | JS; `/api/web/` disallowed by robots | Review |
 | Halyk Bank | [Careers](https://halykbank.kz/about/career/vacancies) | Static HTML; career path disallowed by robots | Blocked |
-| Air Astana | [Careers](https://job.airastana.com/) | Official API | Supported, disabled |
+| Air Astana | [Careers](https://job.airastana.com/) | Official API | Existing importer active; new pipeline redundant |
 | KazMunayGas | [Work portal](https://work.kmg.kz/) | JS / hosted portal | Review |
 | Kazatomprom | [HR portal](https://hrekap.kazatomprom.kz/) | JS | Review |
 | KEGOC | [Corporate site](https://www.kegoc.kz/) | Samruk Qyzmet portal reported; exact career URL unverified | Review |
-| Kcell | [Careers](https://jobs.kcell.kz/) | Official API | Supported, disabled |
+| Kcell | [Careers](https://jobs.kcell.kz/) | Official API | Existing importer active; new pipeline redundant |
 | Beeline Kazakhstan | [People](https://people.beeline.kz/) | JS | Review |
 | Tele2/Altel Kazakhstan | [Careers](https://job.tele2.kz/) | Static HTML, detail contract unverified | Review |
 | Freedom Bank Kazakhstan | [Corporate site](https://www.bankffin.kz/) | Career page unverified | Review |
@@ -84,7 +93,7 @@ run on a blocked source or be combined with `--once`.
 `--once` additionally needs `KZ_IMPORT_WRITE_ENABLED=true` and `DATABASE_URL`
 with the same inspected identity. Staging/production also require
 `KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED=true`. These are explicit operator
-actions; none were performed here. It upserts by `(source, external_id)`;
+actions. It upserts by `(source, external_id)`;
 new company records use existing linking and are not verified automatically.
 The source is registered disabled/unapproved in the DB. Public visibility
 requires a separate source approval and activation review using the existing
@@ -99,9 +108,12 @@ enabling only the selected reviewed source, then uses the existing
 `KZ_IMPORT_PRODUCTION_PERMISSIONS_CONFIRMED=true` are set as repository
 variables, and the inspected `PUBLIC_IMPORT_DATABASE_HOST` and
 `PUBLIC_IMPORT_DATABASE_USER` variables match the secret URL. The workflow
-has no schedule and is not active until committed to the default branch.
+has no schedule and runs only on manual dispatch from the default branch.
 After a successful non-empty import it explicitly activates that source for
 public display; the Telegram publisher still excludes `kzcompany`.
+For Air Astana or Kcell, choose `reconcile-preview` first, inspect the exact
+match counts, then `reconcile` to retire only fully duplicated new-source jobs.
+The established importer and original application URLs remain active.
 
 ## Read-only source review, 2026-10-09
 
