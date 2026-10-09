@@ -16,7 +16,6 @@ import (
 
 func main() {
 	id := flag.String("id", "", "public vacancy UUID to read")
-	sessionPooler := flag.Bool("session-pooler", false, "use the Supabase session pooler for a read-only connection check")
 	flag.Parse()
 	if *id == "" || flag.NArg() != 0 {
 		fmt.Fprintln(os.Stderr, "usage: check-public-job --id <uuid>")
@@ -27,13 +26,6 @@ func main() {
 	if err != nil || dbURL.Hostname() == "" || dbURL.User == nil || dbURL.Hostname() != os.Getenv("PUBLIC_IMPORT_DATABASE_HOST") || dbURL.User.Username() != os.Getenv("PUBLIC_IMPORT_DATABASE_USER") {
 		fmt.Fprintln(os.Stderr, "production database identity check failed")
 		os.Exit(1)
-	}
-	if *sessionPooler {
-		raw, err = database.SessionPoolerURL(raw)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "session pooler target check failed")
-			os.Exit(1)
-		}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

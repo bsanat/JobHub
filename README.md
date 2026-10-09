@@ -84,7 +84,8 @@ deployment.
 | `DATABASE_URL` | Подключение Go API к Production Supabase |
 | `PGX_QUERY_EXEC_MODE` | Режим pgx для используемого типа подключения |
 | `FRONTEND_ORIGIN` | Разрешённый адрес frontend |
-| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Серверный доступ к закрытому хранилищу резюме |
+| `NEON_AUTH_BASE_URL`, `VITE_NEON_AUTH_URL` | Neon Auth: обязательное подтверждение email и Google OAuth |
+| `AWS_ENDPOINT_URL_S3`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Приватные резюме в Neon Object Storage, bucket `uploads`; ключи только на сервере |
 | `TELEGRAM_BOT_TOKEN` | Отправка сообщений через Telegram Bot API |
 | `TELEGRAM_WEBHOOK_SECRET` | Проверка вызовов внутреннего publisher endpoint |
 | `TELEGRAM_PUBLIC_CHANNEL_ID`, `TELEGRAM_PUBLIC_CHANNEL_USERNAME` | Канал публикации |

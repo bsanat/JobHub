@@ -11,7 +11,7 @@ import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
-import { googleAuthConfigured, googleRedirectTo, supabase } from "../lib/supabase";
+import { googleAuthConfigured, googleRedirectTo, neonAuth } from "../lib/neonAuth";
 import { authErrorCode } from "./authUtils";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
@@ -45,16 +45,20 @@ export function LoginPage() {
 
   const startGoogleLogin = async () => {
     setServerError("");
-    if (!googleAuthConfigured || !supabase) {
+    if (!googleAuthConfigured || !neonAuth) {
       setServerError(t("auth.errors.googleNotConfigured"));
       return;
     }
     const returnTo = safeReturnTo(params.get("returnTo"));
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: googleRedirectTo(returnTo) },
-    });
-    if (error) setServerError(t("auth.errors.google"));
+    try {
+      const { error } = await neonAuth.signIn.social({
+        provider: "google",
+        callbackURL: googleRedirectTo(returnTo),
+      });
+      if (error) setServerError(t("auth.errors.google"));
+    } catch {
+      setServerError(t("auth.errors.google"));
+    }
   };
 
   return (

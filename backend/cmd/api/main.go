@@ -50,8 +50,8 @@ func run(logger *slog.Logger) error {
 	}
 	jobStore := jobs.NewPostgresStore(pool, cfg.Environment == "production")
 	authService := auth.NewService(pool)
-	if os.Getenv("SUPABASE_URL") != "" && os.Getenv("SUPABASE_SECRET_KEY") != "" {
-		oauthVerifier, err := auth.NewSupabaseOAuthVerifier(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SECRET_KEY"), nil)
+	if os.Getenv("NEON_AUTH_BASE_URL") != "" {
+		oauthVerifier, err := auth.NewNeonOAuthVerifier(ctx, os.Getenv("NEON_AUTH_BASE_URL"), pool)
 		if err != nil {
 			return err
 		}
@@ -59,8 +59,8 @@ func run(logger *slog.Logger) error {
 		authService.SetEmailVerifier(oauthVerifier)
 	}
 	var resumeFiles candidates.FileStore
-	if os.Getenv("SUPABASE_URL") != "" || os.Getenv("SUPABASE_SECRET_KEY") != "" {
-		resumeFiles, err = candidates.NewSupabaseFileStore(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SECRET_KEY"), "resumes", nil)
+	if os.Getenv("AWS_ENDPOINT_URL_S3") != "" {
+		resumeFiles, err = candidates.NewS3FileStore(os.Getenv("AWS_ENDPOINT_URL_S3"), os.Getenv("AWS_REGION"), os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "uploads", nil)
 		if err != nil {
 			return err
 		}

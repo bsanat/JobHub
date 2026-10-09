@@ -6,7 +6,7 @@ import { JobHubLoader } from "../components/ui/JobHubLoader";
 import { SiteShell } from "../layouts/SiteShell";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 import { safeReturnTo } from "../lib/returnTo";
-import { supabase } from "../lib/supabase";
+import { neonAuth } from "../lib/neonAuth";
 
 export function AuthCallbackPage() {
   const { t } = useTranslation();
@@ -28,26 +28,18 @@ export function AuthCallbackPage() {
     async function completeGoogleSignIn() {
       if (handledRef.current) return;
       handledRef.current = true;
-      if (!supabase) {
+      if (!neonAuth) {
         setError(t("auth.errors.googleNotConfigured"));
         return;
       }
-      const code = params.get("code");
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
+      try {
+        const { data, error: tokenError } = await neonAuth.token();
+        if (tokenError || !data?.token) {
           if (active) setError(t("auth.errors.google"));
           return;
         }
-      }
-      const { data, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !data.session?.access_token) {
-        if (active) setError(t("auth.errors.google"));
-        return;
-      }
-      try {
-        const session = await auth.loginWithGoogleToken(data.session.access_token);
-        await supabase.auth.signOut();
+        const session = await auth.loginWithGoogleToken(data.token);
+        await neonAuth.signOut();
         const destination = onboardingDestination(returnTo, session.user.role);
         navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
       } catch {

@@ -21,7 +21,7 @@ if [ "$mode" = "full" ] && ! command -v npm >/dev/null 2>&1; then
 	exit 1
 fi
 if [ ! -f "$repo_dir/.env" ]; then
-	echo "Create .env with DATABASE_URL before running Supabase development." >&2
+	echo "Create .env with DATABASE_URL before running Neon development." >&2
 	exit 1
 fi
 
@@ -54,7 +54,7 @@ if [ "$mode" = "full" ]; then
 	fi
 fi
 
-echo "Starting JobHub with Supabase database from .env."
+echo "Starting JobHub with Neon database from .env."
 if [ "$mode" = "full" ]; then
 	echo "Frontend: $FRONTEND_ORIGIN"
 fi

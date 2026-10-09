@@ -14,8 +14,8 @@
   `frontend/src/app/OnboardingGate.tsx` восстанавливает незавершённый опрос.
 - `frontend/src/pages/LoginPage.tsx`, `frontend/src/pages/RegisterPage.tsx` and
   `frontend/src/pages/AuthCallbackPage.tsx` — email/password auth, обязательный
-  Supabase email OTP при регистрации и Google OAuth callback; API проверяет
-  Supabase access token до создания локального аккаунта.
+  Neon email OTP при регистрации и Google OAuth callback; API проверяет
+  Neon EdDSA JWT до создания локального аккаунта.
 - `frontend/src/pages/SavedPage.tsx` — единая страница `/saved` с вакансиями
   и компаниями; панели — `frontend/src/components/candidate/Saved{Jobs,Companies}Panel.tsx`.
   `/saved-companies` перенаправляет на `/saved?tab=companies`.
@@ -44,17 +44,17 @@
 - `backend/internal/auth/onboarding.go` — ответы аккаунта и защита версий;
   `backend/internal/handlers/onboarding.go` — GET/PUT `/api/v1/auth/onboarding`.
 - `backend/internal/auth/oauth.go` and `backend/internal/handlers/auth.go` —
-  проверка Google OAuth token через Supabase Auth и создание JobHub session.
+  проверка Neon JWT и привязки Google account и создание JobHub session.
 - `backend/cmd/telegram-publisher/` публикует подходящие вакансии в Telegram.
 - `backend/internal/handlers/` обрабатывает HTTP-маршруты и запросы.
 - `backend/internal/jobs/`, `backend/internal/candidates/`,
   `backend/internal/companies/` и `backend/internal/auth/` — доменная логика.
-- `backend/internal/candidates/supabase_storage.go` хранит приватные резюме
-  в Supabase Storage при serverless-развёртывании.
+- `backend/internal/candidates/s3_storage.go` хранит приватные резюме
+  в Neon Object Storage через SigV4 при serverless-развёртывании.
 - `backend/internal/telegrampublisher/` форматирует сообщения, предотвращает
   дубликаты и управляет повторами.
 - `backend/internal/handlers/telegram_publish.go` — защищённый endpoint
-  однократного запуска publisher по уведомлению Supabase.
+  однократного запуска publisher; после переноса на Neon публикация выключена.
 - `backend/sql/queries/` — исходные запросы sqlc.
 - `backend/migrations/` — миграции базы данных.
 - `backend/internal/providers/` — адаптеры внешних источников вакансий.
@@ -68,4 +68,4 @@
 - `.github/workflows/public-job-imports.yml` — выключенный по умолчанию
   расписанный запуск API-импортера.
 - `scripts/supabase-telegram-publisher.sql` and
-  `docs/telegram-publisher-webhook.md` описывают Production webhook и cron.
+  `docs/telegram-publisher-webhook.md` описывают прежний Supabase webhook и cron; не применять к Neon.

@@ -55,8 +55,8 @@ JobHub — веб-приложение для поиска и публикаци
 
 | Команда | Где запускать | Что делает |
 | --- | --- | --- |
-| `make dev` | root | Запускает `scripts/dev-supabase.sh` для разработки против Supabase из `.env` |
-| `make backend-dev` | root | Запускает backend-часть через `scripts/dev-supabase.sh backend` |
+| `make dev` | root | Запускает `scripts/dev-neon.sh` для разработки против Neon из `.env` |
+| `make backend-dev` | root | Запускает backend-часть через `scripts/dev-neon.sh backend` |
 | `make dev-docker` | root | Запускает старый локальный PostgreSQL flow через `scripts/dev-local.sh` |
 | `make local-up` | root | Поднимает локальный Docker Compose profile `local` |
 | `make local-down` | root | Останавливает локальный Docker Compose profile `local` |

@@ -12,7 +12,7 @@ import { Button, IconButton } from "../components/ui/Button";
 import { Input } from "../components/ui/FormControls";
 import { SiteShell } from "../layouts/SiteShell";
 import { safeReturnTo } from "../lib/returnTo";
-import { googleAuthConfigured, googleRedirectTo, supabase, supabaseAuthConfigured } from "../lib/supabase";
+import { googleAuthConfigured, googleRedirectTo, neonAuth, neonAuthConfigured } from "../lib/neonAuth";
 import { authErrorCode, emailCodeSendErrorKey } from "./authUtils";
 import { onboardingDestination, onboardingPath } from "../lib/onboarding";
 
@@ -51,17 +51,14 @@ export function RegisterPage() {
       setServerError(t("auth.validation.companyRequired"));
       return;
     }
-    if (!supabaseAuthConfigured || !supabase) {
+    if (!neonAuthConfigured || !neonAuth) {
       setServerError(t("auth.errors.emailVerificationUnavailable"));
       return;
     }
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await neonAuth.emailOtp.sendVerificationOtp({
         email: values.email,
-        options: {
-          shouldCreateUser: true,
-          data: { full_name: values.fullName },
-        },
+        type: "sign-in",
       });
       if (error) {
         setServerError(t(emailCodeSendErrorKey(error)));
@@ -79,28 +76,29 @@ export function RegisterPage() {
     event.preventDefault();
     setServerError("");
     setVerificationNotice("");
-    if (!pendingRegistration || !supabase || !verificationCodePattern.test(verificationCode)) {
+    if (!pendingRegistration || !neonAuth || !verificationCodePattern.test(verificationCode)) {
       setServerError(t("auth.validation.verificationCode"));
       return;
     }
     setIsVerifying(true);
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { error } = await neonAuth.signIn.emailOtp({
         email: pendingRegistration.email,
-        token: verificationCode,
-        type: "email",
+        otp: verificationCode,
       });
-      if (error || !data.session?.access_token) {
+      if (error) {
         setServerError(t("auth.errors.codeInvalid"));
         return;
       }
+      const { data: token, error: tokenError } = await neonAuth.token();
+      if (tokenError || !token?.token) throw new Error("Email verification token unavailable");
       const session = await auth.register({
         fullName: pendingRegistration.fullName,
         email: pendingRegistration.email,
         password: pendingRegistration.password,
         role,
         companyName: pendingRegistration.companyName,
-        emailVerificationToken: data.session.access_token,
+        emailVerificationToken: token.token,
       });
       const destination = onboardingDestination(role === "employer" ? "/employer" : params.get("returnTo"), role);
       navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });
@@ -112,19 +110,19 @@ export function RegisterPage() {
       else setServerError(t("auth.errors.generic"));
     } finally {
       setIsVerifying(false);
-      await supabase.auth.signOut({ scope: "local" });
+      await neonAuth.signOut();
     }
   };
 
   const resendCode = async () => {
-    if (!pendingRegistration || !supabase) return;
+    if (!pendingRegistration || !neonAuth) return;
     setServerError("");
     setVerificationNotice("");
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await neonAuth.emailOtp.sendVerificationOtp({
         email: pendingRegistration.email,
-        options: { shouldCreateUser: true, data: { full_name: pendingRegistration.fullName } },
+        type: "sign-in",
       });
       if (error) setServerError(t(emailCodeSendErrorKey(error)));
       else setVerificationNotice(t("auth.codeResent"));
@@ -137,16 +135,20 @@ export function RegisterPage() {
 
   const startGoogleRegistration = async () => {
     setServerError("");
-    if (!googleAuthConfigured || !supabase) {
+    if (!googleAuthConfigured || !neonAuth) {
       setServerError(t("auth.errors.googleNotConfigured"));
       return;
     }
     const returnTo = safeReturnTo(role === "employer" ? "/employer" : params.get("returnTo"));
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: googleRedirectTo(returnTo) },
-    });
-    if (error) setServerError(t("auth.errors.google"));
+    try {
+      const { error } = await neonAuth.signIn.social({
+        provider: "google",
+        callbackURL: googleRedirectTo(returnTo),
+      });
+      if (error) setServerError(t("auth.errors.google"));
+    } catch {
+      setServerError(t("auth.errors.google"));
+    }
   };
 
   return (
