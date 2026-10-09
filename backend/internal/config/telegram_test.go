@@ -56,6 +56,27 @@ func TestLoadTelegramPublisher(t *testing.T) {
 	}
 }
 
+func TestProductionPublisherRequiresValidCutover(t *testing.T) {
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("TELEGRAM_BOT_TOKEN", "secret")
+	t.Setenv("TELEGRAM_PUBLIC_CHANNEL_ID", "-10042")
+	t.Setenv("TELEGRAM_PUBLIC_CHANNEL_USERNAME", "jobhub_test")
+	t.Setenv("JOBHUB_PUBLIC_BASE_URL", "https://jobhub.kz")
+	t.Setenv("TELEGRAM_PUBLISH_AFTER", "")
+	if _, err := LoadTelegramPublisher(); err == nil {
+		t.Fatal("production publisher accepted a missing cutover")
+	}
+	t.Setenv("TELEGRAM_PUBLISH_AFTER", "yesterday")
+	if _, err := LoadTelegramPublisher(); err == nil {
+		t.Fatal("production publisher accepted an invalid cutover")
+	}
+	t.Setenv("TELEGRAM_PUBLISH_AFTER", "2026-10-09T18:00:00Z")
+	cfg, err := LoadTelegramPublisher()
+	if err != nil || cfg.PublishAfter == nil || cfg.PublishAfter.UTC().Format("2006-01-02T15:04:05Z") != "2026-10-09T18:00:00Z" {
+		t.Fatalf("unexpected cutover: %#v %v", cfg.PublishAfter, err)
+	}
+}
+
 func TestLoadTelegramPublisherDryRunDoesNotRequireToken(t *testing.T) {
 	t.Setenv("TELEGRAM_PUBLIC_CHANNEL_ID", "-10042")
 	t.Setenv("TELEGRAM_PUBLISHER_DRY_RUN", "true")

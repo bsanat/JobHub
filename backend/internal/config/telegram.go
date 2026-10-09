@@ -35,6 +35,7 @@ type TelegramPublisherConfig struct {
 	Interval        time.Duration
 	BatchSize       int
 	MaxAttempts     int
+	PublishAfter    *time.Time
 }
 
 func LoadTelegram() (TelegramConfig, error) {
@@ -120,6 +121,16 @@ func LoadTelegramPublisher() (TelegramPublisherConfig, error) {
 	if err != nil {
 		return TelegramPublisherConfig{}, err
 	}
+	var publishAfter *time.Time
+	if raw := strings.TrimSpace(os.Getenv("TELEGRAM_PUBLISH_AFTER")); raw != "" {
+		parsed, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			return TelegramPublisherConfig{}, fmt.Errorf("TELEGRAM_PUBLISH_AFTER must be an RFC3339 timestamp")
+		}
+		publishAfter = &parsed
+	} else if os.Getenv("APP_ENV") == "production" && !dryRun {
+		return TelegramPublisherConfig{}, fmt.Errorf("TELEGRAM_PUBLISH_AFTER is required for production publishing")
+	}
 	channelID, err := strconv.ParseInt(strings.TrimSpace(os.Getenv("TELEGRAM_PUBLIC_CHANNEL_ID")), 10, 64)
 	if err != nil || channelID >= 0 {
 		return TelegramPublisherConfig{}, fmt.Errorf("TELEGRAM_PUBLIC_CHANNEL_ID must be a negative numeric channel ID")
@@ -166,7 +177,7 @@ func LoadTelegramPublisher() (TelegramPublisherConfig, error) {
 	}
 	return TelegramPublisherConfig{
 		Enabled: enabled, DryRun: dryRun, WithoutLink: withoutLink, TestSources: testSources, Token: token, ChannelID: channelID, ChannelUsername: username,
-		PublicBaseURL: publicBaseURL, Interval: interval, BatchSize: batchSize, MaxAttempts: maxAttempts,
+		PublicBaseURL: publicBaseURL, Interval: interval, BatchSize: batchSize, MaxAttempts: maxAttempts, PublishAfter: publishAfter,
 	}, nil
 }
 

@@ -82,6 +82,13 @@ These are intended project constraints; verify the current implementation where 
 - Avoid unrelated redesigns, dependency upgrades, renames, and new product features.
 - Every newly added company must ship with its original logo in the same change, regardless of whether the company is introduced through curated data, a seed, an importer, or a company-name presentation map. Use an official first-party source, bundle the asset locally, record its source, wire every relevant company-name variant to it, and verify the mark is centered in the existing circular container with `object-fit: contain`: no clipping, distortion, ad-hoc enlargement, or visibly undersized mark.
 
+### Material production risks
+
+- Apply this gate only when a proposed action could materially overload the production server or database, expose secrets, or destroy or overwrite production data. Ordinary scoped changes and checks proceed normally.
+- Before such an action, inspect its actual target and impact. If the risk is material, stop before executing the risky command, explain it immediately, and propose a concrete safer path such as a read-only check, dry-run, bounded batch, pooled connection, isolated Neon branch, verified backup, or rollback plan.
+- For production background work, bound overlapping runs, batch size and retries; respect provider rate limits. Optional workers must not determine API health.
+- Do not reuse the retired Supabase database-trigger, `pg_net`, or `pg_cron` Telegram flow on Neon.
+
 ## 6. Verify proportionally and honestly
 
 Honor the current task's quality gates. During iteration, run focused tests first; before handoff, run the required final checks.

@@ -33,12 +33,12 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	defer func() {
 		_, _ = pool.Exec(context.Background(), "DELETE FROM jobhub.telegram_publications WHERE channel_id = $1", channelID)
 	}()
-	store := NewPostgresStore(pool, false)
+	store := NewPostgresStore(pool, false, nil)
 	testChannelID := channelID - 1
 	defer func() {
 		_, _ = pool.Exec(context.Background(), "DELETE FROM jobhub.telegram_publications WHERE channel_id = $1", testChannelID)
 	}()
-	testStore := NewPostgresStore(pool, true)
+	testStore := NewPostgresStore(pool, true, nil)
 	testClaims, err := testStore.ClaimBatch(ctx, testChannelID, 50, 3)
 	if err != nil {
 		t.Fatal(err)
@@ -95,6 +95,14 @@ func TestPostgresStoreClaimsOnceAndRetriesConfirmedFailure(t *testing.T) {
 	var dryRunWrites int
 	if err := pool.QueryRow(ctx, "SELECT count(*) FROM jobhub.telegram_publications WHERE channel_id = $1", channelID).Scan(&dryRunWrites); err != nil || dryRunWrites != 0 {
 		t.Fatalf("dry run created publication rows: count=%d error=%v", dryRunWrites, err)
+	}
+	cutover := time.Now().Add(time.Hour)
+	newOnly := NewPostgresStore(pool, false, &cutover)
+	if items, err := newOnly.ListEligible(ctx, channelID, 50, 3); err != nil || len(items) != 0 {
+		t.Fatalf("pre-cutover vacancies remained eligible: %d, %v", len(items), err)
+	}
+	if items, err := newOnly.ClaimBatch(ctx, channelID, 50, 3); err != nil || len(items) != 0 {
+		t.Fatalf("pre-cutover vacancies were claimed: %d, %v", len(items), err)
 	}
 	claimed, err := store.ClaimBatch(ctx, channelID, 50, 3)
 	if err != nil {

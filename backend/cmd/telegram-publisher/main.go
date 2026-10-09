@@ -82,7 +82,7 @@ func run(logger *slog.Logger) error {
 		DryRun:          publisherConfig.DryRun,
 		BatchSize:       publisherConfig.BatchSize,
 		MaxAttempts:     publisherConfig.MaxAttempts,
-	}, telegrampublisher.NewPostgresStore(pool, publisherConfig.TestSources), sender, os.Stdout, logger)
+	}, telegrampublisher.NewPostgresStore(pool, publisherConfig.TestSources, publisherConfig.PublishAfter), sender, os.Stdout, logger)
 
 	if *once {
 		stats, err := publisher.ProcessOnce(ctx)

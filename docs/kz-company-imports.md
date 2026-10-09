@@ -192,9 +192,9 @@ imports each approved source once, and reconciles Air Astana and Kcell URL
 duplicates. The importer also skips URLs already public through their
 established career sources, avoiding transient duplicate listings during a
 scheduled run. A failed source does not prevent later sources in that run from
-updating. After a successful run, the workflow invokes the Telegram publisher;
-the publication table prevents reposts. The manual `once` workflow does the
-same. This is **five-minute polling**, not instant source notifications; GitHub
+updating. The separate five-minute Telegram publisher workflow then picks up
+new eligible jobs; the publication table prevents reposts. This is
+**five-minute polling**, not instant source notifications; GitHub
 may delay scheduled starts. Neither the API server nor a persistent worker
 starts an importer automatically.
 

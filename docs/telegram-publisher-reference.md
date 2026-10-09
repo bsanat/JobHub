@@ -13,9 +13,9 @@ Telegram publisher sends eligible vacancies to a Telegram channel and records st
 | --- | --- | --- |
 | Local/dev command | `make telegram-publisher-dev` | Runs `backend/cmd/telegram-publisher --dry-run --once` against `TELEGRAM_DEV_DATABASE_URL` |
 | Backend interval publisher | `backend/cmd/api/telegram_publisher.go` | Starts only when `TELEGRAM_PUBLISHER_ENABLED` is true and `VERCEL != 1` |
-| Webhook endpoint | `POST /api/v1/internal/telegram-publish` | Runs one batch when `TELEGRAM_WEBHOOK_SECRET` is configured |
-| Supabase SQL | `scripts/supabase-telegram-publisher.sql` | Defines trigger, pg_net request function and cron retry job |
-| GitHub Actions fallback | `.github/workflows/telegram-publisher.yml` | Every 5 minutes when GitHub variable `TELEGRAM_PUBLISHER_ENABLED` is true on `main` |
+| Optional webhook endpoint | `POST /api/v1/internal/telegram-publish` | Runs one batch when `TELEGRAM_WEBHOOK_SECRET` and the production cutoff are configured; it is not the scheduled Neon path |
+| Retired Supabase SQL | `scripts/supabase-telegram-publisher.sql` | Historical only; do not run on Neon |
+| GitHub Actions schedule | `.github/workflows/telegram-publisher.yml` | Every 5 minutes when GitHub variable `TELEGRAM_PUBLISHER_ENABLED` is true on `main`; GitHub can delay or skip runs |
 
 ## Required config
 
@@ -31,11 +31,13 @@ TELEGRAM_PUBLISH_WITHOUT_LINK=false
 TELEGRAM_PUBLISH_INTERVAL=60s
 TELEGRAM_PUBLISH_BATCH_SIZE=10
 TELEGRAM_PUBLISH_MAX_ATTEMPTS=3
+TELEGRAM_PUBLISH_AFTER=<UTC-activation-time-in-RFC3339>
 JOBHUB_PUBLIC_BASE_URL=https://example.com
 TELEGRAM_WEBHOOK_SECRET=<long-random-secret>
 ```
 
 `JOBHUB_PUBLIC_BASE_URL` must be a public HTTPS URL for real publishing. Localhost is rejected for real delivery.
+Production delivery requires `TELEGRAM_PUBLISH_AFTER` in RFC3339 format. Set it to the UTC activation time so the first run does not send the existing backlog, then keep it fixed; moving it forward would skip unsent jobs and retries. A native employer draft created earlier is still eligible if it is published after this time; imported jobs use their first-seen time. The scheduled workflow reads the repository variable of the same name.
 
 ## Eligibility
 
@@ -83,4 +85,3 @@ Success marks status `sent` with `telegram_message_id` and `sent_at`. Known Tele
 - public vacancy link when `JOBHUB_PUBLIC_BASE_URL` is configured.
 
 Tokens, real channel IDs and private channel names must not be included in documentation or screenshots.
-

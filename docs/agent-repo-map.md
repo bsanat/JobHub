@@ -64,7 +64,7 @@
 - `README.md` — основной обзор проекта.
 - `docs/` — архитектура, источники и рабочие инструкции.
 - `Makefile` — запуск, миграции, импорт и демоданные.
-- `.github/workflows/telegram-publisher.yml` — резервный запуск publisher вне Vercel.
+- `.github/workflows/telegram-publisher.yml` — основной плановый запуск publisher вне Vercel.
 - `.github/workflows/public-job-imports.yml` — выключенный по умолчанию
   расписанный запуск API-импортера.
 - `scripts/supabase-telegram-publisher.sql` and

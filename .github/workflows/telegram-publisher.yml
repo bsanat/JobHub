@@ -28,6 +28,7 @@ jobs:
       TELEGRAM_PUBLIC_CHANNEL_ID: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_ID }}
       TELEGRAM_PUBLIC_CHANNEL_USERNAME: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_USERNAME }}
       TELEGRAM_PUBLISHER_ENABLED: 'true'
+      TELEGRAM_PUBLISH_AFTER: ${{ vars.TELEGRAM_PUBLISH_AFTER }}
       TELEGRAM_PUBLISHER_DRY_RUN: 'false'
       TELEGRAM_PUBLISH_BATCH_SIZE: '15'
       TELEGRAM_PUBLISH_TEST_SOURCES: 'false'
@@ -47,6 +48,7 @@ jobs:
           test -n "$TELEGRAM_BOT_TOKEN" || { echo 'Missing TELEGRAM_BOT_TOKEN secret'; exit 1; }
           test -n "$TELEGRAM_PUBLIC_CHANNEL_ID" || { echo 'Missing TELEGRAM_PUBLIC_CHANNEL_ID variable'; exit 1; }
           test -n "$TELEGRAM_PUBLIC_CHANNEL_USERNAME" || { echo 'Missing TELEGRAM_PUBLIC_CHANNEL_USERNAME variable'; exit 1; }
+          test -n "$TELEGRAM_PUBLISH_AFTER" || { echo 'Missing TELEGRAM_PUBLISH_AFTER variable'; exit 1; }
           python3 - <<'PY'
           import os
           from urllib.parse import urlsplit

@@ -32,6 +32,10 @@ func startTelegramPublisher(ctx context.Context, pool *pgxpool.Pool, logger *slo
 		logger.Warn("Telegram publisher disabled in Vercel API; use a scheduled worker")
 		return nil
 	}
+	if os.Getenv("APP_ENV") == "production" && strings.TrimSpace(os.Getenv("TELEGRAM_PUBLISH_AFTER")) == "" {
+		logger.Warn("Telegram publisher disabled until publication cutover is configured")
+		return nil
+	}
 	cfg, err := config.LoadTelegramPublisher()
 	if err != nil {
 		return err
@@ -55,7 +59,7 @@ func startTelegramPublisher(ctx context.Context, pool *pgxpool.Pool, logger *slo
 		ChannelID: cfg.ChannelID, ChannelUsername: cfg.ChannelUsername,
 		PublicBaseURL: cfg.PublicBaseURL, DryRun: cfg.DryRun,
 		BatchSize: cfg.BatchSize, MaxAttempts: cfg.MaxAttempts,
-	}, telegrampublisher.NewPostgresStore(pool, cfg.TestSources), client, os.Stdout, logger)
+	}, telegrampublisher.NewPostgresStore(pool, cfg.TestSources, cfg.PublishAfter), client, os.Stdout, logger)
 	go func() {
 		if client != nil {
 			for {

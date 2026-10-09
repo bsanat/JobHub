@@ -2,8 +2,9 @@
 
 Publisher отправляет подходящие публичные вакансии в один канал JobHub.
 Отдельная Go-команда находится в `backend/cmd/telegram-publisher` и может
-работать с Supabase Postgres без Docker. Действующая Production-схема с
-webhook описана в [отдельной инструкции](/docs/telegram-publisher-webhook).
+работать с Neon Postgres без Docker. Production запускает её через
+GitHub Actions по расписанию; [старая webhook-инструкция](/docs/telegram-publisher-webhook)
+относится к Supabase и не применяется к Neon.
 
 ## Правила отбора
 
@@ -38,6 +39,7 @@ webhook описана в [отдельной инструкции](/docs/telegr
 | `TELEGRAM_PUBLISH_INTERVAL` | Интервал цикла; по умолчанию `60s` |
 | `TELEGRAM_PUBLISH_BATCH_SIZE` | Вакансий за проход; по умолчанию `10` |
 | `TELEGRAM_PUBLISH_MAX_ATTEMPTS` | Лимит учитываемых ошибок; по умолчанию `3` |
+| `TELEGRAM_PUBLISH_AFTER` | Обязательное время включения в production (RFC3339); старые вакансии в канал не отправляются |
 | `JOBHUB_PUBLIC_BASE_URL` | Публичный HTTPS-адрес для ссылок `/jobs/:id` |
 | `TELEGRAM_PUBLISH_WITHOUT_LINK` | Временный тестовый режим до появления публичного URL; ссылки из текста удаляются |
 | `TELEGRAM_PUBLISH_TEST_SOURCES` | Явный режим только для staging и тестового канала |
@@ -87,27 +89,29 @@ Production и отклоняется вне staging. Режим без ссыл�
   с каналом. У Bot API нет idempotency key для `sendMessage`.
 - Примените миграцию `000014` до запуска publisher.
 - Локальный API может запускать фоновой publisher, если он явно включён.
-  На Vercel постоянный процесс не работает: основная схема использует
-  webhook Supabase, а GitHub Actions — резервный разовый запуск.
+  На Vercel постоянный процесс не работает; production использует
+  разовый запуск через GitHub Actions по расписанию.
 - Между сообщениями в пакете выдерживается минимум 1,1 секунды. Ответ
   Telegram `429` останавливает пакет; `retry_after` учитывается при повторе.
 
-## Резервное расписание GitHub Actions
+## Расписание GitHub Actions
 
 `.github/workflows/telegram-publisher.yml` запускает команду `--once` каждые
 пять минут на ветке `main`, если репозиторная переменная
 `TELEGRAM_PUBLISHER_ENABLED=true`. GitHub может задержать или пропустить
 запуск; точное время доставки не гарантируется.
 
-После успешной синхронизации официальных страниц компаний workflow импорта
-также сразу вызывает publisher. Новую вакансию на чужом сайте JobHub узнаёт
+После успешной синхронизации официальных страниц компаний publisher забирает
+новые вакансии на следующем запуске по расписанию. Новую вакансию на чужом сайте JobHub узнаёт
 только при очередной проверке источника; без webhook от работодателя
 мгновенное обнаружение невозможно.
 
 Secrets: проверенный `PUBLIC_IMPORT_DATABASE_URL` той же Production-базы и
 `TELEGRAM_BOT_TOKEN`. Variables: `PUBLIC_IMPORT_DATABASE_HOST`,
-`PUBLIC_IMPORT_DATABASE_USER`, `TELEGRAM_PUBLIC_CHANNEL_ID` и
-`TELEGRAM_PUBLIC_CHANNEL_USERNAME`. Workflow проверяет имя хоста и пользователя
+`PUBLIC_IMPORT_DATABASE_USER`, `TELEGRAM_PUBLIC_CHANNEL_ID`,
+`TELEGRAM_PUBLIC_CHANNEL_USERNAME` и `TELEGRAM_PUBLISH_AFTER`. Время включения
+задайте в UTC непосредственно перед активацией, чтобы пропустить старую очередь.
+Workflow проверяет имя хоста и пользователя
 перед подключением. Не записывайте секреты в файл workflow,
 Variables или `VITE_*`. Домен ссылок — `https://jobhub-lovat.vercel.app`.
 Один запуск отправляет до 15 вакансий. После отправки проверяйте логи

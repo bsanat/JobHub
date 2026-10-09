@@ -44,7 +44,7 @@ JobHub — веб-приложение для поиска и публикаци
 | `backend/sql/queries/` | sqlc source queries |
 | `backend/migrations/` | Database schema migrations |
 | `scripts/` | Local dev and operational scripts |
-| `.github/workflows/telegram-publisher.yml` | Scheduled Telegram publisher fallback |
+| `.github/workflows/telegram-publisher.yml` | Scheduled Telegram publisher |
 | `docs/` | Project documentation and runbooks |
 
 Папка `documents` в текущем рабочем дереве не найдена. Существующие материалы лежат в `docs/`; они сохранены и связаны с этим Mintlify-сайтом.

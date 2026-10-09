@@ -24,6 +24,10 @@ func registerTelegramWebhook(router *gin.Engine, pool *pgxpool.Pool, logger *slo
 	if len(secret) < 32 {
 		return fmt.Errorf("TELEGRAM_WEBHOOK_SECRET must have at least 32 characters")
 	}
+	if os.Getenv("APP_ENV") == "production" && strings.TrimSpace(os.Getenv("TELEGRAM_PUBLISH_AFTER")) == "" {
+		logger.Warn("Telegram webhook disabled until publication cutover is configured")
+		return nil
+	}
 	cfg, err := config.LoadTelegramPublisher()
 	if err != nil {
 		return err
@@ -38,7 +42,7 @@ func registerTelegramWebhook(router *gin.Engine, pool *pgxpool.Pool, logger *slo
 	publisher := telegrampublisher.New(telegrampublisher.Config{
 		ChannelID: cfg.ChannelID, ChannelUsername: cfg.ChannelUsername,
 		PublicBaseURL: cfg.PublicBaseURL, BatchSize: 1, MaxAttempts: cfg.MaxAttempts,
-	}, telegrampublisher.NewPostgresStore(pool, cfg.TestSources), client, nil, logger)
+	}, telegrampublisher.NewPostgresStore(pool, cfg.TestSources, cfg.PublishAfter), client, nil, logger)
 	handlers.RegisterTelegramPublishRoute(router, secret, publisher, logger)
 	return nil
 }

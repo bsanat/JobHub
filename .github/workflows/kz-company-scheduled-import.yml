@@ -98,15 +98,3 @@ jobs:
           done
           IFS="$old_ifs"
           exit "$failures"
-      - name: Publish newly imported vacancies
-        if: ${{ success() && vars.TELEGRAM_PUBLISHER_ENABLED == 'true' }}
-        working-directory: backend
-        env:
-          FRONTEND_ORIGIN: https://jobhub-lovat.vercel.app
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_PUBLIC_CHANNEL_ID: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_ID }}
-          TELEGRAM_PUBLIC_CHANNEL_USERNAME: ${{ vars.TELEGRAM_PUBLIC_CHANNEL_USERNAME }}
-          TELEGRAM_PUBLISHER_ENABLED: 'true'
-          TELEGRAM_PUBLISH_BATCH_SIZE: '15'
-          JOBHUB_PUBLIC_BASE_URL: https://jobhub-lovat.vercel.app
-        run: go run ./cmd/telegram-publisher --once

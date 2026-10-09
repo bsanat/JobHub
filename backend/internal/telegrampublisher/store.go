@@ -4,17 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PostgresStore struct {
-	pool        *pgxpool.Pool
-	testSources bool
+	pool         *pgxpool.Pool
+	testSources  bool
+	publishAfter *time.Time
 }
 
-func NewPostgresStore(pool *pgxpool.Pool, testSources bool) *PostgresStore {
-	return &PostgresStore{pool: pool, testSources: testSources}
+func NewPostgresStore(pool *pgxpool.Pool, testSources bool, publishAfter *time.Time) *PostgresStore {
+	return &PostgresStore{pool: pool, testSources: testSources, publishAfter: publishAfter}
 }
 
 func (s *PostgresStore) ClaimBatch(ctx context.Context, channelID int64, limit, maxAttempts int) ([]Vacancy, error) {
@@ -61,7 +63,7 @@ WHERE job_id = $1::uuid AND channel_id = $2`, jobID, channelID, errorCode, count
 }
 
 func (s *PostgresStore) queryVacancies(ctx context.Context, query string, channelID int64, limit, maxAttempts int) ([]Vacancy, error) {
-	rows, err := s.pool.Query(ctx, query, channelID, limit, maxAttempts, s.testSources)
+	rows, err := s.pool.Query(ctx, query, channelID, limit, maxAttempts, s.testSources, s.publishAfter)
 	if err != nil {
 		return nil, fmt.Errorf("query telegram publication vacancies: %w", err)
 	}
@@ -155,6 +157,7 @@ WHERE s.enabled
   AND s.provider <> 'demo'
   AND (s.provider NOT IN ('arbeitnow', 'greenhouse', 'lever') OR (s.updated_at > s.created_at AND j.first_seen_at > s.updated_at))
   AND jobhub.job_is_public(j)
+  AND ($5::timestamptz IS NULL OR (CASE WHEN j.source = 'jobhub' THEN j.published_at ELSE j.first_seen_at END) >= $5)
   AND NOT EXISTS (
       SELECT 1 FROM jobhub.users creator
       WHERE creator.id = j.created_by_user_id
@@ -179,6 +182,7 @@ WITH eligible AS (
       AND s.provider <> 'demo'
       AND (s.provider NOT IN ('arbeitnow', 'greenhouse', 'lever') OR (s.updated_at > s.created_at AND j.first_seen_at > s.updated_at))
       AND jobhub.job_is_public(j)
+      AND ($5::timestamptz IS NULL OR (CASE WHEN j.source = 'jobhub' THEN j.published_at ELSE j.first_seen_at END) >= $5)
       AND NOT EXISTS (
           SELECT 1 FROM jobhub.users creator
           WHERE creator.id = j.created_by_user_id

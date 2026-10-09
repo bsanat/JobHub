@@ -86,19 +86,15 @@ Required backend fields for create/update include title, category, description, 
 
 ```mermaid
 sequenceDiagram
-  participant DB as Supabase/Postgres
-  participant Hook as pg_net/pg_cron or GitHub Actions
-  participant API as POST /api/v1/internal/telegram-publish
+  participant DB as Neon Postgres
+  participant Hook as GitHub Actions schedule
   participant Pub as telegrampublisher
   participant TG as Telegram Bot API
-  DB->>Hook: job becomes public or retry cron fires
-  Hook->>API: POST with X-JobHub-Publisher-Secret
-  API->>Pub: ProcessOnce
+  Hook->>Pub: Run one bounded batch every 5 minutes
   Pub->>DB: claim eligible jobs in telegram_publications
   Pub->>TG: send formatted HTML message
   TG-->>Pub: message_id or error
   Pub->>DB: mark sent/failed/pending
 ```
 
-Confirmed publishing conditions are documented in [Telegram publisher](/docs/telegram-publisher-reference). Continuous work on Vercel is not guaranteed by an always-running API process: code explicitly disables background interval publisher when `VERCEL=1`; production-style execution is through webhook, Supabase SQL and/or GitHub Actions.
-
+Confirmed publishing conditions are documented in [Telegram publisher](/docs/telegram-publisher-reference). Continuous work on Vercel is not guaranteed by an always-running API process: code explicitly disables background interval publisher when `VERCEL=1`; production delivery uses the GitHub Actions schedule and may be delayed.
