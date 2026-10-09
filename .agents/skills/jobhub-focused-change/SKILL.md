@@ -80,6 +80,7 @@ These are intended project constraints; verify the current implementation where 
 - Add or update a targeted regression test where practical.
 - For long-text UI fixes, check unbroken text, multiline text, multi-word skills, and narrow screens. Do not globally hide overflow or truncate long-form content to conceal a layout bug.
 - Avoid unrelated redesigns, dependency upgrades, renames, and new product features.
+- Every newly added company must ship with its original logo in the same change, regardless of whether the company is introduced through curated data, a seed, an importer, or a company-name presentation map. Use an official first-party source, bundle the asset locally, record its source, wire every relevant company-name variant to it, and verify the mark is centered in the existing circular container with `object-fit: contain`: no clipping, distortion, ad-hoc enlargement, or visibly undersized mark.
 
 ## 6. Verify proportionally and honestly
 

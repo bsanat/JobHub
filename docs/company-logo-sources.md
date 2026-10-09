@@ -16,8 +16,17 @@
 | ITS Gruppe | `its-gruppe.png` | [Логотип на официальном сайте](https://www.its-gruppe.de/images/logo.png) |
 | Camunda | `camunda.svg` | [Основной логотип на официальном сайте](https://camunda.com/logo-camunda.svg); [правила использования](https://camunda.com/brand/) |
 | nuuEnergy | `nuuenergy.webp` | [Логотип на официальном сайте](https://www.nuuenergy.com/) |
+| Bank CenterCredit | `bank-centercredit.svg` | [Официальный SVG](https://www.bcc.kz/themes/bcc/assets/images/logo.svg) |
+| Qazaqstan Investment Corporation | `qic.svg` | [Официальный SVG](https://qic.kz/local/templates/main_kz/img/logo.svg) |
+| KazMunayGas | `kmg.svg` | [Официальный SVG-знак](https://www.kmg.kz/safari-pinned-tab.svg) |
+| KEGOC | `kegoc.png` | [Официальный значок сайта](https://www.kegoc.kz/public/img/favicon/android-icon-192x192.png) |
+| Alatau City Bank | `alatau-city-bank.svg` | [Официальный SVG-знак](https://alataucitybank.kz/favicon/favicon.svg) |
+| Kazakhtelecom | `kazakhtelecom.svg` | [Официальный SVG](https://sustainability.telecom.kz/wp-content/themes/telecom/assets/images/logo.svg) |
+| Astana Hub | `astana-hub.svg` | [Официальный мобильный SVG-знак](https://cdn.astanahub.com/static/img_v2/logo-mobile.svg) |
+| Sulpak | `sulpak.png` | [Официальный значок сайта](https://object.pscloud.io/cms/wwwroot/img/apple-touch-icon.png) |
 
-Изображения не изменены; стили JobHub ограничивают только размер отображения.
+Фирменная графика не перерисовывается; для круглых контейнеров допустим
+квадратный SVG viewport вокруг оригинального знака без изменения его контуров.
 
 Логотип источника Arbeitnow (`frontend/public/brand/arbeitnow-logo.png`) взят с
 [официального сайта Arbeitnow](https://www.arbeitnow.com/images/logo.png).

@@ -66,6 +66,14 @@ const wordmarkCompanies: Record<string, { brand: string; initials: string }> = {
   technodom: { brand: "technodom", initials: "T" },
   "bi group": { brand: "bi", initials: "BI" },
   magnum: { brand: "magnum", initials: "M" },
+  "bank centercredit": { brand: "bcc", initials: "BCC" },
+  "qazaqstan investment corporation": { brand: "qic", initials: "QIC" },
+  kazmunaygas: { brand: "kmg", initials: "KMG" },
+  kegoc: { brand: "kegoc", initials: "K" },
+  "alatau city bank": { brand: "alatau", initials: "ACB" },
+  kazakhtelecom: { brand: "kazakhtelecom", initials: "KT" },
+  "astana hub": { brand: "astana-hub", initials: "AH" },
+  sulpak: { brand: "sulpak", initials: "S" },
 };
 
 /** Prefer bundled official assets so cards do not depend on remote image hosts. */
@@ -80,6 +88,9 @@ export function companyMarkFor(name: string, logoUrl?: string): CompanyMark {
     freedom: "freedom.svg", "freedom bank": "freedom.svg", "freedom holding": "freedom.svg",
     "kolesa group": "kolesa-group.svg",
     technodom: "technodom.svg", magnum: "magnum.ico", beeline: "beeline.svg", "beeline kazakhstan": "beeline.svg", kazpost: "kazpost.ico", "қазпошта": "kazpost.ico",
+    "bank centercredit": "bank-centercredit.svg", "qazaqstan investment corporation": "qic.svg",
+    kazmunaygas: "kmg.svg", kegoc: "kegoc.png", "alatau city bank": "alatau-city-bank.svg",
+    kazakhtelecom: "kazakhtelecom.svg", "astana hub": "astana-hub.svg", sulpak: "sulpak.png",
     "init ag": "init-ag.png", sfeir: "sfeir.png", "its gruppe": "its-gruppe.png", camunda: "camunda.svg", nuuenergy: "nuuenergy.webp",
   };
   return { brand: wordmarkCompanies[normalized]?.brand ?? "default", initials: "", logoUrl: assets[normalized] ? `/company-logos/${assets[normalized]}` : logoUrl };
