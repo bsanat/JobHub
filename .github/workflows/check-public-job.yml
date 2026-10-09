@@ -7,6 +7,11 @@ on:
         description: Public vacancy UUID
         required: true
         type: string
+      session_pooler:
+        description: Read through the same Supabase project's session pooler
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,4 +35,10 @@ jobs:
         working-directory: backend
         env:
           JOB_ID: ${{ inputs.job_id }}
-        run: go run ./cmd/check-public-job --id "$JOB_ID"
+          SESSION_POOLER: ${{ inputs.session_pooler }}
+        run: |
+          if test "$SESSION_POOLER" = 'true'; then
+            go run ./cmd/check-public-job --id "$JOB_ID" --session-pooler
+          else
+            go run ./cmd/check-public-job --id "$JOB_ID"
+          fi
