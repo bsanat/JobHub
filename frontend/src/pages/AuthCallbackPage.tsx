@@ -33,12 +33,12 @@ export function AuthCallbackPage() {
         return;
       }
       try {
-        const { data, error: tokenError } = await neonAuth.token();
-        if (tokenError || !data?.token) {
+        const { data, error: sessionError } = await neonAuth.getSession();
+        if (sessionError || !data?.session?.token) {
           if (active) setError(t("auth.errors.google"));
           return;
         }
-        const session = await auth.loginWithGoogleToken(data.token);
+        const session = await auth.loginWithGoogleToken(data.session.token);
         await neonAuth.signOut();
         const destination = onboardingDestination(returnTo, session.user.role);
         navigate(session.onboardingRequired ? onboardingPath(destination) : destination, { replace: true });

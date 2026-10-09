@@ -488,6 +488,11 @@
 .shell-page h1 { margin-bottom: var(--space-6); font-size: clamp(var(--text-28), 4vw, var(--text-40)); }
 .auth-form { display: grid; gap: var(--space-4); }
 .auth-verification-copy { margin: 0; color: var(--color-text-secondary); }
+.auth-code-input { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 3.5rem)); gap: clamp(.4rem, 2vw, var(--space-3)); }
+.auth-code-input span { display: grid; aspect-ratio: 1; place-items: center; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); font-family: var(--font-display); font-size: var(--text-28); font-weight: 800; }
+.auth-code-input:focus-within span { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-soft); }
+.auth-code-input:has(input[aria-invalid="true"]) span { border-color: var(--color-error); }
+.auth-code-input input { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; cursor: text; }
 .auth-verification-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .auth-google-button {
   width: 100%;

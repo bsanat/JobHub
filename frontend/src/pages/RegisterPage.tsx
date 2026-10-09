@@ -160,15 +160,24 @@ export function RegisterPage() {
           {pendingRegistration ? (
             <form className="auth-form" onSubmit={finishRegistration} noValidate>
               <p className="auth-verification-copy">{t("auth.verificationDescription", { email: pendingRegistration.email })}</p>
-              <Input
-                label={t("auth.verificationCode")}
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                error={serverError === t("auth.validation.verificationCode") ? serverError : undefined}
-              />
+              <div className="ui-field">
+                <label className="ui-label" htmlFor="verification-code">{t("auth.verificationCode")}</label>
+                <div className="auth-code-input">
+                  {Array.from({ length: 6 }, (_, index) => <span key={index} aria-hidden="true">{verificationCode[index] ?? ""}</span>)}
+                  <input
+                    id="verification-code"
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    aria-invalid={serverError === t("auth.validation.verificationCode")}
+                    aria-describedby={serverError === t("auth.validation.verificationCode") ? "verification-code-error" : undefined}
+                  />
+                </div>
+                {serverError === t("auth.validation.verificationCode") ? <span id="verification-code-error" className="ui-field-error">{serverError}</span> : null}
+              </div>
               {serverError && serverError !== t("auth.validation.verificationCode") ? <p className="auth-error" role="alert">{serverError}</p> : null}
               {verificationNotice ? <p className="auth-success" role="status">{verificationNotice}</p> : null}
               <Button type="submit" isLoading={isVerifying}>{t("auth.verifyAndRegister")}</Button>
