@@ -8,10 +8,10 @@ Bundled unchanged from official company websites on 2026-09-30:
 - magnum.ico: https://magnum.kz/favicon.ico
 - bank-centercredit.svg: https://www.bcc.kz/themes/bcc/assets/images/logo.svg
 - qic.svg: https://qic.kz/local/templates/main_kz/img/logo.svg
-- kmg.svg: https://www.kmg.kz/safari-pinned-tab.svg
-- kegoc.png: https://www.kegoc.kz/public/img/favicon/android-icon-192x192.png
+- kazmunaygas.png: user-provided original brand artwork, 2026-10-09
+- kegoc-logo.png: user-provided original brand artwork, 2026-10-09
 - alatau-city-bank.svg: https://alataucitybank.kz/favicon/favicon.svg
-- kazakhtelecom.svg: https://sustainability.telecom.kz/wp-content/themes/telecom/assets/images/logo.svg
+- kazakhtelecom.png: user-provided original brand artwork, 2026-10-09
 - astana-hub.svg: https://cdn.astanahub.com/static/img_v2/logo-mobile.svg
 - sulpak.png: https://object.pscloud.io/cms/wwwroot/img/apple-touch-icon.png
 - beeline.svg: https://beeline.kz/uploads/logo_fe020b8c39.svg

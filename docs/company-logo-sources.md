@@ -18,10 +18,10 @@
 | nuuEnergy | `nuuenergy.webp` | [Логотип на официальном сайте](https://www.nuuenergy.com/) |
 | Bank CenterCredit | `bank-centercredit.svg` | [Официальный SVG](https://www.bcc.kz/themes/bcc/assets/images/logo.svg) |
 | Qazaqstan Investment Corporation | `qic.svg` | [Официальный SVG](https://qic.kz/local/templates/main_kz/img/logo.svg) |
-| KazMunayGas | `kmg.svg` | [Официальный SVG-знак](https://www.kmg.kz/safari-pinned-tab.svg) |
-| KEGOC | `kegoc.png` | [Официальный значок сайта](https://www.kegoc.kz/public/img/favicon/android-icon-192x192.png) |
+| KazMunayGas | `kazmunaygas.png` | Предоставленный владельцем проекта оригинальный фирменный логотип, 2026-10-09 |
+| KEGOC | `kegoc-logo.png` | Предоставленный владельцем проекта оригинальный фирменный логотип, 2026-10-09 |
 | Alatau City Bank | `alatau-city-bank.svg` | [Официальный SVG-знак](https://alataucitybank.kz/favicon/favicon.svg) |
-| Kazakhtelecom | `kazakhtelecom.svg` | [Официальный SVG](https://sustainability.telecom.kz/wp-content/themes/telecom/assets/images/logo.svg) |
+| Kazakhtelecom | `kazakhtelecom.png` | Предоставленный владельцем проекта оригинальный фирменный логотип, 2026-10-09 |
 | Astana Hub | `astana-hub.svg` | [Официальный мобильный SVG-знак](https://cdn.astanahub.com/static/img_v2/logo-mobile.svg) |
 | Sulpak | `sulpak.png` | [Официальный значок сайта](https://object.pscloud.io/cms/wwwroot/img/apple-touch-icon.png) |
 

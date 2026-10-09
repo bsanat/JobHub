@@ -181,7 +181,6 @@
 .company-logo--brand-forte,
 .company-logo--brand-magnum,
 .company-logo--brand-kazpost { padding: 0; background: #fff; }
-.company-logo--brand-kazakhtelecom { background: #005baa; }
 .company-logo--brand-forte img,
 .company-logo--brand-kazpost img { object-fit: cover; transform: scale(1.35); }
 .company-logo--brand-halyk img,
@@ -236,7 +235,6 @@
 .company-identity__logo--brand-forte,
 .company-identity__logo--brand-magnum,
 .company-identity__logo--brand-kazpost { padding: 0; background: #fff; }
-.company-identity__logo--brand-kazakhtelecom { background: #005baa; }
 .company-identity__logo--brand-forte img,
 .company-identity__logo--brand-kazpost img { object-fit: cover; transform: scale(1.35); }
 .company-identity > div { display: grid; min-width: 0; gap: var(--space-1); }

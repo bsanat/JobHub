@@ -89,8 +89,8 @@ export function companyMarkFor(name: string, logoUrl?: string): CompanyMark {
     "kolesa group": "kolesa-group.svg",
     technodom: "technodom.svg", magnum: "magnum.ico", beeline: "beeline.svg", "beeline kazakhstan": "beeline.svg", kazpost: "kazpost.ico", "қазпошта": "kazpost.ico",
     "bank centercredit": "bank-centercredit.svg", "qazaqstan investment corporation": "qic.svg",
-    kazmunaygas: "kmg.svg", kegoc: "kegoc.png", "alatau city bank": "alatau-city-bank.svg",
-    kazakhtelecom: "kazakhtelecom.svg", "astana hub": "astana-hub.svg", sulpak: "sulpak.png",
+    kazmunaygas: "kazmunaygas.png", kegoc: "kegoc-logo.png", "alatau city bank": "alatau-city-bank.svg",
+    kazakhtelecom: "kazakhtelecom.png", "astana hub": "astana-hub.svg", sulpak: "sulpak.png",
     "init ag": "init-ag.png", sfeir: "sfeir.png", "its gruppe": "its-gruppe.png", camunda: "camunda.svg", nuuenergy: "nuuenergy.webp",
   };
   return { brand: wordmarkCompanies[normalized]?.brand ?? "default", initials: "", logoUrl: assets[normalized] ? `/company-logos/${assets[normalized]}` : logoUrl };
