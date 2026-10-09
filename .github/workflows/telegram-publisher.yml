@@ -14,7 +14,6 @@ concurrency:
 
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main' && vars.TELEGRAM_PUBLISHER_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -35,12 +34,30 @@ jobs:
       TELEGRAM_PUBLISH_WITHOUT_LINK: 'false'
       JOBHUB_PUBLIC_BASE_URL: https://jobhub-lovat.vercel.app
     steps:
+      - name: Check publisher gate
+        id: gate
+        env:
+          PUBLISHER_SWITCH: ${{ vars.TELEGRAM_PUBLISHER_ENABLED }}
+        run: |
+          if [ "$GITHUB_REF" != 'refs/heads/main' ]; then
+            echo 'Publisher disabled: this run is not on main'
+            exit 0
+          fi
+          if [ "$PUBLISHER_SWITCH" != 'true' ]; then
+            echo 'Publisher disabled: TELEGRAM_PUBLISHER_ENABLED is not true'
+            exit 0
+          fi
+          echo 'run=true' >> "$GITHUB_OUTPUT"
+          echo 'Publisher gate open'
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
       - uses: actions/setup-go@v5
+        if: steps.gate.outputs.run == 'true'
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
       - name: Validate configuration
+        if: steps.gate.outputs.run == 'true'
         run: |
           test -n "$DATABASE_URL" || { echo 'Missing PUBLIC_IMPORT_DATABASE_URL secret'; exit 1; }
           test -n "$PUBLIC_IMPORT_DATABASE_HOST" || { echo 'Missing PUBLIC_IMPORT_DATABASE_HOST variable'; exit 1; }
@@ -60,5 +77,6 @@ jobs:
               raise SystemExit('Production database identity check failed')
           PY
       - name: Publish one batch
+        if: steps.gate.outputs.run == 'true'
         working-directory: backend
         run: go run ./cmd/telegram-publisher --once
