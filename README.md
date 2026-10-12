@@ -139,6 +139,7 @@ go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 Навигация по темам: [docs/documentation-index.md](docs/documentation-index.md).
 В ней есть инструкции по разработке, API, безопасности, источникам
 вакансий, миграциям и Telegram publisher.
+Не можешь guest заходить 
 
 ## Безопасность и ограничения
 
