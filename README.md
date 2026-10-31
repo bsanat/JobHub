@@ -48,14 +48,9 @@ JobHub — сайт вакансий для Казахстана. Соискат
 и frontend напрямую против Supabase `DATABASE_URL` из `.env`; Docker для
 обычной разработки не нужен. Перед локальным запуском создайте `.env`:
 
-```sh
-cp .env.example .env
-make dev
-```
 
-`make dev` не применяет миграции автоматически и не загружает seed-данные:
-схему Supabase обновляйте отдельно через защищённую команду
-`make migrate-staging` после проверки target URL. Адреса:
+
+
 
 - Сайт: <http://localhost:5173>
 - Проверка API: <http://localhost:8080/api/v1/health>
