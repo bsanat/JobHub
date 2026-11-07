@@ -101,32 +101,6 @@ deployment.
 публичный каталог. Общие правила описаны в
 [заметке о видимости](docs/job-visibility-rules.md).
 
-## Проверки перед изменениями
-
-```sh
-cd backend
-go test ./...
-go vet ./...
-go build ./...
-```
-
-```sh
-cd frontend
-npm ci
-npm run lint
-npm run typecheck
-npm run build
-```
-
-После изменения SQL-запросов, конфигурации sqlc или используемых
-генерируемым кодом типов запустите генерацию:
-
-```sh
-cd backend
-go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
-```
-
-
 ## Документация
 
 Навигация по темам: [docs/documentation-index.md](docs/documentation-index.md).
